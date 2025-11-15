@@ -1,32 +1,75 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "../../assets/Styles/Main/Productos.css";
 
-import producto1 from "../../assets/Images/Productos/producto1.png";
-import producto2 from "../../assets/Images/Productos/producto2.png";
-import producto3 from "../../assets/Images/Productos/producto3.png";
-import producto4 from "../../assets/Images/Productos/producto4.png";
-import producto5 from "../../assets/Images/Productos/producto5.png";
-import producto6 from "../../assets/Images/Productos/producto6.png";
+// Importa el icono estático
 import iconoProducto from "../../assets/Images/Icons/producto.png";
+// --- (ELIMINADO) Ya no importamos productos estáticos ---
+// import producto1 from "../../assets/Images/Productos/producto1.png";
+// ...
 
+// (OPCIONAL) Importa una imagen de fallback por si un producto no tiene foto
+// Asegúrate de que esta ruta sea correcta
+// import placeholderImg from "../../assets/Images/Productos/producto_placeholder.png"; 
 
-const productos = [
-  { titulo: "Buff con diseño de ciclismo, ideal para protegerte del clima.", imagen: producto1 },
-  { titulo: "Jersey Manga Corta. Rendimiento y Estilo en Cada Pedaleada.", imagen: producto2 },
-  { titulo: "Jersey Manga Larga. Diseñado para rendimiento en tus rutas.", imagen: producto3 },
-  { titulo: "Licra entera, diseñada para el rendimiento en todas las rutas.", imagen: producto4 },
-  { titulo: "Medias de Ciclismo, comodidad y estilo para tus pies.", imagen: producto5 },
-  { titulo: "Chaqueta Rompevientos. Protégete del viento con estilo y ligereza.", imagen: producto6 },
-];
+// URL de tu API (Asegúrate de tener REACT_APP_API_URL en tu .env)
+const apiUrl = process.env.REACT_APP_API_URL;
+
+// (OPCIONAL) Define la imagen de fallback aquí si no la importas
+const placeholderImg = "[https://placehold.co/200x200/e8f0fe/10325c?text=EPN+Cycling](https://placehold.co/200x200/e8f0fe/10325c?text=EPN+Cycling)";
+
 
 const NuestrosProductosCarrusel = () => {
+  // 1. Estado para guardar los productos, el loading y el error
+  const [productos, setProductos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // 2. useEffect para llamar a la API cuando el componente se monta
+  useEffect(() => {
+    const fetchProductos = async () => {
+      try {
+        // 3. Llamada al nuevo endpoint PÚBLICO
+        const response = await fetch(`${apiUrl}/recursos/comerciales/`);
+        
+        if (!response.ok) {
+          throw new Error("No se pudieron cargar los productos.");
+        }
+        
+        const data = await response.json();
+        setProductos(data);
+        console.log("Productos cargados:", data);
+
+      } catch (err) {
+        setError(err.message);
+        console.error("Error fetching productos:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductos();
+  }, []); // El array vacío [] asegura que se ejecute solo una vez
+
+  // 4. Renderizado condicional
+  if (loading) {
+    return <div className="productos-section"><p>Cargando productos...</p></div>;
+  }
+
+  if (error) {
+    return <div className="productos-section"><p>Error: {error}</p></div>;
+  }
+
+  if (productos.length === 0) {
+    return <div className="productos-section"><p>No hay productos disponibles en este momento.</p></div>;
+  }
+
+  // 5. El carrusel ahora usa los datos del estado 'productos'
   return (
     <section className="productos-section">
-
       <Swiper
         modules={[Pagination, Autoplay]}
         slidesPerView={3}
@@ -40,14 +83,47 @@ const NuestrosProductosCarrusel = () => {
           0: { slidesPerView: 1 },
         }}
       >
-        {productos.map((producto, index) => (
-          <SwiperSlide key={index}>
+        {productos.map((producto) => (
+          <SwiperSlide key={producto.id_recurso}>
             <div className="producto-card">
-              <img src={producto.imagen} alt={producto.titulo} className="producto-img" />
+              
+              {/* 6. Usamos la imagen_url de la BD */}
+              <img 
+                src={producto.imagen_url || placeholderImg} 
+                alt={producto.nombre} 
+                className="producto-img"
+                // Fallback por si la URL de la BD está rota
+                onError={(e) => { e.target.src = placeholderImg; }}
+              />
+              
+              {/* Tu CSS (Productos.css) soporta:
+                .producto-info
+                .producto-icono
+                .producto-titulo (le cambié el nombre en tu JSX de <p> a <h3>)
+                .producto-descripcion
+                .producto-precio
+                ¡Vamos a usarlos todos!
+              */}
+              
+              {/* Título del producto */}
               <div className="producto-info">
                 <img src={iconoProducto} alt="icono-producto" className="producto-icono" />
-                <p className="productos-titulo">{producto.titulo}</p>
+                {/* Usamos 'nombre' para el título */}
+                <h3 className="producto-titulo">{producto.nombre}</h3>
               </div>
+              
+              {/* Descripción */}
+              <p className="producto-descripcion">
+                {producto.descripcion || "Próximamente más detalles."}
+              </p>
+              
+              {/* Precio */}
+              <p className="producto-precio">
+                ${Number(producto.precio_venta).toFixed(2)}
+              </p>
+
+              {/* Botón (Opcional, si quieres añadirlo) */}
+              {/* <button className="producto-boton">Ver Más</button> */}
             </div>
           </SwiperSlide>
         ))}

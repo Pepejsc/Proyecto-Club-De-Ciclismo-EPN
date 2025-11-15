@@ -6,8 +6,20 @@ from app.api.endpoints import auth, event, route, event_participant, notificatio
 from app.core.init_data import create_admin_user
 from app.db.init_db import init_db
 from app.services.scheduler_notifications import start_scheduler
+from fastapi.staticfiles import StaticFiles
+
+import os
 
 app = FastAPI()
+
+# --- MODIFICACIÓN AQUÍ ---
+# Creamos la carpeta 'uploads' y también la subcarpeta 'recursos'
+os.makedirs("uploads/recursos", exist_ok=True) 
+# Tu línea de 'mount' está perfecta. Le dice a FastAPI que
+# la URL 'http://.../uploads/' debe leer de la carpeta 'uploads/'
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+# --- FIN DE LA MODIFICACIÓN ---
+
 
 # 🟢 Permitir peticiones CORS
 origins = ["*"]

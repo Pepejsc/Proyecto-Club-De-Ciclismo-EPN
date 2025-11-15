@@ -11,9 +11,13 @@ const ListaRecursos = () => {
   const [recursos, setRecursos] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // --- Estados para el Modal ---
   const [modalVisible, setModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editFormData, setEditFormData] = useState(null); 
+  // --- (NUEVO) Estado para el archivo del modal ---
+  const [archivo, setArchivo] = useState(null);
 
   const fetchRecursos = async () => {
     setLoading(true);
@@ -79,17 +83,20 @@ const ListaRecursos = () => {
     }
   };
 
+  // --- handleEdit (Modificado para limpiar 'archivo') ---
   const handleEdit = (recurso) => {
     console.log("Editando:", recurso);
-    // Mapeamos 'stock_actual' (de la BD) a 'stock_inicial' (para el formulario)
     const formData = {
       ...recurso,
-      stock_inicial: recurso.stock_actual
+      // Mapeamos stock_actual (BD) a stock_inicial (Form)
+      stock_inicial: recurso.stock_actual 
     };
     setEditFormData(formData);
+    setArchivo(null); // Limpiamos el estado del archivo
     setModalVisible(true);
   };
 
+  // --- handleModalChange (Sin cambios) ---
   const handleModalChange = (e) => {
     const { name, value } = e.target;
     setEditFormData(prev => ({
@@ -98,68 +105,80 @@ const ListaRecursos = () => {
     }));
   };
 
-  // --- 👇 AQUÍ ESTÁ LA FUNCIÓN CORREGIDA 👇 ---
+  // --- (NUEVO) Manejador de archivo para el modal ---
+  const handleModalFileChange = (e) => {
+     const file = e.target.files[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) { // 10MB
+        toast.error("El archivo es demasiado grande. Máximo 10MB.");
+        e.target.value = '';
+        return;
+      }
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error("Tipo de archivo no permitido. Solo JPG, PNG o WebP.");
+        e.target.value = '';
+        return;
+      }
+      setArchivo(file);
+      toast.info(`Nuevo archivo seleccionado: ${file.name}`);
+    }
+  };
+  
+// --- handleUpdateSubmit (¡CORREGIDO!) ---
   const handleUpdateSubmit = async () => {
     if (!editFormData) return;
 
     setIsSubmitting(true);
     
-    // 1. Obtenemos el token
+    // 1. Construir FormData
+    const formDataToSend = new FormData();
+
+    // --- 2. Añadir campos (AHORA CON PROTECCIÓN .trim()) ---
+    // (valor || '') se asegura de que nunca llamemos a .trim() en 'null'
+    formDataToSend.append('tipo_recurso', editFormData.tipo_recurso);
+    formDataToSend.append('nombre', (editFormData.nombre || '').trim());
+    formDataToSend.append('descripcion', (editFormData.descripcion || '').trim());
+    formDataToSend.append('categoria', (editFormData.categoria || '').trim());
+    formDataToSend.append('fecha_adquisicion', editFormData.fecha_adquisicion);
+    formDataToSend.append('costo_adquisicion', parseFloat(editFormData.costo_adquisicion));
+    formDataToSend.append('observacion', (editFormData.observacion || '').trim());
+
+    // 3. Añadir el nuevo archivo (si se seleccionó uno)
+    if (archivo) {
+      formDataToSend.append('file', archivo);
+    }
+    
+    // 4. Añadir campos condicionales (TAMBIÉN CON PROTECCIÓN)
+    if (editFormData.tipo_recurso === "COMERCIAL") {
+      formDataToSend.append('precio_venta', parseFloat(editFormData.precio_venta));
+      formDataToSend.append('stock_actual', parseInt(editFormData.stock_inicial)); 
+      formDataToSend.append('sku', (editFormData.sku || '').trim());
+    } else if (editFormData.tipo_recurso === "OPERATIVO") {
+      formDataToSend.append('codigo_activo', (editFormData.codigo_activo || '').trim());
+      formDataToSend.append('estado', editFormData.estado);
+      formDataToSend.append('ubicacion', (editFormData.ubicacion || '').trim());
+      if (editFormData.id_usuario_responsable) {
+        formDataToSend.append('id_usuario_responsable', parseInt(editFormData.id_usuario_responsable));
+      }
+    }
+    
+    console.log("📤 Enviando Payload de ACTUALIZACIÓN (FormData)...");
+
     const token = getToken();
-    if (!token) {
-      toast.error("Error de autenticación. Por favor, inicie sesión de nuevo.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    // 2. Construimos un payload "limpio" desde cero
-    let payload = {
-      // Campos comunes (RecursoBase)
-      tipo_recurso: editFormData.tipo_recurso,
-      nombre: editFormData.nombre,
-      descripcion: editFormData.descripcion || null,
-      categoria: editFormData.categoria || null,
-      fecha_adquisicion: editFormData.fecha_adquisicion,
-      costo_adquisicion: parseFloat(editFormData.costo_adquisicion),
-      observacion: editFormData.observacion || null,
-    };
-
-    // 3. Añadimos solo los campos específicos del tipo
-    if (editFormData.tipo_recurso === 'COMERCIAL') {
-      payload = {
-        ...payload,
-        // Campos de RecursoComercialCreate
-        precio_venta: parseFloat(editFormData.precio_venta),
-        stock_inicial: parseInt(editFormData.stock_inicial), // <-- ¡Enviamos 'stock_inicial'!
-        sku: editFormData.sku || null,
-      };
-    } else if (editFormData.tipo_recurso === 'OPERATIVO') {
-      payload = {
-        ...payload,
-        // Campos de RecursoOperativoCreate
-        codigo_activo: editFormData.codigo_activo,
-        estado: editFormData.estado,
-        ubicacion: editFormData.ubicacion || null,
-        id_usuario_responsable: editFormData.id_usuario_responsable || null,
-      };
-    }
-
-    console.log("📤 Enviando Payload de ACTUALIZACIÓN (JSON):", payload);
-
     try {
       const response = await fetch(`${apiUrl}/recursos/${editFormData.id_recurso}`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
+          // NO 'Content-Type'
         },
-        body: JSON.stringify(payload) // 4. Enviamos el payload limpio
+        body: formDataToSend
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        // El 'result.detail' de Pydantic nos dirá exactamente qué campo falla
         const errorMsg = Array.isArray(result.detail) ? result.detail[0].msg : (result.detail || "Error desconocido");
         throw new Error(errorMsg);
       }
@@ -167,7 +186,8 @@ const ListaRecursos = () => {
       toast.success(`✅ Recurso "${result.nombre}" actualizado`);
       setModalVisible(false);
       setEditFormData(null);
-      fetchRecursos(); // Volvemos a cargar los datos de la tabla
+      setArchivo(null); // Limpiar archivo
+      fetchRecursos(); // Recargar la lista
 
     } catch (error) {
       console.error("❌ Error en handleUpdateSubmit:", error);
@@ -177,7 +197,7 @@ const ListaRecursos = () => {
     }
   };
 
-  // --- JSX (Sin cambios) ---
+  // --- JSX ---
   return (
     <div className="recursos-container">
       <div className="recursos-header">
@@ -252,7 +272,7 @@ const ListaRecursos = () => {
         </tbody>
       </table>
 
-      {/* --- MODAL DE EDICIÓN (Sin cambios) --- */}
+      {/* --- MODAL DE EDICIÓN (Actualizado con campo de archivo) --- */}
       {modalVisible && editFormData && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -271,6 +291,7 @@ const ListaRecursos = () => {
 
             <h3 className="form-section-header">Campos Comunes</h3>
             <div className="form-grid" style={{textAlign: 'left'}}>
+              {/* ... (campos nombre, categoria, fecha, costo) ... */}
               <div>
                 <label>Nombre recurso *</label>
                 <input
@@ -320,6 +341,35 @@ const ListaRecursos = () => {
                   disabled={isSubmitting}
                 />
               </div>
+
+              {/* --- (NUEVO) Campo de Imagen en Modal --- */}
+              <div className="grid-full">
+                <label>Cambiar Imagen (Opcional)</label>
+                {/* Muestra la imagen actual si existe */}
+                {editFormData.imagen_url && !archivo && (
+                  <div style={{marginBottom: '10px'}}>
+                    <img 
+                      src={`${apiUrl}${editFormData.imagen_url}`} 
+                      alt="Imagen actual" 
+                      style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '5px'}}
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  </div>
+                )}
+                <input
+                  type="file"
+                  name="imagen_file"
+                  onChange={handleModalFileChange}
+                  accept="image/png, image/jpeg, image/webp"
+                  disabled={isSubmitting} 
+                />
+                {archivo && (
+                  <div style={{marginTop: '10px', fontSize: '14px'}}>
+                    Nuevo archivo: <strong>{archivo.name}</strong>
+                  </div>
+                )}
+              </div>
+              {/* --- FIN CAMPO IMAGEN --- */}
             </div>
 
             {/* --- SECCIÓN COMERCIAL (CONDICIONAL) --- */}
@@ -407,6 +457,7 @@ const ListaRecursos = () => {
                       name="ubicacion"
                       value={editFormData.ubicacion || ''}
                       onChange={handleModalChange}
+                      placeholder="Ubicación física del activo"
                       disabled={isSubmitting}
                     />
                   </div>

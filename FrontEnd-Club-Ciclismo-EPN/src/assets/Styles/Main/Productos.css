@@ -1,40 +1,119 @@
-/* Estilos para la sección de productos */
+/* =================================
+   1. VARIABLES GLOBALES
+   ================================= */
+:root {
+  /* Colores Primarios */
+  --color-primario: #10325c;
+  --color-primario-oscuro: #1d3557;
+  --color-secundario: #238CBC;
+  --color-gradiente-primario: linear-gradient(135deg, var(--color-primario), var(--color-primario-oscuro));
+
+  /* Colores de Fondo */
+  --color-fondo: #f9fbff;
+  --color-fondo-claro: #f4f6f8;
+  --color-blanco: #ffffff;
+  --color-fondo-tarjeta: linear-gradient(145deg, var(--color-blanco) 0%, #f8faff 100%);
+  --color-borde: #e8f0fe;
+  --color-borde-tabla: #e5e5e5;
+
+  /* Colores de Texto */
+  --color-texto-principal: #333;
+  --color-texto-secundario: #666;
+  --color-titulo-principal: #11182f;
+  --color-titulo-gradiente: linear-gradient(135deg, var(--color-primario), var(--color-primario-oscuro));
+  --color-texto-invertido: #ffffff;
+
+  /* Fuentes */
+  --fuente-principal: 'Montserrat', sans-serif;
+
+  /* Sizing */
+  --ancho-max-container: 1200px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 20px;
+  --border-radius-circulo: 25px;
+
+  /* Sombras */
+  --sombra-tarjeta-suave: 0 6px 16px rgba(0, 0, 0, 0.06);
+  --sombra-tarjeta: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --sombra-tarjeta-hover: 0 15px 30px rgba(0, 0, 0, 0.12);
+  --sombra-tarjeta-hover-ligera: 0 10px 25px rgba(0, 0, 0, 0.1);
+  --sombra-boton-hover: 0 5px 15px rgba(16, 50, 92, 0.3);
+
+  /* Transiciones */
+  --transicion-rapida: all 0.3s ease;
+  --transicion-media: all 0.4s ease;
+}
+
+/* =================================
+   2. ESTILOS DE BOTÓN REUTILIZABLES (DRY)
+   ================================= */
+.producto-boton,
+.btn-membresia {
+  background: var(--color-gradiente-primario);
+  color: var(--color-texto-invertido);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transicion-rapida);
+  margin-top: auto;
+  text-align: center;
+}
+
+.producto-boton:hover,
+.btn-membresia:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sombra-boton-hover);
+}
+
+.producto-boton {
+  padding: 10px 24px;
+  border-radius: var(--border-radius-lg);
+}
+
+.btn-membresia {
+  padding: 12px 30px;
+  border-radius: var(--border-radius-circulo);
+  width: 100%;
+  display: block;
+  margin-top: 15px; /* Espacio entre descripción y botón */
+}
+
+
+/* =================================
+   3. SECCIÓN DE PRODUCTOS
+   ================================= */
 .productos-section {
   padding: 60px 20px;
 }
-
+/* ... (Todo tu CSS de .productos-container y .producto-card va aquí, sin cambios) ... */
 .productos-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2rem;
-  max-width: 1200px;
+  max-width: var(--ancho-max-container);
   margin: 0 auto;
 }
-
 .producto-card {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  background: var(--color-blanco);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--sombra-tarjeta-suave);
   padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: all 0.3s ease;
+  transition: var(--transicion-rapida);
   height: 100%;
 }
-
 .producto-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--sombra-tarjeta-hover-ligera);
 }
-
 .producto-img-container {
   width: 100%;
   display: flex;
   justify-content: center;
   margin-bottom: 15px;
 }
-
 .producto-img {
   width: 100%;
   max-width: 200px;
@@ -43,11 +122,9 @@
   border-radius: 10px;
   transition: transform 0.3s ease;
 }
-
 .producto-card:hover .producto-img {
   transform: scale(1.05);
 }
-
 .producto-info {
   display: flex;
   align-items: center;
@@ -55,56 +132,34 @@
   margin-top: 14px;
   width: 100%;
 }
-
 .producto-icono {
   width: 25px;
   height: 25px;
   object-fit: contain;
   flex-shrink: 0;
 }
-
 .producto-titulo {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #1d3557;
+  color: var(--color-primario-oscuro);
   text-align: left;
   margin: 0;
   line-height: 1.3;
 }
-
 .producto-descripcion {
-  color: #666;
+  color: var(--color-texto-secundario);
   font-size: 0.9rem;
   line-height: 1.4;
   margin: 10px 0;
   text-align: center;
 }
-
 .producto-precio {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #10325c;
+  color: var(--color-primario);
   margin: 10px 0;
 }
-
-.producto-boton {
-  background: linear-gradient(135deg, #10325c, #1d3557);
-  color: white;
-  border: none;
-  padding: 10px 24px;
-  border-radius: 20px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: auto;
-}
-
-.producto-boton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(16, 50, 92, 0.3);
-}
-
-/* RESPONSIVE PARA PRODUCTOS */
+/* ... Media queries de productos sin cambios ... */
 @media (max-width: 1024px) {
   .productos-container {
     grid-template-columns: repeat(2, 1fr);
@@ -112,81 +167,35 @@
     padding: 0 1rem;
   }
 }
-
 @media (max-width: 768px) {
-  .productos-section {
-    padding: 40px 15px;
-  }
-  
-  .productos-container {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-  
-  .producto-card {
-    padding: 15px;
-  }
-  
-  .producto-img {
-    height: 180px;
-    max-width: 180px;
-  }
-  
-  .producto-titulo {
-    font-size: 1rem;
-  }
+  .productos-section { padding: 40px 15px; }
+  .productos-container { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .producto-card { padding: 15px; }
+  .producto-img { height: 180px; max-width: 180px; }
+  .producto-titulo { font-size: 1rem; }
 }
-
 @media (max-width: 576px) {
-  .productos-container {
-    grid-template-columns: 1fr;
-    max-width: 400px;
-  }
-  
-  .producto-img {
-    height: 200px;
-    max-width: 200px;
-  }
-  
-  .producto-info {
-    justify-content: center;
-  }
-  
-  .producto-titulo {
-    text-align: center;
-  }
+  .productos-container { grid-template-columns: 1fr; max-width: 400px; }
+  .producto-img { height: 200px; max-width: 200px; }
+  .producto-info { justify-content: center; }
+  .producto-titulo { text-align: center; }
 }
-
 @media (max-width: 480px) {
-  .productos-section {
-    padding: 30px 10px;
-  }
-  
-  .producto-card {
-    padding: 12px;
-  }
-  
-  .producto-img {
-    height: 160px;
-    max-width: 160px;
-  }
-  
-  .producto-titulo {
-    font-size: 0.95rem;
-  }
-  
-  .producto-boton {
-    padding: 8px 20px;
-    font-size: 0.9rem;
-  }
+  .productos-section { padding: 30px 10px; }
+  .producto-card { padding: 12px; }
+  .producto-img { height: 160px; max-width: 160px; }
+  .producto-titulo { font-size: 0.95rem; }
+  .producto-boton { padding: 8px 20px; font-size: 0.9rem; }
 }
 
-/*Sección de membresías*/
-/* Membresías con más elementos visuales */
+
+/* =================================
+   4. SECCIÓN DE MEMBRESÍAS (con :hover)
+   ================================= */
 .membresias-section {
   padding: 80px 30px;
-  background: linear-gradient(135deg, #f9fbff 0%, #ffffff 100%);
-  font-family: 'Montserrat', sans-serif;
+  background: linear-gradient(135deg, var(--color-fondo) 0%, var(--color-blanco) 100%);
+  font-family: var(--fuente-principal);
   position: relative;
 }
 
@@ -194,25 +203,24 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
-  max-width: 1200px;
+  max-width: var(--ancho-max-container);
   margin: 0 auto;
   padding: 2rem 1rem;
 }
 
 .membresia-item {
-  background: linear-gradient(145deg, #ffffff 0%, #f8faff 100%);
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  background: var(--color-fondo-tarjeta);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--sombra-tarjeta);
   padding: 30px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  transition: var(--transicion-media);
+  border: 1px solid var(--color-borde);
+  position: relative; /* <-- NECESARIO PARA EL OVERLAY */
+  overflow: hidden; /* <-- NECESARIO PARA EL OVERLAY */
   min-height: 380px;
-  transition: all 0.4s ease;
-  border: 1px solid #e8f0fe;
-  position: relative;
-  overflow: hidden;
+  display: flex; /* Añadido para centrar */
+  align-items: center; /* Añadido para centrar */
+  justify-content: center; /* Añadido para centrar */
 }
 
 .membresia-item::before {
@@ -222,12 +230,22 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #10325c, #1d3557);
+  background: var(--color-gradiente-primario);
 }
 
+/* El hover ahora solo levanta la tarjeta */
 .membresia-item:hover {
   transform: translateY(-10px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--sombra-tarjeta-hover);
+}
+
+/* Parte frontal (icono y título) */
+.membresia-front {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  transition: var(--transicion-media); /* Transición para opacidad */
 }
 
 .membresia-img {
@@ -239,10 +257,6 @@
   transition: transform 0.3s ease;
 }
 
-.membresia-item:hover .membresia-img {
-  transform: scale(1.1);
-}
-
 .membresia-info {
   text-align: center;
   width: 100%;
@@ -251,46 +265,65 @@
 .membresia-titulo {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #10325c;
+  color: var(--color-primario);
   margin: 0;
-  background: linear-gradient(135deg, #10325c, #1d3557);
+  background: var(--color-titulo-gradiente);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.membresia-descripcion {
-  color: #666;
+/* --- (NUEVO) ESTILOS PARA EL OVERLAY DE HOVER --- */
+
+.membresia-details {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  
+  /* Fondo opaco oscuro (usa tus colores primarios) */
+  background-color: rgba(1, 138, 250, 0.95); 
+  
+  color: var(--color-texto-invertido);
+  padding: 30px;
+  box-sizing: border-box; /* Asegura que el padding no rompa el layout */
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+
+  /* Oculto por defecto */
+  opacity: 0;
+  transform: scale(0.95); /* Efecto de zoom suave */
+  transition: var(--transicion-media);
+}
+
+/* --- (NUEVO) LÓGICA DE HOVER --- */
+/* Cuando haces hover en el item, se muestra el overlay */
+.membresia-item:hover .membresia-details {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* (Opcional) Oculta la parte frontal al hacer hover */
+.membresia-item:hover .membresia-front {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+
+.membresia-description {
+  color: #f0f0f0; /* Un blanco un poco más suave */
   font-size: 0.95rem;
-  line-height: 1.5;
-  margin-bottom: 20px;
+  line-height: 1.6;
+  margin-bottom: 0; /* El botón dará el margen */
+  text-align: center; /* Centrado para el overlay */
 }
 
-.membresia-precio {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #10325c;
-  margin: 15px 0;
-}
-
-.membresia-boton {
-  background: linear-gradient(135deg, #10325c, #1d3557);
-  color: white;
-  border: none;
-  padding: 12px 30px;
-  border-radius: 25px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: auto;
-}
-
-.membresia-boton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(16, 50, 92, 0.3);
-}
-
-/* RESPONSIVE PARA MEMBRESÍAS */
+/* ... Media queries de membresías ... */
 @media (max-width: 1024px) {
   .membresias-container {
     grid-template-columns: repeat(2, 1fr);
@@ -298,48 +331,25 @@
     padding: 1.5rem;
   }
 }
-
 @media (max-width: 768px) {
-  .membresias-section {
-    padding: 60px 15px;
-  }
+  .membresias-section { padding: 60px 15px; }
+  .membresias-container { grid-template-columns: 1fr; max-width: 500px; gap: 1.5rem; }
+  .membresia-item { padding: 25px 20px; min-height: 350px; }
+  .membresia-img { width: 100px; height: 100px; }
   
-  .membresias-container {
-    grid-template-columns: 1fr;
-    max-width: 500px;
-    gap: 1.5rem;
+  /* En móvil, el hover no existe, así que hacemos el overlay más pequeño
+     para que el usuario intuya que hay algo, pero no lo tapa todo */
+  .membresia-details {
+    /* (Puedes ajustar esto o usar la lógica de acordeón si prefieres) */
+    padding: 20px;
   }
-  
-  .membresia-item {
-    min-height: 350px;
-    padding: 25px 20px;
-  }
-  
-  .membresia-img {
-    width: 100px;
-    height: 100px;
+  .membresia-description {
+    font-size: 0.9rem;
   }
 }
-
 @media (max-width: 480px) {
-  .membresias-section {
-    padding: 40px 10px;
-  }
-  
-  .membresias-container {
-    padding: 1rem 0.5rem;
-  }
-  
-  .membresia-item {
-    min-height: 320px;
-    padding: 20px 15px;
-  }
-  
-  .membresia-titulo {
-    font-size: 1.2rem;
-  }
-  
-  .membresia-precio {
-    font-size: 1.5rem;
-  }
+  .membresias-section { padding: 40px 10px; }
+  .membresias-container { padding: 1rem 0.5rem; }
+  .membresia-item { padding: 20px 15px; min-height: 320px; }
+  .membresia-titulo { font-size: 1.2rem; }
 }
