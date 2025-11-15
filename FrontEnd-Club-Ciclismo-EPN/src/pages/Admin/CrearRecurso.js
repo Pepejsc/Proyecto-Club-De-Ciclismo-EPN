@@ -3,25 +3,25 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import "../../assets/Styles/Admin/CrearRecurso.css";
 
+// --- 1. IMPORTAMOS getToken DE TU AUTHSERVICE ---
+import { getToken } from "../../services/authService"; 
+
+// --- 2. DEFINIMOS LA URL DE LA API ---
+const apiUrl = process.env.REACT_APP_API_URL;
+
 // Estado inicial para todos los campos posibles
 const initialState = {
-  // Campo clave
-  tipo_recurso: "", // 'COMERCIAL' o 'OPERATIVO'
-
-  // --- Campos Comunes ---
+  // ... (sin cambios)
+  tipo_recurso: "",
   nombre: "",
   descripcion: "",
   categoria: "",
   fecha_adquisicion: "",
   costo_adquisicion: "",
   observacion: "",
-
-  // --- Campos Comerciales ---
   precio_venta: "",
   stock_inicial: "",
   sku: "",
-
-  // --- Campos Operativos ---
   codigo_activo: "",
   estado: "",
   responsable: "",
@@ -30,6 +30,8 @@ const initialState = {
 
 const CrearRecurso = () => {
   const [formData, setFormData] = useState(initialState);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -41,6 +43,7 @@ const CrearRecurso = () => {
     navigate(-1);
   };
 
+  // --- validateForm (Sin cambios) ---
   const validateForm = () => {
     const {
       tipo_recurso,
@@ -52,17 +55,14 @@ const CrearRecurso = () => {
       stock_inicial,
       codigo_activo,
       estado,
-      responsable,
       ubicacion,
     } = formData;
 
-    // 1. Validar el tipo de recurso
     if (!tipo_recurso) {
       toast.error("Debe seleccionar un tipo de recurso.");
       return false;
     }
 
-    // 2. Validar campos comunes
     if (
       !nombre.trim() ||
       !fecha_adquisicion ||
@@ -73,12 +73,10 @@ const CrearRecurso = () => {
       return false;
     }
 
-    // 3. Validar campos específicos
     if (tipo_recurso === "OPERATIVO") {
       if (
         !codigo_activo.trim() ||
         !estado ||
-        !responsable.trim() ||
         !ubicacion.trim()
       ) {
         toast.error("Por favor, llene todos los campos de Activo Operativo (*).");
@@ -102,10 +100,8 @@ const CrearRecurso = () => {
       }
     }
 
-    // 4. Validar reglas de negocio (existentes)
     const selectedDate = new Date(fecha_adquisicion);
     const today = new Date();
-    // Ajuste para comparar solo fechas (ignorando la hora)
     selectedDate.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
 
@@ -113,12 +109,10 @@ const CrearRecurso = () => {
       toast.error("La fecha de adquisición no puede ser futura.");
       return false;
     }
-
     if (descripcion.trim().length < 10) {
       toast.error("La descripción debe tener al menos 10 caracteres.");
       return false;
     }
-
     if (formData.observacion && formData.observacion.length > 500) {
       toast.error("La observación no puede exceder los 500 caracteres.");
       return false;
@@ -127,62 +121,82 @@ const CrearRecurso = () => {
     return true;
   };
 
+  // --- handleSubmit (Sin cambios) ---
   const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+    setIsSubmitting(true);
     try {
-      if (!validateForm()) {
-        return;
-      }
-
-      // --- Aquí construyes el payload para la API ---
-      // 1. Empieza con los campos comunes
       let payload = {
         tipo_recurso: formData.tipo_recurso,
-        nombre: formData.nombre,
-        descripcion: formData.descripcion,
-        categoria: formData.categoria,
+        nombre: formData.nombre.trim(),
+        descripcion: formData.descripcion.trim(),
+        categoria: formData.categoria.trim() || null,
         fecha_adquisicion: formData.fecha_adquisicion,
         costo_adquisicion: parseFloat(formData.costo_adquisicion),
-        observacion: formData.observacion,
+        observacion: formData.observacion.trim() || null,
       };
 
-      // 2. Añade los campos específicos
       if (formData.tipo_recurso === "COMERCIAL") {
         payload = {
           ...payload,
           precio_venta: parseFloat(formData.precio_venta),
           stock_inicial: parseInt(formData.stock_inicial),
-          sku: formData.sku,
+          sku: formData.sku.trim() || null,
         };
       } else if (formData.tipo_recurso === "OPERATIVO") {
         payload = {
           ...payload,
-          codigo_activo: formData.codigo_activo,
+          codigo_activo: formData.codigo_activo.trim(),
           estado: formData.estado,
-          responsable: formData.responsable,
-          ubicacion: formData.ubicacion,
+          ubicacion: formData.ubicacion.trim() || null,
+          id_usuario_responsable: null 
         };
       }
 
-      console.log("Enviando a la API:", payload);
-      // Simulación de la llamada a la API
-      // await crearRecurso(payload); 
-      
-      toast.success("Recurso creado correctamente");
-      
-      // Resetea el formulario usando el estado inicial
-      setFormData(initialState);
+      console.log("📤 Enviando Payload (JSON):", payload);
+
+      const token = getToken();
+      if (!token) {
+        toast.error("Error de autenticación. Por favor, inicie sesión de nuevo.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const response = await fetch(`${apiUrl}/recursos/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      console.log("📥 Respuesta del Servidor:", result);
+
+      if (response.ok) {
+        toast.success(`✅ Recurso "${result.nombre}" creado correctamente`);
+        navigate('/admin/lista-recursos');
+      } else {
+        throw new Error(result.detail || "Error al crear el recurso");
+      }
 
     } catch (error) {
-      console.error("Error al crear recurso:", error);
-      toast.error("Hubo un problema al crear el recurso");
+      console.error("❌ Error en handleSubmit:", error);
+      toast.error(`❌ ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+
+  // --- CAMBIOS EN EL JSX ---
   return (
     <div className="editar-perfil-container">
       <h2>Crear Nuevo Recurso</h2>
 
-      {/* --- CAMPO CLAVE --- */}
       <div className="form-grid">
         <div className="grid-full">
           <label>Tipo de Recurso *</label>
@@ -190,6 +204,7 @@ const CrearRecurso = () => {
             name="tipo_recurso"
             value={formData.tipo_recurso}
             onChange={handleChange}
+            disabled={isSubmitting}
           >
             <option value="">Seleccionar tipo...</option>
             <option value="COMERCIAL">Producto Comercial (Para Venta)</option>
@@ -198,18 +213,21 @@ const CrearRecurso = () => {
         </div>
       </div>
 
-      {/* Renderiza el resto del formulario solo si se ha seleccionado un tipo */}
+      {/* Todo el formulario (incluyendo los botones) 
+          ahora está dentro de este bloque condicional */}
       {formData.tipo_recurso && (
         <>
           <h3 className="form-section-header">Campos Comunes</h3>
           <div className="form-grid">
-            <div>
+            {/* ... (campos de nombre, categoría, fecha, costo) ... */}
+             <div>
               <label>Nombre recurso *</label>
               <input
                 name="nombre"
                 value={formData.nombre}
                 onChange={handleChange}
                 placeholder="Ej: Jersey 2025, Carpa Plegable"
+                disabled={isSubmitting} 
               />
             </div>
             
@@ -220,6 +238,7 @@ const CrearRecurso = () => {
                 value={formData.categoria}
                 onChange={handleChange}
                 placeholder="Ej: Indumentaria, Mobiliario"
+                disabled={isSubmitting} 
               />
             </div>
             
@@ -230,6 +249,7 @@ const CrearRecurso = () => {
                 name="fecha_adquisicion"
                 value={formData.fecha_adquisicion}
                 onChange={handleChange}
+                disabled={isSubmitting} 
               />
             </div>
             
@@ -242,6 +262,7 @@ const CrearRecurso = () => {
                 onChange={handleChange}
                 placeholder="Ej: 25.50"
                 min="0"
+                disabled={isSubmitting} 
               />
             </div>
 
@@ -253,6 +274,7 @@ const CrearRecurso = () => {
                 onChange={handleChange}
                 placeholder="Describa el recurso..."
                 rows="3"
+                disabled={isSubmitting} 
               />
             </div>
           </div>
@@ -260,6 +282,7 @@ const CrearRecurso = () => {
           {/* --- SECCIÓN COMERCIAL (CONDICIONAL) --- */}
           {formData.tipo_recurso === "COMERCIAL" && (
             <>
+              {/* ... (campos de precio, stock, sku) ... */}
               <h3 className="form-section-header">Detalles del Producto Comercial</h3>
               <div className="form-grid">
                 <div>
@@ -271,6 +294,7 @@ const CrearRecurso = () => {
                     onChange={handleChange}
                     placeholder="Ej: 35.00"
                     min="0"
+                    disabled={isSubmitting}
                   />
                 </div>
                 <div>
@@ -282,6 +306,7 @@ const CrearRecurso = () => {
                     onChange={handleChange}
                     placeholder="Ej: 50"
                     min="0"
+                    disabled={isSubmitting}
                   />
                 </div>
                 <div>
@@ -291,6 +316,7 @@ const CrearRecurso = () => {
                     value={formData.sku}
                     onChange={handleChange}
                     placeholder="Ej: JSY-EPN-25"
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -300,6 +326,7 @@ const CrearRecurso = () => {
           {/* --- SECCIÓN OPERATIVA (CONDICIONAL) --- */}
           {formData.tipo_recurso === "OPERATIVO" && (
             <>
+              {/* ... (campos de código, estado, responsable, ubicación) ... */}
               <h3 className="form-section-header">Detalles del Activo Operativo</h3>
               <div className="form-grid">
                 <div>
@@ -309,6 +336,7 @@ const CrearRecurso = () => {
                     value={formData.codigo_activo}
                     onChange={handleChange}
                     placeholder="Ej: EPN-CARPA-001"
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -318,6 +346,7 @@ const CrearRecurso = () => {
                     name="estado"
                     value={formData.estado}
                     onChange={handleChange}
+                    disabled={isSubmitting}
                   >
                     <option value="">Seleccionar estado</option>
                     <option value="DISPONIBLE">Disponible</option>
@@ -328,12 +357,13 @@ const CrearRecurso = () => {
                 </div>
                 
                 <div>
-                  <label>Responsable *</label>
+                  <label>Responsable (Opcional por ahora)</label>
                   <input
                     name="responsable"
                     value={formData.responsable}
                     onChange={handleChange}
                     placeholder="Nombre del responsable"
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -344,6 +374,7 @@ const CrearRecurso = () => {
                     value={formData.ubicacion}
                     onChange={handleChange}
                     placeholder="Ubicación física del activo"
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -361,21 +392,31 @@ const CrearRecurso = () => {
                 onChange={handleChange}
                 placeholder="Observaciones adicionales (opcional)"
                 rows="3"
+                disabled={isSubmitting}
               />
             </div>
           </div>
+          
+          {/* --- BOTONES (MOVIDOS AQUÍ) --- */}
+          <div className="form-buttons-inline">
+            <button 
+              className="btn-send" 
+              onClick={handleSubmit} 
+              disabled={isSubmitting}
+            >
+              {/* --- CAMBIO DE TEXTO --- */}
+              {isSubmitting ? "⏳ Guardando..." : "Guardar"}
+            </button>
+            <button 
+              className="btn-cancel" 
+              onClick={handleCancel} 
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </button>
+          </div>
         </>
       )}
-
-      {/* --- BOTONES --- */}
-      <div className="form-buttons-inline">
-        <button className="btn-send" onClick={handleSubmit}>
-          Guardar
-        </button>
-        <button className="btn-cancel" onClick={handleCancel}>
-          Cancelar
-        </button>
-      </div>
     </div>
   );
 };

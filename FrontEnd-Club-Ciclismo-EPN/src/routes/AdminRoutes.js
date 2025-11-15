@@ -12,7 +12,6 @@ import ListaParticipantes from "../pages/Admin/ListaParticipantes";
 import ListaMiembros from "../pages/Admin/ListaMiembros";
 import ListaRecursos from "../pages/Admin/ListaRecursos";
 import CrearRecurso from "../pages/Admin/CrearRecurso";
-import EditarRecurso from "../pages/Admin/EditarRecurso";
 import ListaDocumentos from "../pages/Admin/ListaDocumentos";
 import CrearDocumento from "../pages/Admin/CrearDocumento";
 
@@ -33,7 +32,6 @@ const AdminRoutes = () => {
         <Route path="lista-miembros" element={<ListaMiembros />} />
         <Route path="lista-recursos" element={<ListaRecursos />} />
         <Route path="crear-recurso" element={<CrearRecurso />} />
-        <Route path="editar-recurso" element={<EditarRecurso />} />
         <Route path="lista-documentos" element={<ListaDocumentos />} />
         <Route path="crear-documento" element={<CrearDocumento />} />
       </Route>

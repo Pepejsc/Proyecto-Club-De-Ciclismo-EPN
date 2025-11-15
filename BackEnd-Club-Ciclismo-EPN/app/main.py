@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from starlette.staticfiles import StaticFiles
-from app.api.endpoints import auth, event, route, event_participant, notification, memberships, sponsors, documents
+from app.api.endpoints import auth, event, route, event_participant, notification, memberships, sponsors, documents, recurso
 from app.core.init_data import create_admin_user
 from app.db.init_db import init_db
 from app.services.scheduler_notifications import start_scheduler
@@ -28,6 +28,7 @@ app.include_router(notification.router, prefix="/notifications", tags=["notifica
 app.include_router(memberships.router, prefix="/memberships", tags=["memberships"])
 app.include_router(sponsors.router, tags=["sponsors"])
 app.include_router(documents.router, prefix="/api", tags=["documents"])
+app.include_router(recurso.router, prefix="/recursos", tags=["recursos"])
 
 # ⚙️ Inicializar base de datos y crear admin
 @app.on_event("startup")

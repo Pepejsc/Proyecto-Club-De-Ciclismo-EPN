@@ -51,16 +51,6 @@ export const rolePermissions = {
         category: "administrativo",
       },
       {
-        path: "crear-recurso",
-        label: "Crear Recurso",
-        category: "administrativo",
-      },
-      {
-        path: "editar-recurso",
-        label: "Editar Recurso",
-        category: "administrativo",
-      },
-      {
         path: "lista-documentos",
         label: "Lista de Documentos",
         category: "administrativo",
