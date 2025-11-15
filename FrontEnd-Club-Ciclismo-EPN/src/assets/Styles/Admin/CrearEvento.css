@@ -1,0 +1,193 @@
+.crear-evento-container {
+  background: white;
+  padding: 40px;
+  width: 90%;
+  max-width: 800px;  
+  margin: 40px auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  font-family: 'Montserrat', sans-serif;
+}
+
+.crear-evento-container h2 {
+  text-align: center;
+  margin-bottom: 25px;
+  font-size: 24px;
+  color: #11182f;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 25px; 
+  margin-bottom: 20px;
+}
+
+.form-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px; 
+  margin-bottom: 12px; 
+}
+
+.grid-full {
+  grid-column: 1 / -1;
+  margin-bottom: 15px;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+input[type="datetime-local"] {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  color: #555;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+input[type="datetime-local"]::placeholder {
+  color: #999;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-buttons-inline {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-send,
+.btn-cancel {
+  width: 140px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  font-family: 'Montserrat', sans-serif;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-send {
+  background-color: #2196F3;
+  color: white;
+}
+
+.btn-send:hover {
+  background-color: #4dabf7;
+  box-shadow: 0 4px 10px rgba(33, 150, 243, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-cancel {
+  background-color: #D93E3E;
+  color: white;
+}
+
+.btn-cancel:hover {
+  background-color: #f1646c;
+  box-shadow: 0 4px 10px rgba(220, 53, 69, 0.25);
+  transform: translateY(-1px);
+}
+
+
+/* === Input de Imagen Personalizado === */
+.custom-file-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: white;
+  padding: 0 12px;
+  transition: all 0.3s ease;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  color: #111;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.custom-file-input input[type="file"] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.custom-file-input .file-text {
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: inherit;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.custom-file-input .upload-icon {
+  color: #999;
+  font-size: 16px;
+  margin-left: 8px;
+  transition: color 0.3s ease;
+}
+
+.custom-file-input.file-selected {
+  border: 1px solid #2994ff;
+  box-shadow: 0 0 0 3px rgba(41, 148, 255, 0.2);
+  color: #2994ff;
+}
+
+.custom-file-input.file-selected .upload-icon {
+  color: #2994ff;
+}
+
+.remove-button {
+  position: absolute;
+  left: 10px;
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s ease, color 0.3s ease;
+  z-index: 2;
+}
+
+.custom-file-input:hover .remove-button {
+  opacity: 1;
+}
+
+.custom-file-input.file-selected:hover .remove-button {
+  color: #2994ff;
+}

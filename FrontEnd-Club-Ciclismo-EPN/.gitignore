@@ -1,0 +1,103 @@
+# ==============================
+# React (Frontend)
+# ==============================
+
+# Node dependencies
+/node_modules/
+.pnp/
+.pnp.js
+
+# Build output
+/build/
+
+# Test coverage
+/coverage/
+
+# Local environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor settings
+.vscode/
+.idea/
+.DS_Store
+
+# ==============================
+# Python / FastAPI (Backend)
+# ==============================
+
+# Byte-compiled files
+*.py[cod]
+__pycache__/
+*.so
+
+# Virtual environments
+env/
+venv/
+.venv/
+
+# Database files
+*.sqlite3
+*.db
+
+# Instance and settings folders
+instance/
+.settings/
+.mypy_cache/
+.pytest_cache/
+
+# Local IDE settings
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Environment variables (again, in case backend uses own .env)
+/backend/.env
+/backend/.env.*
+
+# ==============================
+# System Files
+# ==============================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ==============================
+# General
+# ==============================
+
+# Coverage reports
+htmlcov/
+
+# pytest
+.cache
+
+# Pyre type checker
+.pyre/
+
+# VSCode launch settings
+.vscode/launch.json
+.vscode/settings.json
+.vscode/tasks.json
+
+# Optional: other Python tooling
+.pytype/

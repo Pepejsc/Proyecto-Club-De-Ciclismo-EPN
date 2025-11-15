@@ -1,0 +1,44 @@
+.eventos-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  padding: 30px;
+  width: 100%;
+  box-sizing: border-box;
+  justify-content: center;
+
+}
+
+
+.eventos-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.eventos-titulo {
+  font-size: 28px;
+  font-weight: 700;
+  color: #11182f;
+  margin-bottom: 20px;
+}
+
+.eventos-subtitulo {
+  font-size: 17px;
+  color: #666;
+  font-weight: 600;
+}
+
+
+/* Pantallas medianas: 2 columnas */
+@media (min-width: 768px) {
+  .eventos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Pantallas grandes: 3 columnas */
+@media (min-width: 1200px) {
+  .eventos-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

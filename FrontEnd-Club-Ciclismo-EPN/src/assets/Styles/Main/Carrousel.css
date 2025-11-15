@@ -1,0 +1,101 @@
+.banner-container {
+  position: relative;
+  width: 100%;
+  height: 480px; /* ajusta según tu diseño */
+  overflow: hidden;
+}
+
+.banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45); /* ✅ Filtro oscuro */
+  z-index: 1;
+}
+
+.banner-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  color: #fff;
+  text-align: center;
+}
+
+.banner-text h1 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  font-family: "Montserrat", sans-serif;
+  margin: 0;
+}
+
+/* ✅ Animación suave */
+.fade-in {
+  animation: fadeInUp 1s ease-out both;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -40%);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@media (max-width: 480px) {
+  .banner-container {
+    height: 280px;
+  }
+
+  .banner-text h1 {
+    font-size: 1.4rem;
+  }
+}
+
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .slider-image, .carousel-slide {
+    height: 300px;
+  }
+
+  .carousel-title {
+    font-size: 1.8rem;
+  }
+
+  .carousel-control-prev-icon,
+  .carousel-control-next-icon {
+    width: 30px;
+    height: 30px;
+  }
+    .banner-container {
+    height: 350px;
+  }
+
+  .banner-text h1 {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .slider-image, .carousel-slide {
+    height: 220px;
+  }
+
+  .carousel-title {
+    font-size: 1.4rem;
+  }
+}

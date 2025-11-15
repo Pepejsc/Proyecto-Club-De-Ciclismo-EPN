@@ -1,0 +1,117 @@
+.auspiciantes-section {
+  max-width: 990px;
+  margin: 0 auto;
+  padding: 60px 40px 40px 40px; /* ⬅️ ajuste inferior a 60px */
+  text-align: center;
+}
+
+.auspiciantes-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 40px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Contenedor por slide, para centrar verticalmente */
+.auspiciante-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 150px;                  /* altura consistente para alinear vertical */
+}
+
+/* Imagen estándar */
+.auspiciante-img {
+  max-height: 115px;
+  object-fit: contain;
+  margin: 0 auto;
+  transition: transform 0.3s ease;
+  border-radius: 12px; 
+
+}
+
+/* Imagen más grande */
+.auspiciante-img.grande {
+  max-height: 140px;
+}
+
+/* Animación al pasar */
+.auspiciante-img:hover {
+  transform: scale(1.05);
+}
+
+/* Paginación de Swiper */
+
+.swiper-pagination {
+  position: relative;
+  margin-top: 40px !important;
+  padding-bottom: 10px;
+}
+
+
+
+.swiper-pagination-bullet {
+  background-color: #aaa;
+  opacity: 0.4;
+  width: 10px;
+  height: 10px;
+  margin: 0 5px !important;
+}
+
+.swiper-pagination-bullet-active {
+  background-color: #000;
+  opacity: 1;
+}
+
+@media (max-width: 1024px) {
+  .auspiciante-img {
+    max-height: 95px;
+  }
+
+  .auspiciante-img.grande {
+    max-height: 115px;
+  }
+
+  .auspiciante-wrapper {
+    height: 130px;
+  }
+}
+
+/* Celulares grandes */
+@media (max-width: 768px) {
+  .auspiciante-img {
+    max-height: 85px;
+  }
+
+  .auspiciante-img.grande {
+    max-height: 100px;
+  }
+
+  .auspiciante-wrapper {
+    height: 120px;
+  }
+
+  .auspiciantes-title {
+    font-size: 23px;
+  }
+}
+
+/* Celulares pequeños */
+@media (max-width: 480px) {
+  .auspiciante-img {
+    max-height: 80px;
+  }
+
+  .auspiciante-img.grande {
+    max-height: 90px;
+  }
+
+  .auspiciante-wrapper {
+    height: 110px;
+  }
+
+  .auspiciantes-title {
+    font-size: 22px;
+  }
+}

@@ -1,0 +1,73 @@
+.custom-footer {
+  background-color: #0d1224;
+  text-align: center;
+  overflow: hidden;
+  padding-top: 40px;
+  position: relative;
+  height:200px
+}
+
+.social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  margin-bottom: 35px;
+}
+
+.social-icons a {
+  color: white;
+  font-size: 24px;
+  border: 2px solid white;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  text-decoration: none;
+
+}
+
+.social-icons a:hover {
+  background-color: white;
+  color: #0d1224;
+}
+
+/* Arco simulado usando un círculo */
+.footer-curve-arc {
+  margin-top: 10px;
+  width: 750px;
+  height: 750px;
+  background-color: white;
+  border-radius: 50%;
+  position: relative;
+  justify-content: center;
+  text-align: center;
+  display: flex;
+
+  left: 50%;                    
+  transform: translateX(-50%);  
+  position: absolute;           
+}
+
+/* Logo y texto dentro del arco */
+.footer-content {
+  position: absolute;
+  top: -35px; /* Hace que el logo sobresalga */
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.footer-logo {
+  width: 75px;
+  margin-bottom: 10px;
+}
+
+.footer-content p {
+  font-size: 13px;
+  color: #333;
+  margin: 2px 0;
+  font-weight: 500;
+}

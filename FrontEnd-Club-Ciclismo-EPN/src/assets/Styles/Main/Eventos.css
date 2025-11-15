@@ -1,0 +1,75 @@
+.banner-overlay {
+  position: relative;
+  width: 100%;
+  height: 65vh;
+  overflow: hidden;
+  background-color: #000; /* fallback en caso de error de imagen */
+}
+
+.banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.45);
+  display: block;
+}
+
+.banner-text {
+  position: absolute;
+  top: 42%; /* 👈 mejora visual, más alto */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  text-align: center;
+  padding: 0 20px;
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+  max-width: 90%;
+}
+
+.banner-text h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  line-height: 1.2;
+  word-wrap: break-word;
+}
+
+.btn-banner {
+  display: inline-block;
+  padding: 12px 28px;
+  background-color: #ffffff;
+  color: #10325c;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 30px;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-banner:hover {
+  background-color: #10325c;
+  color: #ffffff;
+}
+
+/* 📱 Responsivo */
+@media (max-width: 768px) {
+  .banner-overlay {
+    height: 60vh;
+  }
+
+  .banner-text {
+    top: 46%; /* ajustado para mejor centrado en móvil */
+    max-width: 95%;
+  }
+
+  .banner-text h1 {
+    font-size: 2rem;
+  }
+
+  .btn-banner {
+    font-size: 0.9rem;
+    padding: 10px 22px;
+  }
+}

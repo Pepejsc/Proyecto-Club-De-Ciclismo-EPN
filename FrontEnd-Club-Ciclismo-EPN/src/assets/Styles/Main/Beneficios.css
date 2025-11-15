@@ -1,0 +1,103 @@
+.seccion-beneficios {
+  position: relative;
+  padding: 60px 20px 80px;
+  background: linear-gradient(to right, #d4dee9, #c1d9ec);
+  color: #ffffff;
+  text-align: center;
+  overflow: hidden;
+  clip-path: ellipse(130% 100% at 50% 0%);
+}
+
+.seccion-beneficios h2 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #53172f; /* vino oscuro para contraste */
+  margin-bottom: 60px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.beneficios-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto 40px;
+}
+
+.beneficio-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 12px 30px rgba(160, 60, 88, 0.15);
+  padding: 35px 30px;
+  width: 280px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.beneficio-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(160, 60, 88, 0.25);
+}
+
+.icono-beneficio {
+  font-size: 3rem;
+  color: #a03c58; 
+  margin-bottom: 20px;
+}
+
+.beneficio-card h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #53172f; /* vino oscuro */
+}
+
+.beneficio-card p {
+  font-size: 1rem;
+  color: #444;
+  line-height: 1.5;
+}
+
+.btn-unete-container {
+  margin-top: 30px;
+}
+
+.btn-unete {
+  background-color: #a03c58; /* vino claro */
+  color: white;
+  padding: 14px 36px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(160, 60, 88, 0.3);
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.btn-unete:hover {
+  background-color: #7a2e43; /* vino más profundo */
+  transform: scale(1.04);
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 768px) {
+  .seccion-beneficios {
+    padding: 80px 20px 60px;
+    clip-path: ellipse(150% 100% at 50% 0%);
+  }
+
+  .seccion-beneficios h2 {
+    font-size: 1.4rem;
+    margin-bottom: 40px;
+  }
+
+  .beneficio-card {
+    width: 90%;
+    max-width: 360px;
+  }
+
+  .btn-unete {
+    font-size: 1rem;
+    padding: 12px 28px;
+  }
+}

@@ -1,0 +1,132 @@
+.notification-card {
+  position: relative;
+  background-color: #fff;
+  border-left: 6px solid #238cbc;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+
+.notification-card.read {
+  background-color: #f0f2f5; 
+  border-left: 6px solid #d3d3d3;
+  box-shadow: none;
+  opacity: 0.85;
+}
+
+.notification-card:hover {
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.notification-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  border: none;
+  background: none;
+  color: #b0b0b0;
+  font-size: 15px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.notification-close-btn:hover {
+  color: #ff5252;
+}
+
+.notification-badge {
+  font-size: 17px;
+  font-weight: bold;
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  color: white;
+  letter-spacing: 0.5px;
+}
+
+.badge-new {
+  background-color: #4caf50;
+}
+
+.badge-update {
+  background-color: #fb8c00;
+}
+
+.badge-cancel {
+  background-color: #e53935;
+}
+
+.badge-recording {
+  background-color: #18B7CA;
+}
+
+.notification-message {
+  font-size: 16px;
+  color: #263238;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.notification-date {
+  font-size: 15px;
+  color: #757575;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.9;
+}
+
+.sin-notificaciones-box {
+  text-align: center;
+  padding: 30px 20px;
+  background-color: transparent;
+  max-width: 480px;
+  margin: 80px auto;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.icono-notificacion-vacia {
+  margin-bottom: 20px;
+}
+
+.sin-notificaciones-box h3 {
+  font-size: 20px;
+  color: #444;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.sin-notificaciones-box p {
+  font-size: 15px;
+  color: #888;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes flashRead {
+  0% {
+    background-color: #c8e6c9;
+  }
+  100% {
+    background-color: #f5f7fa;
+  }
+}
+
+.notification-card.just-read {
+  animation: flashRead 1s ease forwards;
+}

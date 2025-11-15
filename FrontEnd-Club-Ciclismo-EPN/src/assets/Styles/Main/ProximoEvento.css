@@ -1,0 +1,225 @@
+/* SECCIÓN PRINCIPAL */
+.proximo-evento-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+  font-family: 'Montserrat', sans-serif;
+
+}
+
+
+/* TÍTULO */
+.eventos-title {
+  font-size: 2rem;
+  font-weight: 800;
+  text-align: center;
+  color: #10325c;
+  margin-bottom: 50px;
+  margin-top:60px
+}
+
+/* LISTA DE CARDS DE EVENTOS */
+.eventos-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  justify-content: center;
+  max-width: 1000px;
+  margin: 0 auto 32px;
+  margin-top: 60px;
+}
+
+
+
+/* TARJETA DE EVENTO */
+.evento-card-public {
+  width: 100%;
+  max-width: 280px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.evento-card-public:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+.evento-card-public-img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.evento-card-public h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 12px 16px 4px;
+  color: #10325c;
+}
+
+.evento-card-public p {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0 16px 16px;
+}
+
+/* TARJETA DESTACADA */
+.evento-destacado {
+  display: flex;
+  flex-wrap: wrap;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2c3e50 0%, #1d3557 50%, #0f2027 100%);
+  color: white;  color: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.evento-info {
+  flex: 1;
+  padding: 40px;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.proximo-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+    color: #b8c2cc; /* un poco más claro que el actual */
+  letter-spacing: 0.5px;
+}
+
+.evento-nombre {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: #ffffff;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3); 
+}
+
+
+.evento-fecha {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  margin-bottom: 16px;
+}
+
+.evento-descripcion {
+  font-size: 1rem;
+  color: #f1f5f9;
+  margin-bottom: 30px;
+}
+
+/* BOTONES */
+.evento-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.btn-inscribirse {
+  padding: 12px 24px;
+  background-color: #ffffff;
+  color: #10325c;
+  border: none;
+  border-radius: 24px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-inscribirse:hover {
+  background-color: #f1f1f1;
+}
+
+.btn-ver-ruta {
+  padding: 12px 24px;
+  background-color: transparent;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  border-radius: 24px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-ver-ruta:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* IMAGEN DESTACADA */
+.evento-imagen-container {
+  flex: 1;
+  min-width: 320px;
+}
+
+.evento-imagen {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.9);
+}
+
+/* RESPONSIVE */
+@media screen and (max-width: 768px) {
+  .evento-destacado {
+    flex-direction: column;
+  }
+
+  .evento-buttons {
+    flex-direction: column;
+  }
+
+  .evento-card-public {
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .eventos-list {
+    flex-direction: column;
+    align-items: center;
+  }
+    .evento-buttons {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-inscribirse, .btn-ver-ruta {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.ver-mas-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.btn-ver-mas {
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #ff6b00;
+  color: #ffffff;
+  border: none;
+  border-radius: 24px;
+  box-shadow: 0 4px 14px rgba(255, 107, 0, 0.25);
+  transition: all 0.3s ease;
+}
+
+.btn-ver-mas:hover {
+  background-color: #e65c00;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.35);
+}

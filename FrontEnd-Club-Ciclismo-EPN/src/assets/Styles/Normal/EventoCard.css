@@ -1,0 +1,208 @@
+.eventos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); 
+  gap: 24px;
+  padding: 40px 30px;
+  justify-items: center;
+}
+
+.evento-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  font-family: 'Montserrat', sans-serif;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  max-width: 420px; /* antes: 380px */
+  min-width: 340px;
+  margin: 0;
+}
+
+.evento-card-header {
+  position: relative;
+  height: 200px;
+  background-color: #f4f4f4;
+}
+
+.imagen-evento {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.evento-fecha-box {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #ffffff;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: bold;
+  width: 48px;
+  height: 50px;
+  padding: 4px 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.evento-fecha-box .dia {
+  font-size: 18px;
+  color: #000000;
+  line-height: 1;
+}
+
+.evento-fecha-box .mes {
+  font-size: 15px;
+  color: #e63946;
+  line-height: 1;
+}
+
+.evento-icono-overlay {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 50%;
+  padding: 6px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+
+.evento-icono-overlay img {
+  height: 28px;
+  width: 28px;
+}
+
+.contenido {
+  padding: 25px 20px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.etiqueta {
+  background-color: #BAE7FC;
+  color: #238CBC;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  display: inline-block;
+  width: fit-content;        
+  max-width: 100%;           
+  margin-bottom: 12px;
+  margin-top: 7px;
+}
+
+h3 {
+  margin: 0 0 15px;
+  color: #11182f;
+  font-size: 20px;
+}
+
+p {
+  margin: 6px 0;
+  font-size: 16px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-ver,
+.btn-enrolarse {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-ver {
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  color: #111;
+}
+
+.btn-ver:hover {
+  background-color: #f0f0f0;
+}
+
+.btn-enrolarse {
+  background-color: #e63946;
+  color: white;
+}
+
+.btn-enrolarse:hover {
+  background-color: #c92c39;
+}
+
+.btn-enrolarse.cancelar {
+  background-color: #ffffff;
+  color: #e63946;
+  border: 2px solid #e63946;
+  font-weight: 600;
+  padding: 10px 14px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.btn-enrolarse.cancelar:hover {
+  background-color: #fff5f5;
+  color: #c82333;
+  border-color: #c82333;
+}
+
+
+.contenido p svg {
+  font-size: 20px;
+  color: #D93E3E; 
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.badge-inscrito {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background-color: #28a745;
+  color: white;
+  padding: 4px 10px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 5px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  z-index: 2;
+}
+.btn-enrolarse.disabled {
+  background-color: #e0e0e0;
+  color: #666;
+  border: none;
+  font-weight: 600;
+  cursor: not-allowed;
+  box-shadow: none;
+  transition: none;
+}

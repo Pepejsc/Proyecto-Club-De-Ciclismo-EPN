@@ -1,0 +1,232 @@
+/* FORMULARIO DE CONTACTO EXACTO */
+.contacto-exacto-section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 60px 20px;
+  background: #f8f9fa;
+}
+
+.contacto-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.contacto-header h1 {
+  font-size: 2.5rem;
+  color: #0077c2;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.contacto-header .descripcion {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 15px;
+  text-align: justify;
+}
+
+.contacto-header .subtitle {
+  font-size: 1.3rem;
+  color: #0077c2;
+  font-weight: 600;
+  margin-bottom: 30px;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* FORMULARIO EXACTO */
+.formulario-exacto {
+  background: white;
+  padding: 50px;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.campo-grupo {
+  margin-bottom: 30px;
+}
+
+.campo-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.campo-label strong {
+  font-weight: 700;
+}
+
+.campo-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: 'Montserrat', sans-serif;
+  background: #fafbfc;
+  transition: all 0.3s ease;
+}
+
+.campo-input:focus {
+  outline: none;
+  border-color: #1d3557;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(29, 53, 87, 0.1);
+}
+
+.campo-input::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+.campo-textarea {
+  resize: vertical;
+  min-height: 120px;
+  font-family: 'Montserrat', sans-serif;
+  width: 100%;
+  box-sizing: border-box; /* ⬅️ ESTA LÍNEA ES CLAVE */
+}
+
+/* CAMPO ARCHIVO */
+.archivo-grupo {
+  margin-bottom: 40px;
+}
+
+.archivo-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.archivo-descripcion {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+  font-style: italic;
+}
+
+.archivo-input {
+  width: 100%;
+  padding: 12px 16px; /* ⬅️ AÑADE ESTE PADDING */
+  border: 2px solid #e1e5e9; /* ⬅️ AÑADE ESTE BORDER */
+  border-radius: 8px; /* ⬅️ AÑADE ESTE BORDER-RADIUS */
+  background: #fafbfc; /* ⬅️ AÑADE ESTE BACKGROUND */
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-sizing: border-box; /* ⬅️ ESTA LÍNEA ES CLAVE */
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+}
+
+.archivo-input:hover {
+  border-color: #1d3557;
+  background: #f0f4f8;
+}
+
+.archivo-input input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* LÍNEA SEPARADORA */
+.separador {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e1e5e9, transparent);
+  margin: 40px 0;
+}
+
+/* BOTÓN ENVIAR */
+.btn-enviar-exacto {
+  width: 100%;
+  background:  #2196F3;
+  color: white;
+  padding: 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-enviar-exacto:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(29, 53, 87, 0.3);
+}
+
+.btn-enviar-exacto:active {
+  transform: translateY(0);
+}
+
+/* En tu Contacto.css */
+.toast-success {
+  background: linear-gradient(135deg, #39B9C2, #2a8a91) !important;
+  color: white !important;
+  font-weight: bold;
+}
+
+.toast-error {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+  font-weight: bold;
+}
+
+.toast-loading {
+  background: #f8fafc !important;
+  border-left: 4px solid #39B9C2 !important;
+}
+
+/* RESPONSIVE EXACTO */
+@media (max-width: 768px) {
+  .contacto-exacto-section {
+    padding: 40px 15px;
+  }
+  
+  .contacto-header h1 {
+    font-size: 2rem;
+  }
+  
+  .contacto-header .subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .formulario-exacto {
+    padding: 30px 25px;
+  }
+  
+  .campo-grupo {
+    margin-bottom: 25px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contacto-exacto-section {
+    padding: 30px 10px;
+  }
+  
+  .contacto-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .formulario-exacto {
+    padding: 25px 20px;
+  }
+  
+  .campo-input {
+    padding: 10px 12px;
+  }
+  
+  .btn-enviar-exacto {
+    padding: 14px;
+    font-size: 1rem;
+  }
+}

@@ -1,0 +1,11 @@
+# Ignorar dependencias locales y archivos de compilación
+node_modules
+build
+
+# Archivos sensibles y configuración local
+.env
+
+# Archivos de sistema o temporales
+.DS_Store
+.vscode
+*.log

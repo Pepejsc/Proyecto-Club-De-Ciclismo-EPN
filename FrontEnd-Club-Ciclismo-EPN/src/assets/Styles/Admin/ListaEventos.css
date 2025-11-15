@@ -1,0 +1,167 @@
+.eventos-container {
+  padding: 30px;
+  background-color: #f4f6f8;
+  border-radius: 10px;
+  margin: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.eventos-container h2 {
+  color: #11182f;
+  margin-bottom: 25px;
+  text-align: center;
+  font-size: 24px;
+  color: #11182f;
+}
+
+.tabla-eventos {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tabla-eventos thead {
+  background-color: #238CBC;
+  color: white;
+  font-size: 16px;
+  text-align: left;
+  height: 60px;
+}
+
+.tabla-eventos thead tr:hover {
+  background-color: #238CBC !important;
+}
+
+.tabla-eventos thead th {
+  background-color: #238CBC;
+  color: white;
+  font-weight: 600;
+}
+
+.tabla-eventos th,
+.tabla-eventos td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.tabla-eventos tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+.tabla-eventos td {
+  font-size: 14px;
+  color: #333;
+}
+
+/* Botones */
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  margin: 0 5px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-action.editar {
+  background-color: #007bff;
+}
+
+.btn-action.eliminar {
+  background-color: #dc3545;
+}
+
+/* Celda de punto de encuentro */
+td.punto-encuentro:hover {
+  overflow: visible;
+  white-space: normal;
+  background-color: #f0f0f0;
+  z-index: 10;
+  position: relative;
+}
+
+th.punto-encuentro,
+td.punto-encuentro {
+  max-width: 250px;
+  width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-ver-punto {
+  background-color: #ffffff;
+  border: 1.5px solid #1c62b9;
+  color: #1c62b9;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn-ver-punto i {
+  font-size: 16px;
+}
+
+.btn-ver-punto:hover {
+  background-color: #1c62b9;
+  color: #ffffff;
+}
+
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  .tabla-eventos thead {
+    display: none;
+  }
+
+  .tabla-eventos tr {
+    display: block;
+    background-color: white;
+    border-radius: 10px;
+    margin: 15px auto;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    padding: 15px;
+    width: 95%;
+    max-width: 700px;
+    border: none;
+  }
+
+  .tabla-eventos td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 10px;
+    border: none;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+  }
+
+  .tabla-eventos td:last-child {
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    border-bottom: none;
+  }
+
+  .tabla-eventos td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #11182f;
+    margin-right: 10px;
+    min-width: 120px;
+  }
+}

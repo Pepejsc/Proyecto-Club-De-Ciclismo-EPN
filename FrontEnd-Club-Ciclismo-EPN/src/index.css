@@ -1,0 +1,100 @@
+/* Importa Montserrat desde Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
+/* ==================== ESTILO GLOBAL ==================== */
+
+html, body {
+  height: 100%; 
+}
+
+body {
+  font-family: "Montserrat", sans-serif;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body,
+input,
+select,
+textarea,
+button {
+  font-family: 'Montserrat', sans-serif !important;
+}
+
+/* ==================== TOAST PERSONALIZADO ==================== */
+.custom-toast {
+  min-width: 400px;
+  max-width: 600px;
+}
+
+/* ==================== INPUTS ==================== */
+.input-error-border {
+  border: 2px solid #dc3545 !important;
+  outline: none;
+}
+
+/* ==================== SELECTS ==================== */
+select {
+  background-color: white;
+  color: #11182f;
+  font-family: 'Montserrat', sans-serif;
+}
+
+select option {
+  background-color: white;
+  color: #11182f;
+}
+
+select option:checked {
+  background-color: #e6f0ff;
+  color: #11182f;
+}
+
+/* ==================== LAYOUT GENERAL ==================== */
+.dashboard-layout {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Sidebar fijo */
+.sidebar {
+  width: 275px;
+  background-color: #0e1a2b;
+  flex-shrink: 0;
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+}
+
+/* Contenedor principal */
+.main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #f4f6f8;
+}
+
+/* ==================== CONTENIDO PRINCIPAL ==================== */
+.main-content {
+  flex: 1;
+  padding: 40px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 80px !important;
+  }
+
+  .main-content {
+    padding: 80px 10px;
+  }
+}
+

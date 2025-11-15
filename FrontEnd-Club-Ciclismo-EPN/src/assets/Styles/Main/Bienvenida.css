@@ -1,0 +1,90 @@
+.bienvenida-section {
+  background-color: #ffffff;
+  text-align: center;
+  padding: 80px 20px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.bienvenida-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.bienvenida-container h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  color: #10325c;
+}
+
+.bienvenida-container p {
+  font-size: 1.3rem;
+  font-weight: 400;
+  margin-bottom: 40px;
+  color: #555;
+}
+
+.btn-conocenos {
+  background-color: #007bff;
+  color: white;
+  padding: 14px 32px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.btn-conocenos:hover {
+  background-color: #0056b3;
+  transform: scale(1.03);
+}
+
+/* ==== TÍTULO ==== */
+.auspiciantes-header {
+  width:100%;
+  margin-top:30px;
+  margin-bottom:30px
+}
+
+.ausp-title-bar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+}
+
+.ausp-title {
+  font-size: 26px;
+  font-weight: 700;
+  font-family: 'Montserrat', sans-serif;
+  white-space: nowrap;
+  display: flex;
+  gap: 6px;
+  margin: 0;
+}
+
+.ausp-title .black {
+  color: black;
+  font-weight: 900;
+}
+
+.ausp-title .blue {
+  color: #23BCCC;
+  font-weight: 700;
+}
+
+.line {
+  background-color: #23BCCC;
+  height: 9px;
+}
+
+.line-left {
+  width: 40px;
+}
+
+.line-right {
+  flex-grow: 1;
+}

@@ -1,0 +1,19 @@
+.header {
+  background-color: #11182f;
+  padding: 20px;
+  color: white;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+
+.header-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}

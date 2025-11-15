@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Código de Verificación - Club Ciclismo EPN</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Arial', sans-serif; background-color: #f5f5f5; line-height: 1.6;">
+    <!-- Contenedor principal -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5; padding: 40px 0;">
+        <tr>
+            <td align="center">
+                <!-- Tarjeta del email -->
+                <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
+                    <!-- Header con logo -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #39B9C2 0%, #2a8a91 100%); padding: 30px 0; text-align: center;">
+                            <!-- CAMBIO: URL pública o base64 -->
+                            <img src="cid:club_logo" 
+                                 alt="Club Ciclismo EPN" 
+                                 style="max-width: 120px; height: auto; display: block; margin: 0 auto; border: 0;">
+                            <h1 style="color: white; margin: 15px 0 0 0; font-size: 24px; font-weight: bold;">
+                                CLUB CICLISMO EPN
+                            </h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Contenido principal -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 22px; text-align: center;">
+                                Recuperación de Contraseña
+                            </h2>
+                            
+                            <p style="color: #666666; font-size: 16px; text-align: center; margin: 0 0 25px 0;">
+                                Has solicitado restablecer tu contraseña. Utiliza el siguiente código de verificación:
+                            </p>
+                            
+                            <!-- Código de verificación -->
+                            <div style="text-align: center; margin: 30px 0;">
+                                <div style="background: linear-gradient(135deg, #39B9C2 0%, #2a8a91 100%); color: white; font-size: 32px; font-weight: bold; letter-spacing: 8px; padding: 20px; border-radius: 8px; display: inline-block; min-width: 280px;">
+                                    {{body.code}}
+                                </div>
+                            </div>
+                            
+                            <!-- Información de expiración -->
+                            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 4px solid #39B9C2; margin: 25px 0;">
+                                <p style="color: #666666; font-size: 14px; margin: 0; text-align: center;">
+                                    ⏰ <strong>Este código expirará el:</strong><br>
+                                    <span style="color: #39B9C2; font-weight: bold;">{{body.date}}</span>
+                                </p>
+                            </div>
+                            
+                            <!-- Instrucciones adicionales -->
+                            <div style="color: #666666; font-size: 14px; text-align: center; margin-top: 30px;">
+                                <p style="margin: 0 0 10px 0;">
+                                    💡 <strong>Consejo de seguridad:</strong> No compartas este código con nadie.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #181D31; padding: 25px 30px; text-align: center;">
+                            <p style="color: #ffffff; font-size: 14px; margin: 0 0 10px 0; font-weight: bold;">
+                                ¿No solicitaste este código?
+                            </p>
+                            <p style="color: #cccccc; font-size: 13px; margin: 0;">
+                                Si no realizaste esta solicitud, por favor ignora este mensaje.<br>
+                                Tu cuenta permanecerá segura.
+                            </p>
+                            
+                            <!-- Información de contacto -->
+                            <div style="border-top: 1px solid #2d3748; margin-top: 20px; padding-top: 15px;">
+                                <p style="color: #39B9C2; font-size: 12px; margin: 5px 0;">
+                                    Club Ciclismo EPN - Escuela Politécnica Nacional
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Footer adicional -->
+                <table width="600" cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px;">
+                    <tr>
+                        <td style="text-align: center;">
+                            <p style="color: #999999; font-size: 12px; margin: 0;">
+                                Este es un mensaje automático, por favor no respondas a este correo.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

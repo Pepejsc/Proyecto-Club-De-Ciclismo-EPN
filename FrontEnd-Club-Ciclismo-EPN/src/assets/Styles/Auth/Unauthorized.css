@@ -1,0 +1,76 @@
+/* Asegura que el componente ocupe toda la pantalla */
+.unauthorized-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;       /* altura total del viewport */
+    width: 100vw;        /* ancho total del viewport */
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  /* Estilo del contenedor principal del mensaje */
+  .unauthorized-container {
+    width: 100%;
+    max-width: 500px;
+    background: #fff;
+    padding: 40px 30px;
+    text-align: center;
+    border-radius: 16px;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    font-family: 'Montserrat', sans-serif;
+    animation: fadeInUp 0.5s ease-in-out;
+  }
+  
+  /* Imagen superior */
+  .unauthorized-image {
+    width: 120px;
+    margin-bottom: 20px;
+  }
+  
+  /* Título */
+  .unauthorized-container h2 {
+    font-size: 26px;
+    color: red;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+  
+  /* Mensaje descriptivo */
+  .unauthorized-container p {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 25px;
+  }
+  
+  /* Botón de cerrar sesión */
+  .btn-logout {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 12px 28px;
+    font-size: 15px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s;
+  }
+  
+  .btn-logout:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+  }
+  
+  /* Animación de entrada */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
