@@ -22,6 +22,10 @@ import Products from './pages/Main/Productos';
 import Contacto from './pages/Main/Contacto';
 import Auspiciantes from './pages/Main/Auspiciantes';
 
+// --- (NUEVO) 1. Importa tu componente VerProducto ---
+import VerProducto from './pages/Main/VerProducto'; // (Asegúrate que la ruta sea correcta)
+
+
 const App = () => {
   return (
     <Router>
@@ -43,6 +47,11 @@ const App = () => {
             <Route path="/productos" element={<Products/>}/>
             <Route path="/auspiciantes" element={<Auspiciantes/>}/>
             <Route path="/contacto" element={<Contacto/>}/>
+
+            {/* --- (NUEVO) 2. Añade la ruta dinámica para VerProducto --- */}
+            {/* :id es un parámetro que leeremos (ej. /producto/5) */}
+            <Route path="/producto/:id" element={<VerProducto />} />
+
             {/* Rutas protegidas */}
             <Route
               path="/admin/*"

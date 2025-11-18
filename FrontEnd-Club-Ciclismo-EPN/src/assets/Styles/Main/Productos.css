@@ -80,12 +80,11 @@
 
 
 /* =================================
-   3. SECCIÓN DE PRODUCTOS
+   3. SECCIÓN DE PRODUCTOS (MODIFICADA)
    ================================= */
 .productos-section {
   padding: 60px 20px;
 }
-/* ... (Todo tu CSS de .productos-container y .producto-card va aquí, sin cambios) ... */
 .productos-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -93,6 +92,9 @@
   max-width: var(--ancho-max-container);
   margin: 0 auto;
 }
+
+/* --- (CAMBIO) .producto-card --- */
+/* (Aseguramos que 'height: 100%' funcione) */
 .producto-card {
   background: var(--color-blanco);
   border-radius: var(--border-radius-md);
@@ -102,11 +104,28 @@
   flex-direction: column;
   align-items: center;
   transition: var(--transicion-rapida);
-  height: 100%;
+  height: 100%; /* Esto es CLAVE: hace que la tarjeta llene el slide */
+  box-sizing: border-box; /* Asegura que el padding no rompa la altura */
 }
 .producto-card:hover {
   transform: translateY(-5px);
   box-shadow: var(--sombra-tarjeta-hover-ligera);
+}
+
+/* --- (NUEVO) .producto-card-body --- */
+/* Este es el contenedor que se estirará */
+.producto-card-body {
+  display: flex;
+  flex-direction: column; /* Apila título, desc, precio */
+  flex-grow: 1; /* <-- ¡LA MAGIA! Hace que este div ocupe todo el alto */
+  width: 100%; /* Ocupa todo el ancho de la tarjeta */
+}
+
+/* --- (FIX) Quitar subrayado --- */
+a.producto-card,
+a.producto-card:hover {
+  text-decoration: none;
+  color: inherit;
 }
 .producto-img-container {
   width: 100%;
@@ -146,20 +165,34 @@
   margin: 0;
   line-height: 1.3;
 }
+
+/* --- (CAMBIO) .producto-descripcion --- */
 .producto-descripcion {
   color: var(--color-texto-secundario);
   font-size: 0.9rem;
   line-height: 1.4;
   margin: 10px 0;
   text-align: center;
+  flex-grow: 1; /* <-- ¡LA OTRA MAGIA! La descripción se estira */
+  
+  /* (Opcional) Limitar el texto a 4 líneas */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 4; /* Muestra máx 4 líneas */
+  -webkit-box-orient: vertical;
 }
+
 .producto-precio {
   font-size: 1.3rem;
   font-weight: 700;
   color: var(--color-primario);
   margin: 10px 0;
+  text-align: center; /* (Añadido) Centra el precio */
+  margin-top: auto; /* (Añadido) Se asegura de que esté abajo */
 }
-/* ... Media queries de productos sin cambios ... */
+
+/* ... (Media queries de productos sin cambios) ... */
 @media (max-width: 1024px) {
   .productos-container {
     grid-template-columns: repeat(2, 1fr);
@@ -190,8 +223,9 @@
 
 
 /* =================================
-   4. SECCIÓN DE MEMBRESÍAS (con :hover)
+   4. SECCIÓN DE MEMBRESÍAS
    ================================= */
+/* ... (Tu sección de membresías va aquí, sin cambios) ... */
 .membresias-section {
   padding: 80px 30px;
   background: linear-gradient(135deg, var(--color-fondo) 0%, var(--color-blanco) 100%);
@@ -215,14 +249,13 @@
   padding: 30px 20px;
   transition: var(--transicion-media);
   border: 1px solid var(--color-borde);
-  position: relative; /* <-- NECESARIO PARA EL OVERLAY */
-  overflow: hidden; /* <-- NECESARIO PARA EL OVERLAY */
+  position: relative; 
+  overflow: hidden; 
   min-height: 380px;
-  display: flex; /* Añadido para centrar */
-  align-items: center; /* Añadido para centrar */
-  justify-content: center; /* Añadido para centrar */
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
 }
-
 .membresia-item::before {
   content: '';
   position: absolute;
@@ -232,22 +265,17 @@
   height: 4px;
   background: var(--color-gradiente-primario);
 }
-
-/* El hover ahora solo levanta la tarjeta */
 .membresia-item:hover {
   transform: translateY(-10px);
   box-shadow: var(--sombra-tarjeta-hover);
 }
-
-/* Parte frontal (icono y título) */
 .membresia-front {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  transition: var(--transicion-media); /* Transición para opacidad */
+  transition: var(--transicion-media); 
 }
-
 .membresia-img {
   width: 150px;
   height: 150px;
@@ -256,12 +284,10 @@
   filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.1));
   transition: transform 0.3s ease;
 }
-
 .membresia-info {
   text-align: center;
   width: 100%;
 }
-
 .membresia-titulo {
   font-size: 1.5rem;
   font-weight: 700;
@@ -272,58 +298,40 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-
-/* --- (NUEVO) ESTILOS PARA EL OVERLAY DE HOVER --- */
-
 .membresia-details {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  
-  /* Fondo opaco oscuro (usa tus colores primarios) */
   background-color: rgba(1, 138, 250, 0.95); 
-  
   color: var(--color-texto-invertido);
   padding: 30px;
-  box-sizing: border-box; /* Asegura que el padding no rompa el layout */
-
+  box-sizing: border-box; 
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
-
-  /* Oculto por defecto */
   opacity: 0;
-  transform: scale(0.95); /* Efecto de zoom suave */
+  transform: scale(0.95); 
   transition: var(--transicion-media);
 }
-
-/* --- (NUEVO) LÓGICA DE HOVER --- */
-/* Cuando haces hover en el item, se muestra el overlay */
 .membresia-item:hover .membresia-details {
   opacity: 1;
   transform: scale(1);
 }
-
-/* (Opcional) Oculta la parte frontal al hacer hover */
 .membresia-item:hover .membresia-front {
   opacity: 0;
   transform: scale(0.9);
 }
-
-
 .membresia-description {
-  color: #f0f0f0; /* Un blanco un poco más suave */
+  color: #f0f0f0; 
   font-size: 0.95rem;
   line-height: 1.6;
-  margin-bottom: 0; /* El botón dará el margen */
-  text-align: center; /* Centrado para el overlay */
+  margin-bottom: 0; 
+  text-align: center; 
 }
-
-/* ... Media queries de membresías ... */
 @media (max-width: 1024px) {
   .membresias-container {
     grid-template-columns: repeat(2, 1fr);
@@ -336,11 +344,7 @@
   .membresias-container { grid-template-columns: 1fr; max-width: 500px; gap: 1.5rem; }
   .membresia-item { padding: 25px 20px; min-height: 350px; }
   .membresia-img { width: 100px; height: 100px; }
-  
-  /* En móvil, el hover no existe, así que hacemos el overlay más pequeño
-     para que el usuario intuya que hay algo, pero no lo tapa todo */
   .membresia-details {
-    /* (Puedes ajustar esto o usar la lógica de acordeón si prefieres) */
     padding: 20px;
   }
   .membresia-description {

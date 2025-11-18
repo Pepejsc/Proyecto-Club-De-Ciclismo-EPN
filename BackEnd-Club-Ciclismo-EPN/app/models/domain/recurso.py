@@ -32,20 +32,21 @@ class Recurso(Base):
     id_recurso = Column(Integer, primary_key=True, autoincrement=True)
     nombre = Column(String(255), nullable=False)
     descripcion = Column(Text)
-    
-    # --- (NUEVO CAMPO DE IMAGEN) ---
-    imagen_url = Column(String(1024), nullable=True) # <-- AÑADIR ESTA LÍNEA
-
+    imagen_url = Column(String(1024), nullable=True) 
     tipo_recurso = Column(Enum(TipoRecursoEnum), nullable=False)
     categoria = Column(String(100))
     fecha_adquisicion = Column(Date)
     costo_adquisicion = Column(Numeric(10, 2), nullable=False, default=0.0)
     observacion = Column(Text)
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
-
+    tallas_disponibles = Column(String(255), nullable=True)
+    
     __mapper_args__ = {
         "polymorphic_on": tipo_recurso,
     }
+
+    imagenes_secundarias = relationship("RecursoImagen", back_populates="recurso")
+
 
 # --- Hijo 1: InventarioComercial (sin cambios) ---
 class InventarioComercial(Recurso):
@@ -78,6 +79,19 @@ class ActivoOperativo(Recurso):
         ForeignKey("user.id", ondelete="SET NULL")
     )
     responsable = relationship("User", back_populates="activos_a_cargo")
+    
     __mapper_args__ = {
         "polymorphic_identity": TipoRecursoEnum.OPERATIVO,
     }
+
+# --- (NUEVA TABLA PARA IMÁGENES SECUNDARIAS) ---
+class RecursoImagen(Base):
+    """
+    Almacena las imágenes secundarias (galería) para un recurso.
+    """
+    __tablename__ = "recurso_imagenes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    imagen_url = Column(String(1024), nullable=False)
+    recurso_id = Column(Integer, ForeignKey("recursos.id_recurso", ondelete="CASCADE"))
+    recurso = relationship("Recurso", back_populates="imagenes_secundarias")
