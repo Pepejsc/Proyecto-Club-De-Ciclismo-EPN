@@ -21,9 +21,10 @@ import Events from './pages/Main/Eventos';
 import Products from './pages/Main/Productos';
 import Contacto from './pages/Main/Contacto';
 import Auspiciantes from './pages/Main/Auspiciantes';
+import VerProducto from './pages/Main/VerProducto';
 
-// --- (NUEVO) 1. Importa tu componente VerProducto ---
-import VerProducto from './pages/Main/VerProducto'; // (Asegúrate que la ruta sea correcta)
+// --- (CORREGIDO) Ruta correcta al contexto ---
+import { CartProvider } from './pages/Main/CarContext';
 
 
 const App = () => {
@@ -33,48 +34,50 @@ const App = () => {
 
       <SidebarProvider>
         <UserProvider>
-          <Routes>
-            {/* Rutas públicas */}
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/send-email" element={<ResetPasswordRequest />} />
-            <Route path="/verify-code" element={<VerifyCode />} />
-            <Route path="/reset-password" element={<ResetPasswordForm />} />
-            <Route path="/unauthorized" element={<Unauthorized />} />
-            <Route path="/quienes-somos" element={<AboutUs/>}/>
-            <Route path="/eventos" element={<Events/>}/>
-            <Route path="/productos" element={<Products/>}/>
-            <Route path="/auspiciantes" element={<Auspiciantes/>}/>
-            <Route path="/contacto" element={<Contacto/>}/>
+          
+          {/* Envolvemos las rutas con el CartProvider */}
+          <CartProvider> 
+            <Routes>
+              {/* Rutas públicas */}
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/send-email" element={<ResetPasswordRequest />} />
+              <Route path="/verify-code" element={<VerifyCode />} />
+              <Route path="/reset-password" element={<ResetPasswordForm />} />
+              <Route path="/unauthorized" element={<Unauthorized />} />
+              <Route path="/quienes-somos" element={<AboutUs/>}/>
+              <Route path="/eventos" element={<Events/>}/>
+              <Route path="/productos" element={<Products/>}/>
+              <Route path="/auspiciantes" element={<Auspiciantes/>}/>
+              <Route path="/contacto" element={<Contacto/>}/>
+              
+              {/* Ruta dinámica de producto */}
+              <Route path="/producto/:id" element={<VerProducto />} />
+              
+              {/* Rutas protegidas */}
+              <Route
+                path="/admin/*"
+                element={
+                  <PrivateRoute allowedRoles={["admin"]}>
+                    <AdminRoutes />
+                  </PrivateRoute>
+                }
+              />
 
-            {/* --- (NUEVO) 2. Añade la ruta dinámica para VerProducto --- */}
-            {/* :id es un parámetro que leeremos (ej. /producto/5) */}
-            <Route path="/producto/:id" element={<VerProducto />} />
-
-            {/* Rutas protegidas */}
-            <Route
-              path="/admin/*"
-              element={
-                <PrivateRoute allowedRoles={["admin"]}>
-                  <AdminRoutes />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/user/*"
-              element={
-                <PrivateRoute allowedRoles={["normal"]}>
-                  <UserRoutes />
-                </PrivateRoute>
-              }
-            />
-          </Routes>
+              <Route
+                path="/user/*"
+                element={
+                  <PrivateRoute allowedRoles={["normal"]}>
+                    <UserRoutes />
+                  </PrivateRoute>
+                }
+              />
+            </Routes>
+          </CartProvider>
+          
         </UserProvider>
       </SidebarProvider>
-
-
     </Router>
   );
 };

@@ -236,7 +236,157 @@
   opacity: 0.7;
 }
 /* --- FIN NUEVO --- */
+/* === ESTILOS DEL MODAL DE COMPRA === */
+.modal-compra {
+  text-align: center;
+  max-width: 500px;
+}
 
+.modal-resumen {
+  display: flex;
+  gap: 20px;
+  margin: 20px 0;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  align-items: center;
+  text-align: left;
+}
+
+.modal-img-preview {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+.modal-detalles p {
+  margin: 5px 0;
+  font-size: 15px;
+  color: #333;
+}
+
+.modal-note {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 20px;
+  font-style: italic;
+}
+
+/* Reutilizando tus botones del modal de admin, pero adaptados */
+.btn-whatsapp-modal {
+  background-color: #25D366 !important;
+  color: white !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-whatsapp-modal:hover {
+  background-color: #1ebc57 !important;
+}
+
+/* Asegurarse que el overlay esté encima de todo */
+.modal-overlay {
+  z-index: 10000;
+}
+
+/* Botón Ver Carrito (Aparece si hay items) */
+.btn-ver-carrito {
+  background-color: #333;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+  width: 100%;
+  font-weight: 600;
+}
+
+/* Estilos del Modal de Carrito */
+.carrito-lista {
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 15px 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.carrito-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f9f9f9;
+}
+
+.carrito-img-mini {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.carrito-info {
+  flex-grow: 1;
+  text-align: left;
+}
+
+.c-nombre {
+  font-weight: bold;
+  font-size: 14px;
+  margin: 0;
+}
+
+.c-detalles {
+  font-size: 12px;
+  color: #666;
+  margin: 2px 0 0 0;
+}
+
+.btn-trash {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.carrito-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 15px 0;
+  padding: 0 10px;
+}
+
+.total-precio {
+  color: #238CBC;
+}
+
+.producto-imagen-principal {
+  position: relative; /* Necesario para el overlay */
+}
+
+.imagen-overlay-agotado {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #dc3545;
+  font-weight: bold;
+  font-size: 1.5rem;
+  padding: 10px 20px;
+  border: 2px solid #dc3545;
+  border-radius: 8px;
+  z-index: 10;
+  pointer-events: none; /* Para poder dar clic en la imagen si quisieras */
+}
 
 /* --- Responsive --- */
 @media (max-width: 850px) {
