@@ -1,28 +1,30 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
-from starlette.staticfiles import StaticFiles
-from app.api.endpoints import auth, event, route, event_participant, notification, memberships, sponsors, documents, recurso
+from fastapi.staticfiles import StaticFiles
+from app.api.endpoints import auth, event, route, event_participant, notification, memberships, sponsors, documents, recurso, ventas, finanzas
 from app.core.init_data import create_admin_user
 from app.db.init_db import init_db
 from app.services.scheduler_notifications import start_scheduler
-from fastapi.staticfiles import StaticFiles
-
-import os
 
 app = FastAPI()
 
-# --- MODIFICACIÓN AQUÍ ---
-# Creamos la carpeta 'uploads' y también la subcarpeta 'recursos'
-os.makedirs("uploads/recursos", exist_ok=True) 
-# Tu línea de 'mount' está perfecta. Le dice a FastAPI que
-# la URL 'http://.../uploads/' debe leer de la carpeta 'uploads/'
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
-# --- FIN DE LA MODIFICACIÓN ---
+# --- CONFIGURACIÓN BLINDADA DE ARCHIVOS ESTÁTICOS ---
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+UPLOADS_DIR = os.path.join(BASE_DIR, "uploads")
 
+os.makedirs(os.path.join(UPLOADS_DIR, "profiles"), exist_ok=True)
+os.makedirs(os.path.join(UPLOADS_DIR, "recursos"), exist_ok=True)
+
+print(f"📂 Sirviendo archivos estáticos desde: {UPLOADS_DIR}")
+
+app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
+# ----------------------------------------------------
 
 # 🟢 Permitir peticiones CORS
 origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -41,6 +43,11 @@ app.include_router(memberships.router, prefix="/memberships", tags=["memberships
 app.include_router(sponsors.router, tags=["sponsors"])
 app.include_router(documents.router, prefix="/api", tags=["documents"])
 app.include_router(recurso.router, prefix="/recursos", tags=["recursos"])
+app.include_router(finanzas.router, prefix="/finanzas", tags=["finanzas"])
+
+# 🔥 2. REGISTRAR EL ROUTER DE VENTAS:
+app.include_router(ventas.router, prefix="/ventas", tags=["ventas"])
+
 
 # ⚙️ Inicializar base de datos y crear admin
 @app.on_event("startup")

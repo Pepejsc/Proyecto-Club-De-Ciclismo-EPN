@@ -14,7 +14,8 @@ import ListaRecursos from "../pages/Admin/ListaRecursos";
 import CrearRecurso from "../pages/Admin/CrearRecurso";
 import ListaDocumentos from "../pages/Admin/ListaDocumentos";
 import CrearDocumento from "../pages/Admin/CrearDocumento";
-
+import DashboardAdmin from "../pages/Admin/DashboardAdmin";
+import ListaRegistros from "../pages/Admin/ListaRegistros";
 
 
 const AdminRoutes = () => {
@@ -34,6 +35,8 @@ const AdminRoutes = () => {
         <Route path="crear-recurso" element={<CrearRecurso />} />
         <Route path="lista-documentos" element={<ListaDocumentos />} />
         <Route path="crear-documento" element={<CrearDocumento />} />
+        <Route path="dashboard-admin" element={<DashboardAdmin/>} />
+        <Route path="lista-registros" element={<ListaRegistros />} />
       </Route>
     </Routes>
   );

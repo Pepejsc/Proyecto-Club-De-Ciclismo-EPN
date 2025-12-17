@@ -39,3 +39,7 @@ class User(Base):
     
     # 🔗 NUEVA RELACIÓN CON ACTIVOS OPERATIVOS
     activos_a_cargo = relationship("ActivoOperativo", back_populates="responsable", cascade="all, delete")
+    
+    #NUEVA RELACIÓN CON MEMBRESÍAS
+    membership = relationship("Membership", back_populates="user", uselist=False)
+    

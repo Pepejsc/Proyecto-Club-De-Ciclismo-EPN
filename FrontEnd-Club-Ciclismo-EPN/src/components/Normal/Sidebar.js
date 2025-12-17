@@ -2,33 +2,52 @@ import React, { useState, useEffect, useRef } from "react";
 import { Nav } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import "../../assets/Styles/Admin/Sidebar.css";
-import { getUserRole, logout } from "../../services/authService";
+import { getUserRole, logout, getMyProfile } from "../../services/authService"; 
 import { rolePermissions } from "../../config/roles";
 import { useUser } from "../../context/Auth/UserContext";
 import { useSidebar } from "../../context/Admin/SidebarContext";
 import { fetchNotifications } from "../../services/notificationService";
 
+// --- LÓGICA DE URL DIRECTA ---
+const API_URL = "http://127.0.0.1:8000"; // Tu backend
+
+const getSidebarImageUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith("http") || path.startsWith("data:")) return path;
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_URL}${cleanPath}`;
+};
+// ----------------------------
+
+// --- AQUÍ ESTABA EL ERROR: FALTABA LA PALABRA 'export' ---
 export const loadUnreadCount = async (setCount) => {
   try {
     const data = await fetchNotifications();
-    const unread = data.filter((n) => !n.is_read).length;
-    setCount(unread);
+    // Aseguramos que data sea un array antes de filtrar
+    if (Array.isArray(data)) {
+        const unread = data.filter((n) => !n.is_read).length;
+        setCount(unread);
+    }
   } catch (err) {
-    console.error("Error al contar notificaciones", err);
+    console.error("Error contando notificaciones", err);
   }
 };
+// ---------------------------------------------------------
 
 const Sidebar = () => {
-  const { userData } = useUser();
+  const { userData, setUserData } = useUser();
   const userRole = getUserRole();
   const links = rolePermissions[userRole] || [];
+  
+  const [localPhoto, setLocalPhoto] = useState(null);
+  const [localName, setLocalName] = useState("");
+  const [localInfo, setLocalInfo] = useState("");
+
   const [expandedCategory, setExpandedCategory] = useState(null);
   const navigate = useNavigate();
   const sidebarRef = useRef(null);
   const { isCollapsed, setIsCollapsed } = useSidebar();
   const [unreadCount, setUnreadCount] = useState(0);
-
-
 
   const categories = {
     personal: links.filter((link) => link.category === "personal"),
@@ -51,92 +70,73 @@ const Sidebar = () => {
     navigate("/");
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsCollapsed(window.innerWidth <= 768);
-    };
+  const refreshProfile = async () => {
+    try {
+      const profile = await getMyProfile();
+      if (profile) {
+        setLocalPhoto(profile.profile_picture);
+        setLocalName(`${profile.first_name} ${profile.last_name}`);
+        setLocalInfo(`${profile.city}, ${profile.neighborhood}`);
+        if (userData) setUserData({ ...userData, ...profile });
+      }
+    } catch (error) {
+      console.error("Error sidebar", error);
+    }
+  };
 
+  useEffect(() => {
+    refreshProfile();
+    const handleUpdate = () => refreshProfile();
+    window.addEventListener("profile_updated", handleUpdate);
+
+    const handleResize = () => setIsCollapsed(window.innerWidth <= 768);
     handleResize();
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
-  useEffect(() => {
-    if (isCollapsed) {
-      document.body.classList.add("sidebar-collapsed");
-    } else {
-      document.body.classList.remove("sidebar-collapsed");
-    }
-  }, [isCollapsed]);
+    // Usamos la función exportada aquí mismo
+    const syncUnreadCount = async () => await loadUnreadCount(setUnreadCount);
+    window.addEventListener("storage", (e) => e.key === "actualizar_notificaciones" && syncUnreadCount());
+    syncUnreadCount();
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        sidebarRef.current &&
-        !sidebarRef.current.contains(event.target) &&
-        window.innerWidth <= 768
-      ) {
-        setIsCollapsed(true);
-        setExpandedCategory(null);
-      }
+    return () => {
+      window.removeEventListener("profile_updated", handleUpdate);
+      window.removeEventListener("resize", handleResize);
     };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+      if (isCollapsed) document.body.classList.add("sidebar-collapsed");
+      else document.body.classList.remove("sidebar-collapsed");
+  }, [isCollapsed]);
 
   const handleSublinkClick = () => {
     if (window.innerWidth <= 768) {
-      setIsCollapsed(true);
-      setExpandedCategory(null);
-    }
+        setIsCollapsed(true);
+        setExpandedCategory(null);
+      }
   };
-  useEffect(() => {
-    console.log("Estado visual:", isCollapsed);
-  }, [isCollapsed]);
-
-useEffect(() => {
-  const syncUnreadCount = async () => {
-    await loadUnreadCount(setUnreadCount);
-  };
-
-  const handleStorageChange = (event) => {
-    if (event.key === "actualizar_notificaciones") {
-      syncUnreadCount();
-    }
-  };
-
-  window.addEventListener("storage", handleStorageChange);
-
-  // Cargar al iniciar
-  syncUnreadCount();
-
-  return () => window.removeEventListener("storage", handleStorageChange);
-}, []);
 
   return (
     <>
-      <div
-        ref={sidebarRef}
-        className="sidebar"
-        data-state={isCollapsed ? "collapsed" : "expanded"}
-      >        <div className="sidebar-user-box">
+      <div ref={sidebarRef} className="sidebar" data-state={isCollapsed ? "collapsed" : "expanded"}>
+        <div className="sidebar-user-box">
           <img
             src={
-              userData?.profile_picture
-                ? userData.profile_picture
+              localPhoto 
+                ? `${getSidebarImageUrl(localPhoto)}?t=${Date.now()}` 
                 : require("../../assets/Images/Icons/defaultProfile.png")
             }
-            alt="Foto de perfil"
+            alt="Foto"
             className="sidebar-user-avatar"
+            style={{objectFit: 'cover'}}
+            onError={(e) => {
+                e.target.onerror = null; 
+                e.target.src=require("../../assets/Images/Icons/defaultProfile.png")
+            }}
           />
           <div className="sidebar-user-info">
-            <span className="sidebar-user-name">
-              {userData?.first_name} {userData?.last_name}
-            </span>
-            <span className="sidebar-user-info">
-              {userData?.city}, {userData?.neighborhood}
-            </span>
+            <span className="sidebar-user-name">{localName || "Cargando..."}</span>
+            <span className="sidebar-user-info">{localInfo}</span>
           </div>
         </div>
 
@@ -146,8 +146,7 @@ useEffect(() => {
             <span className="sidebar-label">Inicio</span>
           </Nav.Link>
 
-          {/* Categoría: Configuración Personal */}
-          <div className="sidebar-category">
+           <div className="sidebar-category">
             <div className="category-title" onClick={() => toggleCategory("personal")}>
               <i className="fas fa-user-cog category-icon"></i>
               <span>Configuración Personal</span>
@@ -155,19 +154,12 @@ useEffect(() => {
             </div>
             {expandedCategory === "personal" &&
               categories.personal.map((link) => (
-                <Nav.Link
-                  key={link.path}
-                  as={Link}
-                  to={`/user/${link.path}`}
-                  className="sidebar-sublink"
-                  onClick={handleSublinkClick}
-                >
+                <Nav.Link key={link.path} as={Link} to={`/user/${link.path}`} className="sidebar-sublink" onClick={handleSublinkClick}>
                   <span className="sidebar-label">{link.label}</span>
                 </Nav.Link>
               ))}
           </div>
-
-          {/* Categoría: Configuración Membresía */}
+          
           <div className="sidebar-category">
             <div className="category-title" onClick={() => toggleCategory("membresia")}>
               <i className="fas fa-id-card category-icon"></i>
@@ -176,61 +168,35 @@ useEffect(() => {
             </div>
             {expandedCategory === "membresia" &&
               categories.membresia.map((link) => (
-                <Nav.Link
-                  key={link.path}
-                  as={Link}
-                  to={`/user/${link.path}`}
-                  className="sidebar-sublink"
-                  onClick={handleSublinkClick}
-                >
+                <Nav.Link key={link.path} as={Link} to={`/user/${link.path}`} className="sidebar-sublink" onClick={handleSublinkClick}>
                   <span className="sidebar-label">{link.label}</span>
                 </Nav.Link>
               ))}
           </div>
 
-          {/* Categoría: Notificaciones */}
           {categories.notificaciones.map((link) => (
-            <Nav.Link
-              key={link.path}
-              as={Link}
-              to={`/user/${link.path}`}
-              className="sidebar-link"
-              onClick={handleSublinkClick}
-            >
-              <div className="sidebar-icon-wrapper">
+            <Nav.Link key={link.path} as={Link} to={`/user/${link.path}`} className="sidebar-link" onClick={handleSublinkClick}>
+               <div className="sidebar-icon-wrapper">
                 <i className="fas fa-bell sidebar-icon"></i>
-                {unreadCount > 0 && (
-                  <span className="sidebar-notification-count">{unreadCount}</span>
-                )}
+                {unreadCount > 0 && <span className="sidebar-notification-count">{unreadCount}</span>}
               </div>
               <span className="sidebar-label">{link.label}</span>
             </Nav.Link>
           ))}
-
-
-          {/* Categoría: Eventos Disponibles */}
-          {categories.eventos.map((link) => (
-            <Nav.Link
-              key={link.path}
-              as={Link}
-              to={`/user/${link.path}`}
-              className="sidebar-link"
-              onClick={handleSublinkClick}
-            >
+          
+           {categories.eventos.map((link) => (
+            <Nav.Link key={link.path} as={Link} to={`/user/${link.path}`} className="sidebar-link" onClick={handleSublinkClick}>
               <i className="far fa-calendar-check sidebar-icon"></i>
               <span className="sidebar-label">{link.label}</span>
             </Nav.Link>
           ))}
 
-
-          {/* Cerrar sesión */}
           <div className="sidebar-link" onClick={handleLogout} style={{ cursor: "pointer" }}>
             <i className="fas fa-sign-out-alt sidebar-icon"></i>
             <span className="sidebar-label">Cerrar Sesión</span>
           </div>
         </Nav>
       </div>
-
       {!isCollapsed && window.innerWidth <= 576 && (
         <div className="sidebar-overlay" onClick={() => setIsCollapsed(true)}></div>
       )}

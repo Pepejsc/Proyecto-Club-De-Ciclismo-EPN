@@ -1,39 +1,67 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
-import "../../assets/Styles/Admin/ListaRecursos.css"; 
-import { getToken } from "../../services/authService"; 
-import { useNavigate } from 'react-router-dom';
+import { getToken } from "../../services/authService";
+import "../../assets/Styles/Admin/ListaRecursos.css";
 
-const apiUrl = process.env.REACT_APP_API_URL;
+/**
+ * Constantes de configuración
+ */
+const API_URL = process.env.REACT_APP_API_URL;
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_GALLERY_FILES = 3;
+const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const RESOURCE_TYPES = {
+  COMMERCIAL: 'COMERCIAL',
+  OPERATIONAL: 'OPERATIVO'
+};
+
+/**
+ * Función auxiliar para validar tipo y tamaño de archivo.
+ * @param {File} file - El archivo a validar.
+ * @returns {string|null} - Mensaje de error o null si es válido.
+ */
+const validateFile = (file) => {
+  if (file.size > MAX_FILE_SIZE_BYTES) return `El archivo ${file.name} excede el tamaño máximo de 10MB.`;
+  if (!ALLOWED_FILE_TYPES.includes(file.type)) return `El archivo ${file.name} debe ser JPG, PNG o WebP.`;
+  return null;
+};
 
 const ListaRecursos = () => {
-  const [recursos, setRecursos] = useState([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Gestión de Estado
+  const [recursos, setRecursos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Estado del Modal
   const [modalVisible, setModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editFormData, setEditFormData] = useState(null); 
+  const [editFormData, setEditFormData] = useState(null);
   const [archivo, setArchivo] = useState(null);
   const [archivosGaleria, setArchivosGaleria] = useState([]);
 
-  const fetchRecursos = async () => {
-    // ... (sin cambios)
+  /**
+   * Obtiene la lista de recursos de la API.
+   */
+  const fetchRecursos = useCallback(async () => {
     setLoading(true);
     const token = getToken();
+
     if (!token) {
       toast.error("No estás autenticado.");
       setLoading(false);
       return;
     }
+
     try {
-      const response = await fetch(`${apiUrl}/recursos/`, {
+      const response = await fetch(`${API_URL}/recursos/`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: No se pudieron cargar los recursos`);
-      }
+
+      if (!response.ok) throw new Error(`Error ${response.status}: No se pudieron cargar los recursos`);
+
       const data = await response.json();
       setRecursos(data);
     } catch (error) {
@@ -42,149 +70,149 @@ const ListaRecursos = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    // ... (sin cambios)
-    fetchRecursos();
   }, []);
 
+  useEffect(() => {
+    fetchRecursos();
+  }, [fetchRecursos]);
+
+  /**
+   * Maneja la eliminación de un recurso con confirmación.
+   * @param {number} recursoId 
+   */
   const handleDelete = async (recursoId) => {
-    // ... (sin cambios)
     const result = await Swal.fire({
-      title: "¿Estás seguro?",
+      title: '¿Estás seguro?',
       text: "El recurso se borrará de forma permanente",
-      icon: "warning",
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Sí, borrar",
-      cancelButtonText: "Cancelar",
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, borrar',
+      cancelButtonText: 'Cancelar'
     });
 
-    if (result.isConfirmed) {
-      const token = getToken();
-      try {
-        const response = await fetch(`${apiUrl}/recursos/${recursoId}`, {
-          method: "DELETE",
-          headers: { "Authorization": `Bearer ${token}` },
-        });
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || "Error al eliminar el recurso");
-        }
-        toast.success("Recurso eliminado correctamente");
-        setRecursos((prevRecursos) =>
-          prevRecursos.filter((r) => r.id_recurso !== recursoId)
-        );
-      } catch (error) {
-        console.error("Error al eliminar:", error);
-        toast.error(error.message);
+    if (!result.isConfirmed) return;
+
+    const token = getToken();
+    try {
+      const response = await fetch(`${API_URL}/recursos/${recursoId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Error al eliminar el recurso");
       }
+
+      Swal.fire('¡Eliminado!', 'El recurso ha sido eliminado.', 'success');
+      setRecursos((prev) => prev.filter((r) => r.id_recurso !== recursoId));
+    } catch (error) {
+      console.error("Error al eliminar:", error);
+      Swal.fire('Error', 'Hubo un problema al eliminar el recurso.', 'error');
     }
   };
 
+  /**
+   * Abre el modal de edición y carga los datos.
+   * @param {object} recurso 
+   */
   const handleEdit = (recurso) => {
-    // ... (sin cambios)
-    console.log("Editando:", recurso);
-    const formData = {
+    setEditFormData({
       ...recurso,
-      stock_inicial: recurso.stock_actual 
-    };
-    setEditFormData(formData);
-    setArchivo(null); 
+      stock_inicial: recurso.stock_actual // Mapear stock actual a inicial para la edición
+    });
+    setArchivo(null);
     setArchivosGaleria([]);
     setModalVisible(true);
   };
 
+  /**
+   * Maneja los cambios en los inputs del formulario modal.
+   */
   const handleModalChange = (e) => {
-    // ... (sin cambios)
     const { name, value } = e.target;
-    setEditFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setEditFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * Maneja la selección del archivo de imagen principal.
+   */
   const handleModalFileChange = (e) => {
-    // ... (sin cambios)
-     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) { 
-        toast.error("El archivo es demasiado grande. Máximo 10MB.");
-        e.target.value = '';
-        return;
-      }
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        toast.error("Tipo de archivo no permitido. Solo JPG, PNG o WebP.");
-        e.target.value = '';
-        return;
-      }
-      setArchivo(file);
-      toast.info(`Nuevo archivo principal: ${file.name}`);
-    }
-  };
+    const file = e.target.files[0];
+    if (!file) return;
 
-  const handleModalGalleryFileChange = (e) => {
-    // ... (sin cambios)
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-    if (files.length > 3) {
-      toast.error("Puedes subir un máximo de 3 imágenes de galería.");
+    const error = validateFile(file);
+    if (error) {
+      toast.error(error);
       e.target.value = '';
       return;
     }
+
+    setArchivo(file);
+    toast.info(`Archivo seleccionado: ${file.name}`);
+  };
+
+  /**
+   * Maneja la selección de imágenes para la galería.
+   */
+  const handleModalGalleryFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    if (files.length > MAX_GALLERY_FILES) {
+      toast.error(`Máximo ${MAX_GALLERY_FILES} imágenes de galería.`);
+      e.target.value = '';
+      return;
+    }
+
     for (const file of files) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`El archivo ${file.name} es demasiado grande (Máx 10MB).`);
-        e.target.value = '';
-        return;
-      }
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        toast.error(`Archivo ${file.name} no permitido. Solo JPG, PNG o WebP.`);
+      const error = validateFile(file);
+      if (error) {
+        toast.error(error);
         e.target.value = '';
         return;
       }
     }
+
     setArchivosGaleria(files);
-    toast.success(`${files.length} imágenes de galería seleccionadas.`);
+    toast.success(`${files.length} imágenes seleccionadas.`);
   };
-  
+
+  /**
+   * Envía los datos actualizados del recurso a la API.
+   */
   const handleUpdateSubmit = async () => {
-    // ... (lógica de validación sin cambios)
     if (!editFormData) return;
     setIsSubmitting(true);
-    
+
     const formDataToSend = new FormData();
-
-    // 1. Añadir campos (con protección .trim() y tallas)
-    formDataToSend.append('tipo_recurso', editFormData.tipo_recurso);
-    formDataToSend.append('nombre', (editFormData.nombre || '').trim());
-    formDataToSend.append('descripcion', (editFormData.descripcion || '').trim());
-    formDataToSend.append('categoria', (editFormData.categoria || '').trim());
-    formDataToSend.append('fecha_adquisicion', editFormData.fecha_adquisicion);
-    formDataToSend.append('costo_adquisicion', parseFloat(editFormData.costo_adquisicion));
-    formDataToSend.append('observacion', (editFormData.observacion || '').trim());
-    formDataToSend.append('tallas_disponibles', (editFormData.tallas_disponibles || '').trim()); // <-- (AÑADIDO)
-
-    // 2. Añadir archivos
-    if (archivo) {
-      formDataToSend.append('file', archivo);
-    }
-    if (archivosGaleria.length > 0) {
-      archivosGaleria.forEach(file => {
-        formDataToSend.append('files_gallery', file);
-      });
-    }
     
-    // 3. Añadir campos condicionales
-    if (editFormData.tipo_recurso === "COMERCIAL") {
+    // Agregar campos básicos
+    const fields = [
+      'tipo_recurso', 'nombre', 'descripcion', 'categoria', 
+      'fecha_adquisicion', 'observacion', 'tallas_disponibles'
+    ];
+
+    fields.forEach(field => {
+      if (editFormData[field] !== undefined && editFormData[field] !== null) {
+        formDataToSend.append(field, String(editFormData[field]).trim());
+      }
+    });
+    
+    formDataToSend.append('costo_adquisicion', parseFloat(editFormData.costo_adquisicion));
+
+    // Agregar archivos
+    if (archivo) formDataToSend.append('file', archivo);
+    archivosGaleria.forEach(file => formDataToSend.append('files_gallery', file));
+
+    // Agregar campos específicos por tipo
+    if (editFormData.tipo_recurso === RESOURCE_TYPES.COMMERCIAL) {
       formDataToSend.append('precio_venta', parseFloat(editFormData.precio_venta));
-      formDataToSend.append('stock_actual', parseInt(editFormData.stock_inicial)); 
+      formDataToSend.append('stock_actual', parseInt(editFormData.stock_inicial));
       formDataToSend.append('sku', (editFormData.sku || '').trim());
-    } else if (editFormData.tipo_recurso === "OPERATIVO") {
+    } else if (editFormData.tipo_recurso === RESOURCE_TYPES.OPERATIONAL) {
       formDataToSend.append('codigo_activo', (editFormData.codigo_activo || '').trim());
       formDataToSend.append('estado', editFormData.estado);
       formDataToSend.append('ubicacion', (editFormData.ubicacion || '').trim());
@@ -192,38 +220,58 @@ const ListaRecursos = () => {
         formDataToSend.append('id_usuario_responsable', parseInt(editFormData.id_usuario_responsable));
       }
     }
-    
-    // 4. Lógica de envío (sin cambios)
-    console.log("📤 Enviando Payload de ACTUALIZACIÓN (FormData)...");
+
     const token = getToken();
     try {
-      const response = await fetch(`${apiUrl}/recursos/${editFormData.id_recurso}`, {
+      const response = await fetch(`${API_URL}/recursos/${editFormData.id_recurso}`, {
         method: "PUT",
         headers: { "Authorization": `Bearer ${token}` },
         body: formDataToSend
       });
+
       const result = await response.json();
       if (!response.ok) {
         const errorMsg = Array.isArray(result.detail) ? result.detail[0].msg : (result.detail || "Error desconocido");
         throw new Error(errorMsg);
       }
-      toast.success(`✅ Recurso "${result.nombre}" actualizado`);
+
+      toast.success(`Recurso "${result.nombre}" actualizado`);
       setModalVisible(false);
       setEditFormData(null);
-      setArchivo(null);
-      setArchivosGaleria([]);
-      fetchRecursos(); 
+      fetchRecursos();
     } catch (error) {
-      console.error("❌ Error en handleUpdateSubmit:", error);
-      toast.error(`❌ ${error.message}`);
+      console.error("Error al actualizar recurso:", error);
+      toast.error(error.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  /**
+   * Renderiza el badge de stock o estado según el tipo de recurso.
+   */
+  const renderStockStatus = (resource) => {
+    if (resource.tipo_recurso === RESOURCE_TYPES.COMMERCIAL) {
+      if (resource.stock_actual <= 0) {
+        return <span className="stock-badge stock-agotado">AGOTADO</span>;
+      } 
+      const badgeClass = resource.stock_actual < 10 ? "stock-badge stock-bajo" : "stock-badge stock-normal";
+      const label = resource.stock_actual < 10 ? "(Bajo)" : "";
+      return <span className={badgeClass}>{resource.stock_actual} unidades {label}</span>;
+    }
+    
+    return (
+      <div className="status-container">
+        <span className={`estado-badge ${resource.estado ? resource.estado.toLowerCase() : ''}`}>
+          {resource.estado}
+        </span>
+        <small className="location-text">📍 {resource.ubicacion}</small>
+      </div>
+    );
+  };
+
   return (
     <div className="recursos-container">
-      {/* ... (Header y Tabla sin cambios) ... */}
       <div className="recursos-header">
         <h2>Lista de Recursos</h2>
         <div className="header-button-container">
@@ -235,8 +283,8 @@ const ListaRecursos = () => {
           </button>
         </div>
       </div>
+
       <table className="tabla-recursos">
-        {/* ... (thead sin cambios) ... */}
         <thead>
           <tr>
             <th>Tipo</th>
@@ -244,65 +292,64 @@ const ListaRecursos = () => {
             <th>Categoría</th>
             <th>Fecha Ingreso</th>
             <th>Costo Adq.</th>
+            <th>Stock / Estado</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          {/* ... (tbody map sin cambios) ... */}
           {loading ? (
-            <tr><td colSpan="6">Cargando recursos...</td></tr>
+            <tr><td colSpan="7">Cargando recursos...</td></tr>
           ) : recursos.length === 0 ? (
-            <tr><td colSpan="6">No se encontraron recursos.</td></tr>
+            <tr><td colSpan="7">No se encontraron recursos.</td></tr>
           ) : (
-            recursos.map((r) => (
-              <tr key={r.id_recurso}>
-                <td data-label="Tipo">
-                  <span
-                    className={`badge ${
-                      r.tipo_recurso === "COMERCIAL"
-                        ? "badge-comercial"
-                        : "badge-operativo"
-                    }`}
-                  >
-                    {r.tipo_recurso}
-                  </span>
-                </td>
-                <td data-label="Nombre">{r.nombre}</td>
-                <td data-label="Categoría">{r.categoria || "N/A"}</td>
-                <td data-label="Fecha Ingreso">{r.fecha_adquisicion}</td>
-                <td data-label="Costo Adq.">
-                  {`$${Number(r.costo_adquisicion).toFixed(2)}`}
-                </td>
-                <td data-label="Acciones">
-                  <button
-                    className="btn-action editar"
-                    title="Editar Recurso"
-                    onClick={() => handleEdit(r)} 
-                  >
-                    <i className="fas fa-pen-to-square"></i>
-                  </button>
-                  <button
-                    className="btn-action eliminar"
-                    title="Eliminar Recurso"
-                    onClick={() => handleDelete(r.id_recurso)}
-                  >
-                    <i className="fas fa-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            ))
+            recursos.map((r) => {
+              const isComercial = r.tipo_recurso === RESOURCE_TYPES.COMMERCIAL;
+              const isOutOfStock = isComercial && r.stock_actual <= 0;
+
+              return (
+                <tr key={r.id_recurso} className={isOutOfStock ? "fila-agotada" : ""}>
+                  <td data-label="Tipo">
+                    <span className={`badge ${isComercial ? "badge-comercial" : "badge-operativo"}`}>
+                      {r.tipo_recurso}
+                    </span>
+                  </td>
+                  <td data-label="Nombre">{r.nombre}</td>
+                  <td data-label="Categoría">{r.categoria || "N/A"}</td>
+                  <td data-label="Fecha Ingreso">{r.fecha_adquisicion}</td>
+                  <td data-label="Costo Adq.">{`$${Number(r.costo_adquisicion).toFixed(2)}`}</td>
+                  <td data-label="Stock / Estado">{renderStockStatus(r)}</td>
+                  <td data-label="Acciones">
+                    <div className="actions-wrapper">
+                      <button
+                        className="btn-action editar"
+                        title="Editar Recurso"
+                        onClick={() => handleEdit(r)}
+                      >
+                        <i className="fas fa-pen-to-square"></i>
+                      </button>
+                      <button
+                        className="btn-action eliminar"
+                        title="Eliminar Recurso"
+                        onClick={() => handleDelete(r.id_recurso)}
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
 
-      {/* --- MODAL DE EDICIÓN (Actualizado) --- */}
+      {/* Modal de Edición */}
       {modalVisible && editFormData && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>Editar Recurso ({editFormData.nombre})</h3>
             
-            {/* ... (Tipo de Recurso (disabled) sin cambios) ... */}
-            <div className="form-grid" style={{textAlign: 'left'}}>
+            <div className="form-grid text-left">
               <div className="grid-full">
                 <label>Tipo de Recurso</label>
                 <input type="text" value={editFormData.tipo_recurso} disabled />
@@ -310,8 +357,7 @@ const ListaRecursos = () => {
             </div>
 
             <h3 className="form-section-header">Campos Comunes</h3>
-            <div className="form-grid" style={{textAlign: 'left'}}>
-              {/* ... (campos nombre, categoria, fecha, costo, descripcion) ... */}
+            <div className="form-grid text-left">
               <div>
                 <label>Nombre recurso *</label>
                 <input name="nombre" value={editFormData.nombre} onChange={handleModalChange} disabled={isSubmitting} />
@@ -332,92 +378,38 @@ const ListaRecursos = () => {
                 <label>Descripción *</label>
                 <textarea name="descripcion" value={editFormData.descripcion || ''} onChange={handleModalChange} rows="3" disabled={isSubmitting} />
               </div>
-
-              {/* --- (NUEVO CAMPO DE TALLAS) --- */}
               <div className="grid-full">
                 <label>Tallas Disponibles (Opcional)</label>
-                <input
-                  type="text"
-                  name="tallas_disponibles"
-                  value={editFormData.tallas_disponibles || ''}
-                  onChange={handleModalChange}
-                  placeholder="Ej: S, M, L, XL ó Talla Única"
-                  disabled={isSubmitting} 
-                />
+                <input name="tallas_disponibles" value={editFormData.tallas_disponibles || ''} onChange={handleModalChange} placeholder="Ej: S, M, L" disabled={isSubmitting} />
               </div>
-              {/* --- FIN CAMPO TALLAS --- */}
 
-              {/* --- (Campo Imagen Principal) --- */}
               <div className="grid-full">
                 <label>Cambiar Imagen Principal (Opcional)</label>
                 {editFormData.imagen_url && !archivo && (
-                  <div style={{marginBottom: '10px'}}>
+                  <div className="image-preview">
                     <img 
-                      src={`${apiUrl}${editFormData.imagen_url}`} 
-                      alt="Imagen actual" 
-                      style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '5px'}}
+                      src={`${API_URL}${editFormData.imagen_url}`} 
+                      alt="Actual" 
                       onError={(e) => { e.target.style.display = 'none'; }}
                     />
                   </div>
                 )}
-                <input
-                  type="file"
-                  name="imagen_file_principal"
-                  onChange={handleModalFileChange}
-                  accept="image/png, image/jpeg, image/webp"
-                  disabled={isSubmitting} 
-                />
-                {archivo && (
-                  <div style={{marginTop: '10px', fontSize: '14px'}}>
-                    Nuevo archivo principal: <strong>{archivo.name}</strong>
-                  </div>
-                )}
+                <input type="file" name="imagen_file_principal" onChange={handleModalFileChange} accept="image/*" disabled={isSubmitting} />
               </div>
               
-              {/* --- (Campo Galería) --- */}
               <div className="grid-full">
-                <label>Añadir Imágenes de Galería (Máx 3)</label>
-                <div className="galeria-existente" style={{display: 'flex', gap: '10px', flexWrap: 'wrap', margin: '10px 0'}}>
-                  {editFormData.imagenes_secundarias && editFormData.imagenes_secundarias.length > 0 ? (
-                    editFormData.imagenes_secundarias.map(img => (
-                      <div key={img.id} style={{position: 'relative'}}>
-                        <img 
-                          src={`${apiUrl}${img.imagen_url}`} 
-                          alt={`Galería ${img.id}`} 
-                          style={{width: '70px', height: '70px', objectFit: 'cover', borderRadius: '5px'}}
-                          onError={(e) => { e.target.style.display = 'none'; }}
-                        />
-                      </div>
-                    ))
-                  ) : (
-                    <p style={{fontSize: '12px', margin: '0', color: '#555'}}>No hay imágenes de galería.</p>
-                  )}
-                </div>
-                
-                <label style={{marginTop: '10px', fontWeight: 'normal'}}>Subir nuevas imágenes:</label>
-                <input
-                  type="file"
-                  name="imagen_file_gallery"
-                  multiple 
-                  onChange={handleModalGalleryFileChange} 
-                  accept="image/png, image/jpeg, image/webp"
-                  disabled={isSubmitting} 
-                />
-                {archivosGaleria.length > 0 && (
-                  <div style={{marginTop: '10px', fontSize: '14px'}}>
-                    {archivosGaleria.length} nuevas imágenes de galería seleccionadas.
-                  </div>
-                )}
+                <label>Añadir Imágenes de Galería (Máx {MAX_GALLERY_FILES})</label>
+                <input type="file" name="imagen_file_gallery" multiple onChange={handleModalGalleryFileChange} accept="image/*" disabled={isSubmitting} />
+                {archivosGaleria.length > 0 && <small>{archivosGaleria.length} seleccionadas</small>}
               </div>
             </div>
 
-            {/* ... (Secciones COMERCIAL y OPERATIVO sin cambios) ... */}
-            {editFormData.tipo_recurso === "COMERCIAL" && (
+            {editFormData.tipo_recurso === RESOURCE_TYPES.COMMERCIAL && (
               <>
-                <h3 className="form-section-header">Detalles del Producto Comercial</h3>
-                <div className="form-grid" style={{textAlign: 'left'}}>
+                <h3 className="form-section-header">Detalles Comerciales</h3>
+                <div className="form-grid text-left">
                   <div>
-                    <label>Precio de Venta (USD) *</label>
+                    <label>Precio Venta (USD) *</label>
                     <input type="number" name="precio_venta" value={editFormData.precio_venta} onChange={handleModalChange} min="0" disabled={isSubmitting} />
                   </div>
                   <div>
@@ -431,13 +423,13 @@ const ListaRecursos = () => {
                 </div>
               </>
             )}
-            {editFormData.tipo_recurso === "OPERATIVO" && (
+
+            {editFormData.tipo_recurso === RESOURCE_TYPES.OPERATIONAL && (
               <>
-                <h3 className="form-section-header">Detalles del Activo Operativo</h3>
-                <div className="form-grid" style={{textAlign: 'left'}}>
-                  {/* ... (campos codigo, estado, responsable, ubicacion) ... */}
+                <h3 className="form-section-header">Detalles Operativos</h3>
+                <div className="form-grid text-left">
                   <div>
-                    <label>Código de Activo *</label>
+                    <label>Código Activo *</label>
                     <input name="codigo_activo" value={editFormData.codigo_activo} onChange={handleModalChange} disabled={isSubmitting} />
                   </div>
                   <div>
@@ -461,20 +453,11 @@ const ListaRecursos = () => {
               </>
             )}
 
-            {/* ... (Botones del Modal sin cambios) ... */}
             <div className="modal-buttons">
-              <button 
-                onClick={handleUpdateSubmit} 
-                className="btn-primary" 
-                disabled={isSubmitting}
-              >
+              <button onClick={handleUpdateSubmit} className="btn-primary" disabled={isSubmitting}>
                 {isSubmitting ? "Guardando..." : "Guardar Cambios"}
               </button>
-              <button 
-                onClick={() => setModalVisible(false)} 
-                className="btn-secondary" 
-                disabled={isSubmitting}
-              >
+              <button onClick={() => setModalVisible(false)} className="btn-secondary" disabled={isSubmitting}>
                 Cancelar
               </button>
             </div>

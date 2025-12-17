@@ -31,7 +31,7 @@ class Persona(Base):
     neighborhood = Column(String(255), nullable=False)
     blood_type = Column(SQLAEnum(BloodType), nullable=False)
     skill_level = Column(SQLAEnum(SkillLevel), nullable=False)
-    profile_picture = Column(LargeBinary, nullable=True)
+    profile_picture = Column(String(1024), nullable=True)
 
 
 

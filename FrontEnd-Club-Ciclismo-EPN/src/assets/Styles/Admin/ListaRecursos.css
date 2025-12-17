@@ -1,15 +1,80 @@
-/* --- Contenedor Principal --- */
-.recursos-container {
-  padding: 30px;
-  background-color: #f4f6f8;
-  border-radius: 10px;
-  margin: 40px auto;
-  max-width: 1200px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-  font-family: 'Montserrat', sans-serif;
+/* ==========================================================================
+   1. VARIABLES GLOBALES & CONFIGURACIÓN
+   ========================================================================== */
+:root {
+  /* --- Paleta de Colores --- */
+  --color-primary: #238CBC;
+  --color-primary-dark: #1b6ca8;
+  --color-secondary: #6c757d;
+  --color-secondary-dark: #545b62;
+  --color-success: #28a745;
+  --color-success-dark: #218838;
+  --color-info: #007bff;
+  --color-danger: #dc3545;
+  
+  /* --- Fondos & Textos --- */
+  --bg-body: #f4f6f8;
+  --bg-white: #ffffff;
+  --text-main: #333333;
+  --text-heading: #11182f;
+  --text-light: #666666;
+  --text-inverse: #ffffff;
+
+  /* --- Bordes & Separadores --- */
+  --border-color: #e5e5e5;
+  --border-input: #cccccc;
+  
+  /* --- Badges (Fondos y Textos) --- */
+  --badge-bg-operativo: #17a2b8;
+  --badge-bg-comercial: #28a745;
+  
+  /* Stock Badges */
+  --stock-normal-bg: #e8f5e9;
+  --stock-normal-text: #2e7d32;
+  --stock-normal-border: #c8e6c9;
+  
+  --stock-low-bg: #fff8e1;
+  --stock-low-text: #f57f17;
+  --stock-low-border: #ffecb3;
+  
+  --stock-out-bg: #ffebee;
+  --stock-out-text: #c62828;
+  --stock-out-border: #ffcdd2;
+
+  /* Estado Badges */
+  --estado-disponible-bg: #d4edda; --estado-disponible-text: #155724;
+  --estado-asignado-bg: #cce5ff;   --estado-asignado-text: #004085;
+  --estado-manten-bg: #fff3cd;     --estado-manten-text: #856404;
+  --estado-baja-bg: #f8d7da;       --estado-baja-text: #721c24;
+
+  /* Estados de Fila */
+  --row-error-bg: #ffe6e6;
+  --row-error-hover: #ffcccc;
+  --row-hover: #f1f1f1;
+
+  /* --- Dimensiones & Efectos --- */
+  --shadow-card: 0 0 10px rgba(0, 0, 0, 0.05);
+  --shadow-modal: 0 5px 20px rgba(0, 0, 0, 0.25);
+  --radius-card: 10px;
+  --radius-btn: 5px;
+  --font-main: 'Montserrat', sans-serif;
+  --max-width-container: 1200px;
 }
 
-/* --- Encabezado para Título y Botón --- */
+/* ==========================================================================
+   2. LAYOUT & CONTENEDORES
+   ========================================================================== */
+
+.recursos-container {
+  font-family: var(--font-main);
+  background-color: var(--bg-body);
+  padding: 30px;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  margin: 40px auto;
+  max-width: var(--max-width-container);
+}
+
 .recursos-header {
   display: flex;
   justify-content: space-between;
@@ -18,124 +83,52 @@
 }
 
 .recursos-container h2 {
-  color: #11182f;
+  color: var(--text-heading);
   margin: 0;
   text-align: left;
   font-size: 24px;
+  font-weight: 700;
 }
 
-.header-button-container {
-  /* Contenedor del botón */
-}
+/* ==========================================================================
+   3. BOTONES GENERALES
+   ========================================================================== */
 
-.btn-crear-nuevo {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
+.btn-crear-nuevo,
+.btn-primary,
+.btn-secondary,
+.btn-action {
   cursor: pointer;
-  font-size: 1em;
+  border: none;
+  border-radius: var(--radius-btn);
+  font-family: inherit;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Botón "Crear Nuevo" */
+.btn-crear-nuevo {
+  background-color: var(--color-success);
+  color: var(--text-inverse);
+  padding: 10px 15px;
+  font-size: 1rem;
   font-weight: 600;
-  transition: background-color 0.3s ease;
-}
-
-.btn-crear-nuevo:hover {
-  background-color: #218838;
-}
-
-.btn-crear-nuevo .fas {
-  margin-right: 8px;
-}
-
-
-/* --- Tabla de Recursos --- */
-.tabla-recursos {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: white;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.tabla-recursos thead {
-  background-color: #238CBC;
-  color: white;
-  font-size: 16px;
-  text-align: left;
-  height: 60px;
-}
-
-.tabla-recursos thead th {
-  font-weight: 600;
-  padding: 12px 16px;
-}
-
-.tabla-recursos th,
-.tabla-recursos td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e5e5;
-}
-
-.tabla-recursos tbody tr:hover {
-  background-color: #f1f1f1;
-}
-
-.tabla-recursos td {
-  font-size: 14px;
-  color: #333;
-}
-
-.tabla-recursos td:last-child {
-  min-width: 130px;
-  text-align: center;
-  display: flex;
-  justify-content: center;
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
 }
 
-/* --- Badges para Tipo de Recurso --- */
-.badge {
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-weight: bold;
-  color: #fff;
-  font-size: 0.9em;
-  text-transform: uppercase;
+.btn-crear-nuevo:hover {
+  background-color: var(--color-success-dark);
 }
 
-.badge-comercial {
-  background-color: #28a745;
-  /* Verde para ventas */
-}
-
-.badge-operativo {
-  background-color: #17a2b8;
-  /* Cian para activos */
-}
-
-
-/* --- Botones de Acción (Editar/Eliminar) --- */
+/* Botones de Acción (Tabla) */
 .btn-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
   font-size: 16px;
-  color: #fff;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.btn-action.editar {
-  background-color: #007bff;
-}
-
-.btn-action.eliminar {
-  background-color: #dc3545;
+  color: var(--text-inverse);
 }
 
 .btn-action:hover {
@@ -143,55 +136,154 @@
   opacity: 0.9;
 }
 
-/* --- Responsive --- */
-@media screen and (max-width: 768px) {
-  /* ... (Estilos responsive sin cambios) ... */
-  .recursos-header {
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-  }
-  .tabla-recursos { border: none; }
-  .tabla-recursos thead { display: none; }
-  .tabla-recursos tr {
-    display: block;
-    background-color: white;
-    border-radius: 10px;
-    margin: 15px auto;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    padding: 15px;
-    width: 95%;
-    max-width: 500px;
-    border: none;
-  }
-  .tabla-recursos td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 10px;
-    border: none;
-    border-bottom: 1px solid #eee;
-    font-size: 14px;
-  }
-  .tabla-recursos td:last-child {
-    justify-content: center;
-    gap: 10px;
-    margin-top: 10px;
-    border-bottom: none;
-  }
-  .tabla-recursos td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: #11182f;
-    margin-right: 10px;
-    min-width: 120px;
-  }
+.btn-action.editar {
+  background-color: var(--color-info);
 }
 
+.btn-action.eliminar {
+  background-color: var(--color-danger);
+}
 
-/* ======================================== */
-/* ==== ESTILOS DEL MODAL ACTUALIZADOS ==== */
-/* ======================================== */
+/* ==========================================================================
+   4. TABLA DE DATOS
+   ========================================================================== */
+
+.tabla-recursos {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--bg-white);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Cabecera */
+.tabla-recursos thead {
+  background-color: var(--color-primary);
+  color: var(--text-inverse);
+  text-align: left;
+  height: 60px;
+}
+
+.tabla-recursos th {
+  font-weight: 600;
+  padding: 12px 16px;
+  font-size: 16px;
+}
+
+/* Cuerpo */
+.tabla-recursos td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 14px;
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+/* Filas */
+.tabla-recursos tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.tabla-recursos tbody tr:hover {
+  background-color: var(--row-hover);
+}
+
+/* Estado de Fila: Agotada */
+.fila-agotada {
+  background-color: #fafafa;
+  color: #999;
+}
+
+.fila-agotada:hover {
+  background-color: var(--row-hover); 
+}
+
+/* Alineación de la columna de acciones */
+.tabla-recursos td:last-child {
+  min-width: 130px;
+  text-align: center;
+}
+
+/* --- [NUEVO] Wrapper de botones de acción (Sustituye el flex inline) --- */
+.actions-wrapper {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* --- [NUEVO] Contenedor para Estado + Ubicación --- */
+.status-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.location-text {
+  color: var(--text-light);
+  font-size: 0.8em;
+}
+
+/* ==========================================================================
+   5. BADGES Y ETIQUETAS
+   ========================================================================== */
+
+/* Badge General (Tipo de Recurso) */
+.badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  color: var(--text-inverse);
+  font-size: 0.85em;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.badge-comercial {
+  background-color: var(--badge-bg-comercial);
+}
+
+.badge-operativo {
+  background-color: var(--badge-bg-operativo);
+}
+
+/* Badges de Stock */
+.stock-badge {
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 0.85em;
+  font-weight: 700;
+  display: inline-block;
+  min-width: 90px;
+  text-align: center;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.stock-normal { background-color: var(--stock-normal-bg); color: var(--stock-normal-text); border-color: var(--stock-normal-border); }
+.stock-bajo   { background-color: var(--stock-low-bg); color: var(--stock-low-text); border-color: var(--stock-low-border); }
+.stock-agotado{ background-color: var(--stock-out-bg); color: var(--stock-out-text); border-color: var(--stock-out-border); }
+
+/* Badges de Estado */
+.estado-badge {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.estado-badge.disponible { background-color: var(--estado-disponible-bg); color: var(--estado-disponible-text); }
+.estado-badge.asignado   { background-color: var(--estado-asignado-bg);   color: var(--estado-asignado-text); }
+.estado-badge.en_mantenimiento { background-color: var(--estado-manten-bg); color: var(--estado-manten-text); }
+.estado-badge.de_baja    { background-color: var(--estado-baja-bg);       color: var(--estado-baja-text); }
+
+
+/* ==========================================================================
+   6. MODAL
+   ========================================================================== */
 
 .modal-overlay {
   position: fixed;
@@ -199,76 +291,90 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5); /* Más oscuro */
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999;
+  z-index: 1000;
 }
 
 .modal-content {
-  background-color: white;
-  padding: 20px 30px 30px 30px; /* Ajuste de padding */
-  border-radius: 10px;
+  background-color: var(--bg-white);
+  padding: 30px;
+  border-radius: var(--radius-card);
   width: 90%;
-  max-width: 700px; /* <-- CAMBIO: Más ancho para el grid */
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
-  text-align: left; /* <-- CAMBIO: Alinear texto a la izquierda */
-  max-height: 80vh; /* <-- NUEVO: Altura máxima */
-  overflow-y: auto;   /* <-- NUEVO: Scroll interno */
+  max-width: 700px;
+  box-shadow: var(--shadow-modal);
+  max-height: 85vh;
+  overflow-y: auto;
+  text-align: left; /* Alineación general izquierda */
 }
 
 .modal-content h3 {
   margin-top: 0;
-  margin-bottom: 15px;
-  font-size: 22px; /* Más grande */
-  color: #11182f;
-  text-align: center; /* Título principal centrado */
+  margin-bottom: 20px;
+  color: var(--text-heading);
+  text-align: center;
+  font-size: 22px;
 }
 
-/* --- (NUEVO) Estilos del formulario dentro del modal --- */
-/* (Basados en CrearRecurso.css) */
-
-.modal-content .form-section-header {
+/* Formulario */
+.form-section-header {
   font-size: 16px;
-  font-weight: bold;
-  color: #238CBC;
+  font-weight: 700;
+  color: var(--color-primary);
   margin-top: 20px;
   margin-bottom: 15px;
-  border-bottom: 2px solid #238CBC;
+  border-bottom: 2px solid var(--color-primary);
   padding-bottom: 5px;
 }
 
-.modal-content .form-grid {
+.form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2 columnas */
-  gap: 18px;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
   margin-bottom: 15px;
 }
 
-.modal-content .grid-full {
-  grid-column: 1 / -1; /* Ocupa todo el ancho */
+/* Utility class para forzar alineación izquierda si es necesario */
+.text-left {
+  text-align: left;
+}
+
+.grid-full {
+  grid-column: 1 / -1;
+}
+
+/* --- [NUEVO] Previsualización de imagen en modal --- */
+.image-preview {
+  margin-bottom: 10px;
+}
+
+.image-preview img {
+  width: 80px;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  object-fit: cover;
 }
 
 .modal-content label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
   font-weight: 600;
   font-size: 14px;
-  color: #333;
+  color: var(--text-main);
 }
 
-.modal-content input[type="text"],
-.modal-content input[type="number"],
-.modal-content input[type="date"],
+.modal-content input,
 .modal-content select,
 .modal-content textarea {
   width: 100%;
   padding: 10px;
-  font-size: 15px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-sizing: border-box; /* Importante */
+  font-size: 14px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-btn);
+  box-sizing: border-box;
+  font-family: inherit;
 }
 
 .modal-content input:disabled {
@@ -281,40 +387,97 @@
   min-height: 80px;
 }
 
-/* --- (FIN NUEVO) --- */
-
-
+/* Botones del Modal */
 .modal-buttons {
   display: flex;
-  justify-content: flex-end; /* Botones a la derecha */
+  justify-content: flex-end;
   gap: 15px;
-  margin-top: 25px; /* Espacio superior */
-  border-top: 1px solid #eee; /* Separador */
+  margin-top: 25px;
+  border-top: 1px solid var(--border-color);
   padding-top: 20px;
 }
 
-.modal-buttons button {
+.btn-primary {
+  background-color: var(--color-info);
+  color: var(--text-inverse);
   padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.3s ease;
+  font-weight: 600;
 }
 
-.modal-buttons .btn-primary {
-  background-color: #007bff;
-  color: white;
-}
-.modal-buttons .btn-primary:hover {
+.btn-primary:hover {
   background-color: #0056b3;
 }
 
-.modal-buttons .btn-secondary {
-  background-color: #6c757d;
-  color: white;
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: var(--text-inverse);
+  padding: 10px 20px;
+  font-weight: 600;
 }
-.modal-buttons .btn-secondary:hover {
-  background-color: #5a6268;
+
+.btn-secondary:hover {
+  background-color: var(--color-secondary-dark);
+}
+
+
+/* ==========================================================================
+   7. RESPONSIVE (Móvil)
+   ========================================================================== */
+
+@media screen and (max-width: 768px) {
+  .recursos-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .tabla-recursos, 
+  .tabla-recursos tbody, 
+  .tabla-recursos tr, 
+  .tabla-recursos td {
+    display: block;
+    width: 100%;
+  }
+
+  .tabla-recursos thead {
+    display: none;
+  }
+
+  .tabla-recursos tr {
+    background-color: var(--bg-white);
+    border-radius: var(--radius-card);
+    margin-bottom: 15px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    box-sizing: border-box; /* Añadido para evitar desbordes en padding */
+  }
+
+  .tabla-recursos td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+    text-align: right;
+  }
+
+  .tabla-recursos td:last-child {
+    border-bottom: none;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .tabla-recursos td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--text-heading);
+    text-align: left;
+    margin-right: 15px;
+    flex-basis: 40%; /* Asegura ancho para la etiqueta */
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
 }

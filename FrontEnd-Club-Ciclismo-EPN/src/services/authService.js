@@ -1,22 +1,18 @@
 import { jwtDecode } from "jwt-decode";
 
-const apiUrl = process.env.REACT_APP_API_URL;
+const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
+// --- FUNCIONES DE AUTENTICACIÓN ---
 
 export const registerUser = async (userData) => {
   try {
     const response = await fetch(`${apiUrl}/auth/register`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData),
     });
-
     const responseData = await response.json();
-    if (!response.ok) {
-      throw new Error(responseData.detail || 'Error en el registro');
-    }
+    if (!response.ok) throw new Error(responseData.detail || 'Error en el registro');
     return responseData;
   } catch (error) {
     console.error('Error en el registro:', error.message);
@@ -27,7 +23,6 @@ export const registerUser = async (userData) => {
 export const sendPasswordResetEmail = async (email) => {
   const body = new URLSearchParams();
   body.append("email", email);
-
 
   const response = await fetch(`${apiUrl}/auth/reset_password/send`, {
     method: "POST",
@@ -40,39 +35,25 @@ export const sendPasswordResetEmail = async (email) => {
 
   if (!response.ok) {
     const errorData = await response.json();
-
     let message = "Error al enviar el código.";
-
     if (Array.isArray(errorData.detail)) {
       const rawMsg = errorData.detail[0]?.msg || "";
-      if (rawMsg.toLowerCase().includes("email")) {
-        message = "Correo electrónico no válido.";
-      } else {
-        message = rawMsg;
-      }
+      message = rawMsg.toLowerCase().includes("email") ? "Correo electrónico no válido." : rawMsg;
     } else if (typeof errorData.detail === "string") {
       message = errorData.detail;
     }
-
-
     throw new Error(message);
   }
-
-
   return await response.json();
 };
 
 export const verifyResetCode = async (code) => {
   try {
-    const response = await fetch(`${apiUrl}/auth/reset_password/verify?code=${code}`, {
-      method: "POST"
-    });
-
+    const response = await fetch(`${apiUrl}/auth/reset_password/verify?code=${code}`, { method: "POST" });
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.detail || "Error al verificar el código.");
     }
-
     return await response.json();
   } catch (error) {
     console.error("Error en verifyResetCode:", error);
@@ -92,12 +73,10 @@ export const resetPassword = async (code, newPassword) => {
         },
       }
     );
-
     if (!response.ok) {
       const error = await response.text();
       throw new Error(error || "Error al restablecer la contraseña.");
     }
-
     return await response.json();
   } catch (error) {
     console.error("Error en resetPassword:", error);
@@ -126,8 +105,7 @@ export const login = async (email, password) => {
       let errorMessage = "Error al iniciar sesión";
       try {
         const errorData = JSON.parse(responseBody);
-        errorMessage =
-          Array.isArray(errorData.detail) && errorData.detail.length > 0
+        errorMessage = Array.isArray(errorData.detail) && errorData.detail.length > 0
             ? errorData.detail.map((err) => err.msg).join(", ")
             : errorData.detail || errorMessage;
       } catch {
@@ -135,92 +113,102 @@ export const login = async (email, password) => {
       }
       throw new Error(errorMessage);
     }
-
     return JSON.parse(responseBody); 
   } catch (error) {
     console.error("Error en login:", error.message);
     throw error;
   }
 };
-// Obtener el token almacenado
+
+// --- UTILIDADES DE TOKEN ---
+
 export const getToken = () => sessionStorage.getItem("accessToken");
 
-// Decodificar el token usando jwt-decode
 export const decodeToken = (token) => {
   try {
-    let decode = jwtDecode(token);
-    console.log(decode);
-    return decode;
+    return jwtDecode(token);
   } catch (error) {
     console.error("Error al decodificar el token:", error);
     return null;
   }
 };
 
-// Obtener el rol del usuario del token
 export const getUserRole = () => {
   const token = getToken();
+  if (!token) return null;
   const decoded = decodeToken(token);
-  console.log("Token decodificado:", decoded);
   return decoded?.role.toLowerCase() || null; 
 };
 
-// Verificar si el usuario está autenticado y el token no ha expirado
 export const isAuthenticated = () => {
   const token = getToken();
   if (!token) return false;
-
   const decoded = decodeToken(token);
   const now = Math.floor(Date.now() / 1000); 
   return decoded?.exp > now; 
 };
 
-//Cerrar sesion
 export const logout = () => {
   sessionStorage.removeItem("accessToken");
 };
+
 export const getUserData = () => {
   const token = getToken();
   if (!token) return null;
   return decodeToken(token);
 };
 
-// En authService.js - agregar esta función
-export const checkUserMembership = async () => {
-  try {
-    const token = getToken();
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
+// --- FUNCIONES QUE FALTABAN (Y CAUSABAN EL ERROR) ---
 
-    const response = await fetch(`${apiUrl}/memberships/my-membership`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
+export const getMyProfile = async () => {
+  const token = getToken();
+  if (!token) return null;
 
-    // Si no tiene membresía (404), retornar null
-    if (response.status === 404) {
-      return null;
-    }
+  const response = await fetch(`${apiUrl}/auth/my_profile`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
 
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
-    }
-
-    const membershipData = await response.json();
-    return membershipData;
-    
-  } catch (error) {
-    console.error('Error checking membership:', error);
-    
-    // Si es error 404 (no tiene membresía), retornar null
-    if (error.message.includes('404')) {
-      return null;
-    }
-    
-    throw error;
+  if (!response.ok) {
+    // Si es 404 significa que el usuario no tiene perfil asociado aun, retornamos null
+    if(response.status === 404) return null;
+    throw new Error("Error cargando perfil");
   }
+  return await response.json();
+};
+
+export const updateBasicInfo = async (personaId, data) => {
+  const token = getToken();
+  if (!token) throw new Error("No autenticado");
+
+  const response = await fetch(`${apiUrl}/auth/update/basic_information/${personaId}`, {
+    method: "PUT",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al actualizar información");
+  }
+  return await response.json();
+};
+
+export const getFullImageUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith("http") || path.startsWith("data:")) return path;
+  
+  // IMPORTANTE: Quitar '/api' si tu apiUrl lo tiene, para que quede solo el dominio base
+  // Ejemplo: si apiUrl es 'http://localhost:8000/api', queremos 'http://localhost:8000'
+  const baseUrl = apiUrl.replace('/api', ''); 
+  
+  // Asegurar que el path empiece con /
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  
+  return `${baseUrl}${cleanPath}`;
 };

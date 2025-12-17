@@ -1,0 +1,134 @@
+/* Renew Membership Modal Styles */
+.renew-modal {
+  padding: 10px;
+}
+
+.renew-modal-title {
+  color: #000;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.current-membership-info {
+  background: #fff3f3;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #EF4444;
+}
+
+.current-membership-info h4 {
+  margin: 0 0 10px 0;
+  color: #000;
+}
+
+.status-expired {
+  color: #EF4444;
+  font-weight: bold;
+}
+
+.plans-selection h4 {
+  color: #000;
+  margin-bottom: 15px;
+}
+
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.plan-card {
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.plan-card:hover {
+  border-color: #238CBC;
+  transform: translateY(-2px);
+}
+
+.plan-card.selected {
+  border-color: #238CBC;
+  background: #f0f9ff;
+  box-shadow: 0 4px 12px rgba(35, 140, 188, 0.2);
+}
+
+.plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.plan-header h5 {
+  margin: 0;
+  color: #000;
+  font-size: 1.1rem;
+}
+
+.plan-price {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #238CBC;
+}
+
+.plan-description {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+.plan-features ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.plan-features li {
+  padding: 2px 0;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+.renew-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-renew-confirm {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-renew-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-renew-cancel {
+  background: #e5e7eb;
+  color: #333;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-renew-cancel:hover {
+  background: #d1d5db;
+}

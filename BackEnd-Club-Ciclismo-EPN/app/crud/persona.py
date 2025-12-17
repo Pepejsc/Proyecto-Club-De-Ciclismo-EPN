@@ -1,14 +1,13 @@
 import base64
-
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.domain.persona import Persona
-from app.models.domain.user import User
-from app.models.schema.persona import PersonaCreate, PersonaUpdate, PersonaBase
-from app.services.verify import verify_cellphone_number, verify_location_field, verify_image_size
+from app.models.schema.persona import PersonaCreate, PersonaUpdate
+from app.services.verify import verify_cellphone_number, verify_location_field
 
+# Nota: Ya no importamos verify_image_size porque auth.py maneja la imagen
 
 def create_persona(db: Session, persona_data: PersonaCreate):
     # Validar número de teléfono
@@ -33,7 +32,7 @@ def create_persona(db: Session, persona_data: PersonaCreate):
         return new_persona
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail="El número de teléfono ya está registrado.")
+        raise HTTPException(status_code=400, detail="Error de integridad al crear persona.")
 
 
 def get_persona_by_id(db: Session, persona_id: int):
@@ -43,11 +42,13 @@ def get_persona_by_id(db: Session, persona_id: int):
 def get_all_personas(db: Session):
     return db.query(Persona).all()
 
+
 def update_persona(db: Session, persona_id: int, persona_data: PersonaUpdate):
     persona = db.query(Persona).filter(Persona.id == persona_id).first()
     if not persona:
         raise HTTPException(status_code=404, detail="Persona no encontrada.")
 
+    # exclude_unset=True evita sobreescribir con null lo que no enviaste
     update_data = persona_data.dict(exclude_unset=True)
 
     # Validación del número de teléfono
@@ -63,18 +64,24 @@ def update_persona(db: Session, persona_id: int, persona_data: PersonaUpdate):
     if "neighborhood" in update_data:
         update_data["neighborhood"] = verify_location_field(update_data["neighborhood"], "Barrio")
 
-    # Si se envía imagen base64, convertirla a bytes y validar
-    if "profile_picture" in update_data:
-        update_data["profile_picture"] = verify_image_size(update_data["profile_picture"])
-        persona.profile_picture = update_data["profile_picture"]
-
-    # Aplicar cambios
+    # --- CORRECCIÓN: Eliminamos el bloque que intentaba verificar la imagen ---
+    # Como auth.py ya nos manda la URL limpia (string), simplemente dejamos
+    # que el bucle de abajo la guarde tal cual.
+    
+    # Aplicar cambios dinámicamente
     for key, value in update_data.items():
         setattr(persona, key, value)
 
-    db.commit()
-    db.refresh(persona)
-    return persona
+    try:
+        db.add(persona)
+        db.commit()
+        db.refresh(persona)
+        return persona
+    except Exception as e:
+        db.rollback()
+        print(f"Error en DB update_persona: {e}")
+        raise HTTPException(status_code=500, detail="Error al actualizar persona en base de datos")
+
 def delete_persona(db: Session, persona_id: int):
     persona = get_persona_by_id(db, persona_id)
     if not persona:

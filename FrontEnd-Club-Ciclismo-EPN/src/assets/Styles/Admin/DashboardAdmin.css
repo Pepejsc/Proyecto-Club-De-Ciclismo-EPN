@@ -1,0 +1,451 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg-color: #F8FAFC;
+  --card-bg: #FFFFFF;
+  --text-dark: #111827;
+  /* Negro intenso */
+  --text-gray: #6B7280;
+  /* Gris medio */
+  --primary-blue: #3B82F6;
+  --success-green: #10B981;
+  --danger-red: #EF4444;
+  --warning-orange: #F59E0B;
+  --border-color: #E2E8F0;
+  /* Borde visible */
+}
+
+.dashboard-wrapper {
+  padding: 2rem;
+  background-color: var(--bg-color);
+  min-height: 100vh;
+  font-family: 'Montserrat', sans-serif;
+  color: var(--text-dark);
+}
+
+/* HEADER ALINEADO */
+.main-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.main-title {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+/* Botones alineados y estilizados */
+.chart-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-refresh {
+  border: 1px solid var(--border-color);
+  background: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-weight: 600;
+  color: #374151;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-refresh.action {
+  background: var(--primary-blue);
+  color: white;
+  border-color: var(--primary-blue);
+}
+
+.btn-refresh.action:hover {
+  background: #2563EB;
+}
+
+.btn-refresh.icon-only {
+  padding: 0.6rem;
+}
+
+/* LAYOUT */
+.dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.top-section {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  /* 2/3 para KPIs, 1/3 para Dona */
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+/* KPIs */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.kpi-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  /* Borde más visible para monitores externos */
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-title {
+  color: var(--text-gray);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.kpi-mini-bar {
+  width: 32px;
+  height: 6px;
+  background: #F3F4F6;
+  border-radius: 4px;
+}
+
+/* Colores de la barrita según estado */
+.kpi-mini-bar.positive {
+  background-color: #D1FAE5;
+}
+
+/* Verde claro */
+.kpi-mini-bar.negative {
+  background-color: #FEE2E2;
+}
+
+/* Rojo claro */
+
+.kpi-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.kpi-row h2 {
+  font-size: 2rem;
+  font-weight: 800;
+  /* Texto muy negro */
+  color: var(--text-dark);
+  margin: 0;
+  line-height: 1;
+}
+
+/* TENDENCIAS */
+.trend-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.trend-badge.positive {
+  color: var(--success-green);
+  background: #ECFDF5;
+}
+
+.trend-badge.negative {
+  color: var(--danger-red);
+  background: #FEF2F2;
+}
+
+.trend-badge.neutral {
+  color: var(--text-gray);
+  background: #F3F4F6;
+}
+
+.compare-text {
+  font-size: 0.8rem;
+  color: #6B7280;
+  margin: 0;
+}
+
+/* DONA */
+.donut-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-card h3 {
+  align-self: flex-start;
+  margin: 0 0 1.5rem 0;
+  color: var(--text-gray);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.donut-wrapper {
+  margin-bottom: 2rem;
+}
+
+.donut-container {
+  width: 160px;
+  height: 160px;
+}
+
+.donut-chart {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+}
+
+.donut-hole {
+  position: absolute;
+  top: 18%;
+  left: 18%;
+  width: 64%;
+  height: 64%;
+  background: var(--card-bg);
+  border-radius: 50%;
+}
+
+.donut-legend {
+  width: 100%;
+}
+
+.legend-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+  font-size: 0.9rem;
+}
+
+.legend-label-group {
+  display: flex;
+  align-items: center;
+}
+
+.legend-row .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.legend-row .label {
+  color: #4B5563;
+  font-weight: 500;
+}
+
+.legend-row .val {
+  color: #111827;
+  font-weight: 700;
+}
+
+/* SECCIÓN INFERIOR */
+.bottom-section {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.5rem;
+}
+
+.table-card,
+.chart-card-large {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+}
+
+.chart-header-row h3,
+.table-card h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  color: var(--text-dark);
+  font-weight: 700;
+}
+
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.products-table th {
+  text-align: left;
+  color: var(--text-gray);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.products-table td {
+  padding: 1rem 0;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #F9FAFB;
+}
+
+.prod-rank {
+  background: #F3F4F6;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: #4B5563;
+}
+
+.prod-name {
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.prod-val {
+  text-align: right;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.chart-select {
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: var(--text-gray);
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+}
+
+/* ESTILOS NUEVOS PARA LA LEYENDA */
+.legend-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed #F1F5F9;
+  /* Línea separadora sutil */
+}
+
+.legend-row:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.legend-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.legend-values {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.count-text {
+  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 1rem;
+}
+
+/* Flechas con fondo de color (Badges pequeños) */
+.arrow-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.arrow-badge.up {
+  background-color: #ECFDF5;
+  color: #10B981;
+  /* Verde */
+}
+
+.arrow-badge.neutral {
+  background-color: #FFFBEB;
+  color: #F59E0B;
+  /* Amarillo */
+}
+
+.arrow-badge.down {
+  background-color: #FEF2F2;
+  color: #EF4444;
+  /* Rojo */
+}
+
+/* Ajuste de colores del gráfico para coincidir */
+.dot[style*="#10B981"] {
+  background-color: #10B981 !important;
+}
+
+.dot[style*="#F59E0B"] {
+  background-color: #F59E0B !important;
+}
+
+.dot[style*="#EF4444"] {
+  background-color: #EF4444 !important;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+  .top-section {
+    grid-template-columns: 1fr;
+  }
+
+  .donut-card {
+    flex-direction: row;
+    justify-content: space-around;
+  }
+
+  .bottom-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .donut-card {
+    flex-direction: column;
+  }
+
+  .main-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

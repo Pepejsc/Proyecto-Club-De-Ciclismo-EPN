@@ -2,15 +2,33 @@ import React, { useState, useEffect, useRef } from "react";
 import { Nav } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import "../../assets/Styles/Admin/Sidebar.css";
-import { getUserRole, logout } from "../../services/authService";
+import { getUserRole, logout, getMyProfile } from "../../services/authService";
 import { rolePermissions } from "../../config/roles";
 import { useUser } from "../../context/Auth/UserContext";
 import { useSidebar } from "../../context/Admin/SidebarContext";
 
+// --- 1. LÓGICA DE URL DIRECTA (Igual que en User Sidebar) ---
+const API_URL = "http://127.0.0.1:8000";
+
+const getSidebarImageUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith("http") || path.startsWith("data:")) return path;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${API_URL}${cleanPath}`;
+};
+// -----------------------------------------------------------
+
 const Sidebar = () => {
-  const { userData } = useUser();
+  // Usamos setUserData para actualizar el contexto global si es necesario
+  const { userData, setUserData } = useUser();
   const userRole = getUserRole();
   const links = rolePermissions[userRole] || [];
+
+  // --- 2. ESTADOS LOCALES PARA CARGA INMEDIATA ---
+  const [localPhoto, setLocalPhoto] = useState(null);
+  const [localName, setLocalName] = useState("");
+  const [localInfo, setLocalInfo] = useState("");
+
   const [expandedCategory, setExpandedCategory] = useState(null);
   const navigate = useNavigate();
   const sidebarRef = useRef(null);
@@ -23,6 +41,7 @@ const Sidebar = () => {
     eventos: links.filter((link) => link.category === "eventos"),
     administrativo: links.filter((link) => link.category === "administrativo"),
     financiero: links.filter((link) => link.category === "financiero"),
+    dashboard: links.filter((link) => link.category === "Dashboard"),
   };
 
   const toggleCategory = (category) => {
@@ -30,7 +49,7 @@ const Sidebar = () => {
       setIsCollapsed(false);
       setExpandedCategory(category);
     } else {
-      setExpandedCategory(prev => (prev === category ? null : category));
+      setExpandedCategory((prev) => (prev === category ? null : category));
     }
   };
 
@@ -39,22 +58,43 @@ const Sidebar = () => {
     navigate("/");
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsCollapsed(window.innerWidth <= 768);
-    };
+  // --- 3. FUNCIÓN DE REFRESCAR PERFIL ---
+  const refreshProfile = async () => {
+    try {
+      const profile = await getMyProfile();
+      if (profile) {
+        setLocalPhoto(profile.profile_picture);
+        setLocalName(`${profile.first_name} ${profile.last_name}`);
+        setLocalInfo(`${profile.city}, ${profile.neighborhood}`);
 
+        if (userData) setUserData({ ...userData, ...profile });
+      }
+    } catch (error) {
+      console.error("Error admin sidebar", error);
+    }
+  };
+
+  useEffect(() => {
+    refreshProfile(); // Carga inicial
+
+    // Escuchar evento de actualización (si el admin edita su perfil)
+    const handleUpdate = () => refreshProfile();
+    window.addEventListener("profile_updated", handleUpdate);
+
+    const handleResize = () => setIsCollapsed(window.innerWidth <= 768);
     handleResize();
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("profile_updated", handleUpdate);
+      window.removeEventListener("resize", handleResize);
+      // Click outside se maneja en otro useEffect
+    };
   }, []);
 
   useEffect(() => {
-    if (isCollapsed) {
-      document.body.classList.add("sidebar-collapsed");
-    } else {
-      document.body.classList.remove("sidebar-collapsed");
-    }
+    if (isCollapsed) document.body.classList.add("sidebar-collapsed");
+    else document.body.classList.remove("sidebar-collapsed");
   }, [isCollapsed]);
 
   useEffect(() => {
@@ -68,7 +108,6 @@ const Sidebar = () => {
         setExpandedCategory(null);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -79,32 +118,36 @@ const Sidebar = () => {
       setExpandedCategory(null);
     }
   };
-  useEffect(() => {
-    console.log("Estado visual:", isCollapsed);
-  }, [isCollapsed]);
+
   return (
     <>
       <div
         ref={sidebarRef}
         className="sidebar"
         data-state={isCollapsed ? "collapsed" : "expanded"}
-      >        <div className="sidebar-user-box">
+      >
+        <div className="sidebar-user-box">
+          {/* --- 4. USO DE LA IMAGEN CORREGIDO --- */}
           <img
             src={
-              userData?.profile_picture
-                ? userData.profile_picture
+              localPhoto
+                ? `${getSidebarImageUrl(localPhoto)}?t=${Date.now()}` // URL Backend + Cache Busting
                 : require("../../assets/Images/Icons/defaultProfile.png")
             }
             alt="Foto de perfil"
             className="sidebar-user-avatar"
+            style={{ objectFit: "cover" }}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = require("../../assets/Images/Icons/defaultProfile.png");
+            }}
           />
+
           <div className="sidebar-user-info">
             <span className="sidebar-user-name">
-              {userData?.first_name} {userData?.last_name}
+              {localName || "Administrador"}
             </span>
-            <span className="sidebar-user-info">
-              {userData?.city}, {userData?.neighborhood}
-            </span>
+            <span className="sidebar-user-info">{localInfo}</span>
           </div>
         </div>
 
@@ -114,12 +157,21 @@ const Sidebar = () => {
             <span className="sidebar-label">Inicio</span>
           </Nav.Link>
 
-          {/* Categoría: Configuración Personal */}
+          {/* --- CATEGORÍAS (Sin cambios) --- */}
           <div className="sidebar-category">
-            <div className="category-title" onClick={() => toggleCategory("personal")}>
+            <div
+              className="category-title"
+              onClick={() => toggleCategory("personal")}
+            >
               <i className="fas fa-user-cog category-icon"></i>
               <span>Configuración Personal</span>
-              <i className={`fas ${expandedCategory === "personal" ? "fa-chevron-up" : "fa-chevron-down"} chevron-icon`}></i>
+              <i
+                className={`fas ${
+                  expandedCategory === "personal"
+                    ? "fa-chevron-up"
+                    : "fa-chevron-down"
+                } chevron-icon`}
+              ></i>
             </div>
             {expandedCategory === "personal" &&
               categories.personal.map((link) => (
@@ -135,12 +187,20 @@ const Sidebar = () => {
               ))}
           </div>
 
-          {/* Categoría: Gestión de Usuarios */}
           <div className="sidebar-category">
-            <div className="category-title" onClick={() => toggleCategory("users")}>
+            <div
+              className="category-title"
+              onClick={() => toggleCategory("users")}
+            >
               <i className="fas fa-users category-icon"></i>
               <span>Gestión de Usuarios</span>
-              <i className={`fas ${expandedCategory === "users" ? "fa-chevron-up" : "fa-chevron-down"} chevron-icon`}></i>
+              <i
+                className={`fas ${
+                  expandedCategory === "users"
+                    ? "fa-chevron-up"
+                    : "fa-chevron-down"
+                } chevron-icon`}
+              ></i>
             </div>
             {expandedCategory === "users" &&
               categories.users.map((link) => (
@@ -156,12 +216,20 @@ const Sidebar = () => {
               ))}
           </div>
 
-          {/* Categoría: Gestión de Rutas */}
           <div className="sidebar-category">
-            <div className="category-title" onClick={() => toggleCategory("rutas")}>
+            <div
+              className="category-title"
+              onClick={() => toggleCategory("rutas")}
+            >
               <i className="fas fa-route category-icon"></i>
               <span>Gestión de Rutas</span>
-              <i className={`fas ${expandedCategory === "rutas" ? "fa-chevron-up" : "fa-chevron-down"} chevron-icon`}></i>
+              <i
+                className={`fas ${
+                  expandedCategory === "rutas"
+                    ? "fa-chevron-up"
+                    : "fa-chevron-down"
+                } chevron-icon`}
+              ></i>
             </div>
             {expandedCategory === "rutas" &&
               categories.rutas.map((link) => (
@@ -177,12 +245,20 @@ const Sidebar = () => {
               ))}
           </div>
 
-          {/* Categoría: Gestión de Eventos */}
           <div className="sidebar-category">
-            <div className="category-title" onClick={() => toggleCategory("eventos")}>
+            <div
+              className="category-title"
+              onClick={() => toggleCategory("eventos")}
+            >
               <i className="far fa-calendar-check category-icon"></i>
               <span>Gestión de Eventos</span>
-              <i className={`fas ${expandedCategory === "eventos" ? "fa-chevron-up" : "fa-chevron-down"} chevron-icon`}></i>
+              <i
+                className={`fas ${
+                  expandedCategory === "eventos"
+                    ? "fa-chevron-up"
+                    : "fa-chevron-down"
+                } chevron-icon`}
+              ></i>
             </div>
             {expandedCategory === "eventos" &&
               categories.eventos.map((link) => (
@@ -198,12 +274,20 @@ const Sidebar = () => {
               ))}
           </div>
 
-          {/* Categoría: Gestión administrativa */}
           <div className="sidebar-category">
-            <div className="category-title" onClick={() => toggleCategory("administrativo")}>
+            <div
+              className="category-title"
+              onClick={() => toggleCategory("administrativo")}
+            >
               <i className="fas fa-briefcase category-icon"></i>
               <span>Gestión Administrativa</span>
-              <i className={`fas ${expandedCategory === "administrativo" ? "fa-chevron-up" : "fa-chevron-down"} chevron-icon`}></i>
+              <i
+                className={`fas ${
+                  expandedCategory === "administrativo"
+                    ? "fa-chevron-up"
+                    : "fa-chevron-down"
+                } chevron-icon`}
+              ></i>
             </div>
             {expandedCategory === "administrativo" &&
               categories.administrativo.map((link) => (
@@ -219,13 +303,20 @@ const Sidebar = () => {
               ))}
           </div>
 
-
-          {/* Categoría: Gestión financiera*/}
           <div className="sidebar-category">
-            <div className="category-title" onClick={() => toggleCategory("financiero")}>
+            <div
+              className="category-title"
+              onClick={() => toggleCategory("financiero")}
+            >
               <i className="fas fa-chart-line category-icon"></i>
               <span>Gestión Financiera</span>
-              <i className={`fas ${expandedCategory === "financiero" ? "fa-chevron-up" : "fa-chevron-down"} chevron-icon`}></i>
+              <i
+                className={`fas ${
+                  expandedCategory === "financiero"
+                    ? "fa-chevron-up"
+                    : "fa-chevron-down"
+                } chevron-icon`}
+              ></i>
             </div>
             {expandedCategory === "financiero" &&
               categories.financiero.map((link) => (
@@ -241,8 +332,11 @@ const Sidebar = () => {
               ))}
           </div>
 
-          {/* Cerrar sesión */}
-          <div className="sidebar-link" onClick={handleLogout} style={{ cursor: "pointer" }}>
+          <div
+            className="sidebar-link"
+            onClick={handleLogout}
+            style={{ cursor: "pointer" }}
+          >
             <i className="fas fa-sign-out-alt sidebar-icon"></i>
             <span className="sidebar-label">Cerrar Sesión</span>
           </div>
@@ -250,7 +344,10 @@ const Sidebar = () => {
       </div>
 
       {!isCollapsed && window.innerWidth <= 576 && (
-        <div className="sidebar-overlay" onClick={() => setIsCollapsed(true)}></div>
+        <div
+          className="sidebar-overlay"
+          onClick={() => setIsCollapsed(true)}
+        ></div>
       )}
     </>
   );

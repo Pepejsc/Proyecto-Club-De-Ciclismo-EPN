@@ -388,6 +388,29 @@
   pointer-events: none; /* Para poder dar clic en la imagen si quisieras */
 }
 
+/* --- Botón de Cerrar X en Modal --- */
+.modal-close-x {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.modal-close-x:hover {
+  color: #000;
+}
+
+/* Aseguramos que el modal-content tenga position relative para ubicar la X */
+.modal-content {
+  position: relative; 
+  /* ... tus otros estilos de modal-content ... */
+}
+
 /* --- Responsive --- */
 @media (max-width: 850px) {
   .producto-main {
@@ -425,4 +448,56 @@
     max-width: 100%;
     height: 450px; 
   }
+}
+
+/* Estilos para el formulario de invitado en el modal */
+.guest-form {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    text-align: left;
+}
+
+.guest-form h4 {
+    margin: 0 0 5px 0;
+    color: #238CBC;
+    font-size: 1rem;
+}
+
+.form-note {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    margin-bottom: 10px;
+}
+
+.form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: 'Montserrat', sans-serif;
+    transition: border-color 0.3s;
+}
+
+.form-input:focus {
+    border-color: #238CBC;
+    outline: none;
+}
+
+/* Responsive para los inputs dobles */
+@media (max-width: 480px) {
+    .form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
 }

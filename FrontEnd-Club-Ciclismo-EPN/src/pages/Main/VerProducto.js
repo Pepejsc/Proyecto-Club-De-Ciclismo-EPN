@@ -5,14 +5,15 @@ import ProductosCarrusel from '../../components/Main/ProductosCarrusel';
 import '../../assets/Styles/Main/VerProducto.css';
 import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash } from '@fortawesome/free-solid-svg-icons'; 
-import { faWhatsapp } from '@fortawesome/free-brands-svg-icons'; 
-import { useCart } from '../Main/CarContext';
+import { faTrash, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
+import { useCart } from '../Main/CarContext'; // Asegúrate de que la ruta sea correcta
 
 const apiUrl = process.env.REACT_APP_API_URL;
 const placeholderImg = "https://placehold.co/500x500/e8f0fe/10325c?text=EPN+Cycling";
 
 const VerProducto = () => {
+  // --- ESTADOS ---
   const [producto, setProducto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,11 +22,23 @@ const VerProducto = () => {
   const [showCartModal, setShowCartModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
+  // Estado para controlar los pasos del Modal (1: Lista, 2: Datos)
+  const [step, setStep] = useState(1);
+
+  // Estado para datos del cliente invitado
+  const [cliente, setCliente] = useState({
+    nombre: '',
+    telefono: '',
+    cedula: ''
+  });
+  
   const { id } = useParams();
   const navigate = useNavigate();
-  // Importamos la nueva función getQuantityInCart
+  
+  // Hooks del Carrito
   const { cartItems, addToCart, removeFromCart, cartTotal, cartCount, clearCart, getQuantityInCart } = useCart();
 
+  // --- 1. CARGAR PRODUCTO ---
   useEffect(() => {
     const fetchProducto = async () => {
       setLoading(true);
@@ -35,12 +48,17 @@ const VerProducto = () => {
         const response = await fetch(`${apiUrl}/recursos/${id}`);
         if (!response.ok) throw new Error('Producto no encontrado');
         const data = await response.json();
+        
         if (data.tipo_recurso !== 'COMERCIAL') throw new Error('Este producto no está disponible para la venta.');
+        
         setProducto(data);
         setSelectedTalla(null);
+        
+        // Seleccionar imagen principal
         if (data.imagen_url) setSelectedImage(data.imagen_url);
         else if (data.imagenes_secundarias && data.imagenes_secundarias.length > 0) setSelectedImage(data.imagenes_secundarias[0].imagen_url);
         else setSelectedImage(placeholderImg);
+        
       } catch (err) {
         setError(err.message);
       } finally {
@@ -53,17 +71,16 @@ const VerProducto = () => {
   const isAgotado = !producto || producto.stock_actual <= 0;
   const tallasArray = producto?.tallas_disponibles ? producto.tallas_disponibles.split(',').map(t => t.trim()) : [];
 
-  // --- (MODIFICADO) Validación de Stock ---
+  // --- 2. MANEJAR CARRITO (AÑADIR) ---
   const handleAddToCart = () => {
     if (!selectedTalla && tallasArray.length > 0) {
       toast.warning("Por favor selecciona una talla.");
       return;
     }
 
-    // 1. Verificar cuántos tengo ya en el carrito
+    // Verificar stock acumulado en carrito
     const currentInCart = getQuantityInCart(producto.id_recurso);
     
-    // 2. Verificar si al sumar 1 supero el stock real
     if (currentInCart + 1 > producto.stock_actual) {
         toast.error(`¡No hay suficiente stock! Solo quedan ${producto.stock_actual} unidades.`);
         return;
@@ -72,51 +89,77 @@ const VerProducto = () => {
     addToCart(producto, selectedTalla || "Única");
     toast.success("Producto añadido al carrito");
     setShowCartModal(true);
+    setStep(1); // Siempre abrir en el paso 1
   };
 
+  // --- 3. CHECKOUT (ENVIAR AL BACKEND) ---
   const handleWhatsAppCheckout = async () => {
     if (cartItems.length === 0) return;
+
+    // Validación
+    if (!cliente.nombre.trim() || !cliente.telefono.trim() || cliente.telefono.length < 9) {
+        toast.warning("Por favor ingresa tu Nombre y un Celular válido.");
+        return;
+    }
+
     setIsProcessing(true);
     try {
-      // Loop para restar stock (igual que antes)
-      for (const item of cartItems) {
-        // Restamos la cantidad TOTAL acumulada de ese item (ej. 3 veces)
-        // Ojo: Tu endpoint actual resta de 1 en 1.
-        // Para ser precisos, deberíamos llamar al endpoint 'item.quantity' veces.
-        for (let i = 0; i < item.quantity; i++) {
-             const response = await fetch(`${apiUrl}/recursos/${item.id_recurso}/comprar`, {
-                method: 'POST',
-            });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Error con ${item.nombre}: ${errorData.detail}`);
-            }
-        }
+      // Payload
+      const orderPayload = {
+        customer_name: `${cliente.nombre} ${cliente.cedula ? `(CI: ${cliente.cedula})` : ''}`,
+        customer_phone: cliente.telefono,
+        total: cartTotal,
+        items: cartItems.map(item => ({
+            id_recurso: item.id_recurso,
+            quantity: item.quantity,
+            precio_venta: item.precio_venta,
+            nombre: item.nombre
+        }))
+      };
+
+      // Fetch al Backend
+      const response = await fetch(`${apiUrl}/ventas/checkout`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderPayload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Error al procesar la orden");
       }
 
-      const telefono = "593987624912";
-      let mensaje = `¡Hola! Quiero confirmar mi pedido de la web:\n\n`;
-      
-      cartItems.forEach((item) => {
-        mensaje += `${item.nombre}* (x${item.quantity})\n`;
-        mensaje += `   Talla: ${item.selectedTalla}\n`;
-        mensaje += `   Precio Unitario: $${item.precio_venta}\n`;
-        mensaje += `   Subtotal: $${(item.precio_venta * item.quantity).toFixed(2)}\n\n`;
-      });
-      mensaje += `TOTAL A PAGAR: $${cartTotal.toFixed(2)}*`;
-
-      const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
-      window.open(url, '_blank');
+      // --- ÉXITO ---
+      // 1. Limpieza Forzada
+      localStorage.removeItem('cartItems'); 
+      localStorage.removeItem('cart'); 
       clearCart();
+      
+      // 2. Reset UI
+      setCliente({ nombre: '', telefono: '', cedula: '' });
       setShowCartModal(false);
-      toast.success("Pedido enviado y stock actualizado.");
-      window.location.reload();
+      setStep(1);
+      
+      // 3. Notificación y Recarga
+      toast.success("¡Pedido enviado correctamente! Te contactaremos.");
+      
+      setTimeout(() => {
+          window.location.reload();
+      }, 2000);
+
     } catch (error) {
       console.error("Error en checkout:", error);
-      toast.error("Hubo un problema: " + error.message);
+      toast.error(error.message);
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Función para cerrar y resetear modal
+  const handleCloseModal = () => {
+    setShowCartModal(false);
+    setCliente({ nombre: '', telefono: '', cedula: '' });
+    setStep(1);
   };
 
   if (loading) return <PublicLayout><div className="producto-page-loading">Cargando...</div></PublicLayout>;
@@ -126,11 +169,17 @@ const VerProducto = () => {
     <PublicLayout>
       <div className="producto-page">
         <div className="producto-main">
+          
+          {/* --- COLUMNA IZQUIERDA (FOTOS) --- */}
           <div className="producto-columna-izquierda">
-             <div className="producto-imagen-principal">
-              {/* Si está agotado, mostramos un overlay visual o una etiqueta */}
+              <div className="producto-imagen-principal">
               {isAgotado && <div className="imagen-overlay-agotado">AGOTADO</div>}
-              <img src={selectedImage} alt={producto.nombre} onError={(e) => { e.target.src = placeholderImg; }} style={isAgotado ? {opacity: 0.6} : {}} />
+              <img 
+                src={selectedImage} 
+                alt={producto.nombre} 
+                onError={(e) => { e.target.src = placeholderImg; }} 
+                style={isAgotado ? {opacity: 0.6} : {}} 
+              />
             </div>
             <div className="producto-galeria-thumbnails">
               {producto.imagen_url && (
@@ -146,13 +195,14 @@ const VerProducto = () => {
             </div>
           </div>
 
+          {/* --- COLUMNA DERECHA (INFO) --- */}
           <div className="producto-info">
             <h1>{producto.nombre.toUpperCase()}</h1>
             <p>{producto.descripcion || "Sin descripción."}</p>
             <span className="precio">${Number(producto.precio_venta).toFixed(2)}</span>
             
             <p style={{fontSize: '0.9rem', color: isAgotado ? 'red' : '#666', marginBottom: '10px'}}>
-               Status: <strong>{isAgotado ? "Agotado" : `Disponible (${producto.stock_actual} un.)`}</strong>
+                Status: <strong>{isAgotado ? "Agotado" : `Disponible (${producto.stock_actual} un.)`}</strong>
             </p>
 
             {tallasArray.length > 0 && (
@@ -185,58 +235,139 @@ const VerProducto = () => {
               
               {cartItems.length > 0 && (
                 <button className="btn-ver-carrito" onClick={() => setShowCartModal(true)}>
-                   Ver mi Carrito ({cartCount})
+                    Ver mi Carrito ({cartCount})
                 </button>
               )}
             </div>
           </div>
         </div>
 
-        {/* --- MODAL DEL CARRITO (AGRUPADO) --- */}
+        {/* --- MODAL DEL CARRITO (2 PASOS) --- */}
         {showCartModal && (
           <div className="modal-overlay">
             <div className="modal-content modal-compra">
-              <h3>Tu Carrito de Compras</h3>
-              <div className="carrito-lista">
-                {cartItems.length === 0 ? (
-                  <p>El carrito está vacío.</p>
-                ) : (
-                  cartItems.map((item) => (
-                    <div key={item.uniqueId} className="carrito-item">
-                      <img src={item.imagen_url || placeholderImg} alt="mini" className="carrito-img-mini"/>
-                      <div className="carrito-info">
-                        <p className="c-nombre">{item.nombre}</p>
-                        <p className="c-detalles">
-                             Talla: {item.selectedTalla} | ${item.precio_venta} 
-                             {/* --- (NUEVO) Mostrar Cantidad --- */}
-                             <span style={{fontWeight: 'bold', color: '#238CBC', marginLeft: '8px'}}>
-                                x{item.quantity}
-                             </span>
-                        </p>
-                      </div>
-                      <button className="btn-trash" onClick={() => removeFromCart(item.uniqueId, true)}> {/* True para borrar todo el grupo */}
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
+
+              <button className="modal-close-x" onClick={handleCloseModal}>
+                 <FontAwesomeIcon icon={faTimes} />
+              </button>
+
+              <h3>{step === 1 ? "Tu Carrito de Compras" : "Datos de Facturación"}</h3>
+
+              {/* === PASO 1: LISTA DE ITEMS === */}
+              {step === 1 && (
+                <>
+                  <div className="carrito-lista">
+                    {cartItems.length === 0 ? (
+                      <p>El carrito está vacío.</p>
+                    ) : (
+                      cartItems.map((item) => (
+                        <div key={item.uniqueId} className="carrito-item">
+                          <img src={item.imagen_url || placeholderImg} alt="mini" className="carrito-img-mini"/>
+                          <div className="carrito-info">
+                            <p className="c-nombre">{item.nombre}</p>
+                            <p className="c-detalles">
+                                 Talla: {item.selectedTalla} | ${item.precio_venta} 
+                                 <span style={{fontWeight: 'bold', color: '#238CBC', marginLeft: '8px'}}>
+                                    x{item.quantity}
+                                 </span>
+                            </p>
+                          </div>
+                          <button className="btn-trash" onClick={() => removeFromCart(item.uniqueId, true)}>
+                            <FontAwesomeIcon icon={faTrash} />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {cartItems.length > 0 && (
+                    <div className="carrito-total">
+                      <span>Total Estimado:</span>
+                      <span className="total-precio">${cartTotal.toFixed(2)}</span>
                     </div>
-                  ))
-                )}
-              </div>
-              {/* ... (resto del modal igual) ... */}
-               {cartItems.length > 0 && (
-                <div className="carrito-total">
-                  <span>Total:</span>
-                  <span className="total-precio">${cartTotal.toFixed(2)}</span>
+                  )}
+
+                  <div className="modal-buttons">
+                    {/* Botón para ir al Paso 2 */}
+                    <button 
+                        className="btn-primary" 
+                        onClick={() => setStep(2)}
+                        disabled={cartItems.length === 0}
+                    >
+                        Procesar Pago
+                    </button>
+                    <button className="btn-secondary" onClick={handleCloseModal}>
+                      Seguir Comprando
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* === PASO 2: FORMULARIO DE INVITADO === */}
+              {step === 2 && cartItems.length > 0 && (
+                <div className="step-container">
+                  <div className="guest-form">
+                      <p className="form-note">Ingresa tus datos para generar la orden.</p>
+                      
+                      <div className="form-group">
+                          <label>Nombre Completo *</label>
+                          <input 
+                              type="text" 
+                              className="form-input"
+                              placeholder="Ej: Juan Pérez"
+                              value={cliente.nombre}
+                              onChange={(e) => setCliente({...cliente, nombre: e.target.value})}
+                          />
+                      </div>
+                      
+                      <div className="form-row">
+                          <div className="form-group" style={{flex: 1}}>
+                            <label>Celular (WhatsApp) *</label>
+                            <input 
+                                type="tel" 
+                                className="form-input"
+                                placeholder="099..."
+                                value={cliente.telefono}
+                                onChange={(e) => setCliente({...cliente, telefono: e.target.value})}
+                            />
+                          </div>
+                          <div className="form-group" style={{flex: 1}}>
+                            <label>C.I. / RUC (Opcional)</label>
+                            <input 
+                                type="text" 
+                                className="form-input"
+                                placeholder="171..."
+                                value={cliente.cedula}
+                                onChange={(e) => setCliente({...cliente, cedula: e.target.value})}
+                            />
+                          </div>
+                      </div>
+
+                      <div className="carrito-total" style={{marginTop: '1rem', borderTop: '1px dashed #eee'}}>
+                          <span>Total a Pagar:</span>
+                          <span className="total-precio">${cartTotal.toFixed(2)}</span>
+                      </div>
+                  </div>
+
+                  <p className="modal-note">Al confirmar, enviaremos tu pedido.</p>
+                  
+                  <div className="modal-buttons">
+                    <button 
+                        className="btn-primary btn-whatsapp-modal" 
+                        onClick={handleWhatsAppCheckout} 
+                        disabled={isProcessing}
+                    >
+                        <FontAwesomeIcon icon={faWhatsapp} /> {isProcessing ? "Procesando..." : "Confirmar Pedido"}
+                    </button>
+                    
+                    {/* Botón para volver al Paso 1 */}
+                    <button className="btn-secondary" onClick={() => setStep(1)} disabled={isProcessing}>
+                       Atrás
+                    </button>
+                  </div>
                 </div>
               )}
-              <p className="modal-note">Al confirmar, serás redirigido a WhatsApp.</p>
-              <div className="modal-buttons">
-                <button className="btn-primary btn-whatsapp-modal" onClick={handleWhatsAppCheckout} disabled={cartItems.length === 0 || isProcessing}>
-                   <FontAwesomeIcon icon={faWhatsapp} /> {isProcessing ? "..." : "Confirmar Pedido"}
-                </button>
-                <button className="btn-secondary" onClick={() => setShowCartModal(false)} disabled={isProcessing}>
-                  Seguir Comprando
-                </button>
-              </div>
+
             </div>
           </div>
         )}

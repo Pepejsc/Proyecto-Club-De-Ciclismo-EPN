@@ -1,154 +1,163 @@
 import React, { useEffect, useState } from "react";
-import { deleteUser, fetchUsers, updateUserRole } from "../../services/userService";
+import { fetchUsers } from "../../services/userService";
+import { getFullImageUrl, getToken } from "../../services/authService";
 import { toast } from "react-toastify";
-import Swal from "sweetalert2";
-import "../../assets/Styles/Admin/ListaUsuarios.css";
-import { logout, getUserData } from "../../services/authService";
-import { useNavigate } from 'react-router-dom';
-import { useUser } from "../../context/Auth/UserContext";
+import "../../assets/Styles/Admin/ListaMiembros.css";
+import defaultProfile from "../../assets/Images/Icons/defaultProfile.png";
+
+const API_URL = "http://127.0.0.1:8000";
 
 const ListaMiembros = () => {
   const [usuarios, setUsuarios] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [newRole, setNewRole] = useState("Normal");
-  const navigate = useNavigate();
-  const { setUserData } = useUser();
+  const [loading, setLoading] = useState(true);
 
+  const loadUsers = async () => {
+    try {
+      const data = await fetchUsers();
+      const members = data.filter(u => u.role === 'Normal' || u.role === 'NORMAL');
+      setUsuarios(members);
+    } catch (error) {
+      console.error("Error cargando usuarios:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchUsers()
-      .then((data) => setUsuarios(data))
-      .catch((error) => console.error("Error al cargar usuarios:", error));
+    loadUsers();
   }, []);
 
-  const handleDelete = async (userId) => {
-    const result = await Swal.fire({
-      title: '¿Estás seguro?',
-      text: "Se borrará de forma permanente",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, borrar',
-      cancelButtonText: 'Cancelar'
-    });
-
-    if (result.isConfirmed) {
-      try {
-        await deleteUser(userId);
-        toast.success("Usuario eliminado correctamente");
-        setUsuarios(prev => prev.filter(u => u.id !== userId));
-      } catch (error) {
-        toast.error("Error al eliminar el usuario");
-      }
-    }
-  };
-
-  const handleEdit = (user) => {
-    setSelectedUser(user);
-    setNewRole(user.role);
-    setModalVisible(true);
-  };
-
-  const handleRoleUpdate = async () => {
+  const handleToggleStatus = async (userId, currentStatus) => {
     try {
-      const currentUser = getUserData(); 
-  
-      const esMismoUsuario = selectedUser.id === currentUser?.id;
-      const rolCambiado = newRole !== currentUser?.role;
-  
-      await updateUserRole(selectedUser.id, newRole);
-      toast.success("Rol actualizado correctamente");
-  
-      setModalVisible(false);
-  
-      if (esMismoUsuario && rolCambiado) {
-        toast.info("Tu rol ha cambiado. Cerrando sesión...");
-        logout();
-        setUserData(null);
-        navigate("/login");
-        return; 
-      }
-  
-      const updated = await fetchUsers();
-      setUsuarios(updated);
-  
+      const token = getToken();
+      const response = await fetch(`${API_URL}/memberships/${userId}/toggle-status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) throw new Error("Error al cambiar estado");
+      
+      toast.success("Estado actualizado");
+      loadUsers(); 
     } catch (error) {
-      console.error("Error al actualizar el rol:", error);
-      toast.error("Error al actualizar el rol");
+      toast.error("No se pudo cambiar el estado");
     }
   };
-  
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "-";
+    return new Date(dateStr).toLocaleDateString();
+  };
 
   return (
-    <div className="usuarios-container">
-      <h2>Lista de Miembros</h2>
-      <table className="tabla-usuarios">
+    <div className="miembros-container">
+      <div className="miembros-header">
+        <h2>Lista de Miembros</h2>
+      </div>
+
+      <table className="tabla-miembros">
         <thead>
           <tr>
-            <th>Nombre</th>
-            <th>Cédula</th>
-            <th>Fecha de nacimiento</th>
-            <th>Correo electrónico</th>
-            <th>Teléfono</th>
-            <th>Fecha de inscripción</th>
-            <th>Dirección</th>
-            <th>Estado inscripción</th>
-            <th>Acciones</th>
+            <th>Ciclista</th>
+            <th>Contacto</th>
+            <th>Membresía</th>
+            <th>Estado</th>
+            <th>Vigencia</th>
+            <th style={{textAlign: 'center'}}>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          {usuarios.map((u) => (
-            <tr key={u.id}>
-              <td data-label="Nombre">{u.person.first_name}</td>
-              <td data-label="Apellido">{u.person.last_name}</td>
-              <td data-label="Teléfono">{u.person.phone_number}</td>
-              <td data-label="Ciudad">{u.person.city}</td>
-              <td data-label="Barrio">{u.person.neighborhood}</td>
-              <td data-label="Tipo de Sangre">{u.person.blood_type}</td>
-              <td data-label="Nivel">{u.person.skill_level}</td>
-              <td data-label="Rol">{u.role}</td>
-              <td data-label="Acciones">
-                <button
-                  className="btn-action editar"
-                  title="Editar usuario"
-                  onClick={() => handleEdit(u)}
-                >
-                  <i className="fas fa-pen-to-square"></i>
-                </button>
-                <button
-                  className="btn-action eliminar"
-                  title="Eliminar usuario"
-                  onClick={() => handleDelete(u.id)}
-                >
-                  <i className="fas fa-trash"></i>
-                </button>
-              </td>
-            </tr>
-          ))}
+          {loading ? (
+             <tr><td colSpan="6" style={{textAlign:'center', padding:'30px', color:'#666'}}>Cargando miembros...</td></tr>
+          ) : usuarios.map((u) => {
+            const mem = u.membership;
+            const hasMembership = !!mem;
+            const isActive = mem?.status === 'ACTIVE';
+
+            return (
+              <tr key={u.id}>
+                {/* 1. Ciclista */}
+                <td data-label="Ciclista">
+                  <div className="user-cell">
+                    <img 
+                      src={u.person?.profile_picture ? getFullImageUrl(u.person.profile_picture) : defaultProfile} 
+                      alt="Avatar" className="user-thumb"
+                      onError={(e) => e.target.src = defaultProfile}
+                    />
+                    <div className="user-info-text">
+                      <strong>{u.person?.first_name} {u.person?.last_name}</strong>
+                      <small>{u.person?.city}</small>
+                    </div>
+                  </div>
+                </td>
+
+                {/* 2. Contacto */}
+                <td data-label="Contacto">
+                   <div className="user-info-text">
+                      <span>{u.person?.phone_number}</span>
+                      <small>{u.email}</small>
+                   </div>
+                </td>
+
+                {/* 3. Tipo Membresía */}
+                <td data-label="Membresía">
+                   {hasMembership ? 
+                      <span style={{fontWeight:'700', color:'#238CBC', fontSize:'0.9rem'}}>{mem.membership_type}</span> 
+                      : <span style={{fontStyle:'italic', color:'#aaa'}}>--</span>
+                   }
+                </td>
+
+                {/* 4. Estado Badge */}
+                <td data-label="Estado">
+                  {hasMembership ? (
+                    <span className={`status-badge status-${mem.status.toLowerCase()}`}>
+                      {mem.status}
+                    </span>
+                  ) : (
+                    <span className="status-badge status-none">N/A</span>
+                  )}
+                </td>
+
+                {/* 5. Vigencia */}
+                <td data-label="Vigencia">
+                  {hasMembership ? (
+                    <div className="user-info-text">
+                      <small>Inicio: {formatDate(mem.start_date)}</small>
+                      <strong style={{fontSize:'0.85rem', color: isActive ? '#065f46' : '#991b1b'}}>
+                        Fin: {formatDate(mem.end_date)}
+                      </strong>
+                    </div>
+                  ) : "-"}
+                </td>
+
+                {/* 6. Switch */}
+                <td data-label="Acción" style={{textAlign: 'center'}}>
+                  {hasMembership ? (
+                    <div className="switch-container">
+                        <label className="switch">
+                          <input 
+                            type="checkbox" 
+                            checked={isActive} 
+                            onChange={() => handleToggleStatus(u.id, mem.status)}
+                          />
+                          <span className="slider"></span>
+                        </label>
+                        <span className="switch-label" style={{color: isActive ? '#238CBC' : '#999'}}>
+                            {isActive ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </div>
+                  ) : (
+                    <small style={{color:'#aaa'}}>Sin Acción</small>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
-
-      {modalVisible && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Actualizar Rol</h3>
-            <p><strong>{selectedUser.person.first_name} {selectedUser.person.last_name}</strong></p>
-
-            <select value={newRole} onChange={(e) => setNewRole(e.target.value)}>
-              <option value="Admin">Admin</option>
-              <option value="Normal">Normal</option>
-            </select>
-
-            <div className="modal-buttons">
-              <button onClick={handleRoleUpdate} className="btn-action editar">Guardar</button>
-              <button onClick={() => setModalVisible(false)} className="btn-action eliminar">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

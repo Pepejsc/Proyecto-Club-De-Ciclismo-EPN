@@ -1,0 +1,358 @@
+/* src/assets/Styles/Admin/ListaResgistros.css */
+
+/* --- CONFIGURACIÓN BASE --- */
+.gestion-ventas-container {
+  padding: 1.5rem;
+  background-color: #F8FAFC;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box; /* Crucial para que el padding no rompa el ancho */
+  font-family: 'Montserrat', sans-serif;
+}
+
+.main-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+/* --- BARRA DE CONTROLES (FILTROS Y BOTÓN NUEVO) --- */
+.sales-controls {
+  display: flex;
+  justify-content: space-between; /* Filtros a la izq, Botón a la der */
+  align-items: center;
+  flex-wrap: wrap; /* Permite que bajen si no hay espacio */
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filters-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  border: 1px solid #E5E7EB;
+  background: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #6B7280;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.filter-btn:hover {
+  background-color: #F3F4F6;
+  color: #111827;
+}
+
+.filter-btn.active {
+  background-color: #3B82F6 !important;
+  color: white !important;
+  border-color: #3B82F6 !important;
+}
+
+/* Botón Nuevo Registro (Destacado) */
+.btn-new {
+  background-color: #238CBC;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 6px rgba(35, 140, 188, 0.2);
+  transition: transform 0.2s;
+}
+
+.btn-new:hover {
+  background-color: #1b6ca8;
+  transform: translateY(-2px);
+}
+
+/* --- TABLA FULL WIDTH CON SCROLL --- */
+.sales-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #E2E8F0;
+  width: 100%;
+  overflow: hidden; /* Mantiene las esquinas redondeadas */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Contenedor responsivo para la tabla */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto; /* Habilita scroll horizontal en móviles */
+  -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+}
+
+.sales-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px; /* Ancho mínimo para forzar scroll si la pantalla es chica */
+}
+
+.sales-table th {
+  background-color: #F9FAFB;
+  text-align: left;
+  padding: 1rem 1.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  border-bottom: 1px solid #E2E8F0;
+  white-space: nowrap; /* Evita que los encabezados se rompan en dos líneas */
+}
+
+.sales-table td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #F1F5F9;
+  vertical-align: middle;
+  color: #1F2937;
+  font-size: 0.95rem;
+}
+
+.sales-table tbody tr:hover {
+  background-color: #F8FAFC;
+}
+
+/* --- ESTILOS DE COLUMNAS --- */
+.col-id {
+  font-weight: 700;
+  color: #6B7280;
+}
+
+.client-info h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.client-phone {
+  font-size: 0.85rem;
+  color: #6B7280;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.items-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.item-row {
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.item-qty {
+  font-weight: 700;
+  margin-right: 8px;
+  color: #3B82F6;
+  background: #EFF6FF;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.total-amount {
+  font-weight: 700;
+  color: #10B981;
+  font-size: 1rem;
+}
+
+/* BADGES DE ESTADO */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-block;
+  text-transform: uppercase;
+}
+
+.status-badge.PENDING { background-color: #FFF7ED; color: #C2410C; border: 1px solid #FFEDD5; }
+.status-badge.PAID { background-color: #ECFDF5; color: #047857; border: 1px solid #D1FAE5; }
+.status-badge.CANCELLED { background-color: #FEF2F2; color: #B91C1C; border: 1px solid #FEE2E2; }
+.status-badge.INGRESO { background-color: #ECFDF5; color: #047857; }
+.status-badge.EGRESO { background-color: #FEF2F2; color: #B91C1C; }
+
+/* ACCIONES */
+.actions-group {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.btn-confirm { background-color: #DCFCE7; color: #166534; }
+.btn-confirm:hover { background-color: #10B981; color: white; }
+
+.btn-cancel { background-color: #FEE2E2; color: #991B1B; }
+.btn-cancel:hover { background-color: #EF4444; color: white; }
+
+/* --- MODAL --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem; /* Margen en móviles */
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 450px;
+  position: relative;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-close-x {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #9CA3AF;
+  padding: 0;
+  line-height: 1;
+}
+
+.finance-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-top: 1rem;
+}
+
+.finance-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.finance-form select,
+.finance-form input {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  box-sizing: border-box; /* Importante para que no se salga del contenedor */
+  transition: border-color 0.2s;
+}
+
+.finance-form select:focus,
+.finance-form input:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn-save {
+  background-color: #238CBC;
+  color: white;
+  border: none;
+  padding: 0.9rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.btn-save:hover {
+  background-color: #1b6ca8;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- MEDIA QUERIES (RESPONSIVE) --- */
+
+/* Tablet y menores (max 1024px) */
+@media (max-width: 1024px) {
+  .sales-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .filters-group {
+    width: 100%;
+    overflow-x: auto; /* Scroll horizontal en los filtros si son muchos */
+    padding-bottom: 5px;
+  }
+  
+  .btn-new {
+    width: 100%; /* Botón full width en tablet/móvil */
+    justify-content: center;
+  }
+}
+
+/* Móvil (max 640px) */
+@media (max-width: 640px) {
+  .gestion-ventas-container {
+    padding: 1rem;
+  }
+
+  .main-title {
+    font-size: 1.5rem;
+  }
+
+  .sales-table th, 
+  .sales-table td {
+    padding: 0.8rem 1rem; /* Reducir padding en celdas */
+  }
+  
+  .status-badge {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+  }
+}

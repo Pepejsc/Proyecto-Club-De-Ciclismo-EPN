@@ -8,8 +8,6 @@ import app.models.domain.event_participant
 from app.models.domain.notification import Notification
 
 from app.models.domain.membership import Membership
-from app.models.domain.membership_payment import MembershipPayment
-from app.models.domain.membership_participation import MembershipParticipation
 
 # Se inicia la base de datos y de ser el caso crea la tabla
 def init_db():

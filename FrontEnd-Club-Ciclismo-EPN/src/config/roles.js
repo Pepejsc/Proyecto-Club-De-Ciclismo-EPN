@@ -41,11 +41,6 @@ export const rolePermissions = {
         category: "administrativo",
       },
       {
-        path: "editar-membresia",
-        label: "Editar Membresía",
-        category: "administrativo",
-      },
-      {
         path: "lista-recursos",
         label: "Lista de Recursos",
         category: "administrativo",
@@ -71,14 +66,13 @@ export const rolePermissions = {
         category: "financiero",
       },
       {
-        path: "panel-financiero",
+        path: "dashboard-admin",
         label: "Panel Financiero",
         category: "financiero",
-      },
+      }
     ],
-
+    
     normal: [
-
       {
         path: "editar-perfil",
         label: "Editar Perfil",
@@ -94,7 +88,6 @@ export const rolePermissions = {
         label: "Notificaciones",
         category: "notificaciones",
       },
-      // NUEVOS ENLACES PARA MEMBRESÍA - USUARIO NORMAL
       {
         path: "mi-membresia",
         label: "Mi Membresía",
