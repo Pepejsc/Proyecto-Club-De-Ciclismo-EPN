@@ -7,7 +7,10 @@ class CartItemSchema(BaseModel):
     quantity: int
     precio_venta: float
     nombre: str
+    talla: Optional[str] = "Única" # Agregamos talla aquí también
 
+# Nota: CheckoutSchema ya no se usa directamente en el endpoint 'procesar_orden' 
+# porque cambiamos a Form(...), pero lo dejamos como referencia.
 class CheckoutSchema(BaseModel):
     customer_name: str
     customer_phone: str = "N/A"
@@ -22,6 +25,9 @@ class SaleOrderItemRead(BaseModel):
     unit_price: float
     subtotal: float
     product_name: Optional[str] = None
+    
+    # --- NUEVO CAMPO VISIBLE AL LEER ---
+    size: Optional[str] = None 
 
     class Config:
         from_attributes = True
@@ -34,7 +40,11 @@ class SaleOrderRead(BaseModel):
     total_amount: float
     status: str
     created_at: datetime
-    items: List[SaleOrderItemRead] # Aquí anidamos los items
+    
+    # --- NUEVO CAMPO VISIBLE AL LEER ---
+    payment_proof_url: Optional[str] = None 
+    
+    items: List[SaleOrderItemRead] 
     
     class Config:
         from_attributes = True

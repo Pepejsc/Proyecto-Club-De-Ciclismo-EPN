@@ -56,16 +56,6 @@ export const rolePermissions = {
         category: "financiero",
       },
       {
-        path: "crear-registro",
-        label: "Crear Registro",
-        category: "financiero",
-      },
-      {
-        path: "editar-registro",
-        label: "Editar Registro",
-        category: "financiero",
-      },
-      {
         path: "dashboard-admin",
         label: "Panel Financiero",
         category: "financiero",
@@ -91,16 +81,6 @@ export const rolePermissions = {
       {
         path: "mi-membresia",
         label: "Mi Membresía",
-        category: "membresia",
-      },
-      {
-        path: "renovar-membresia",
-        label: "Renovar Membresía",
-        category: "membresia",
-      },
-      {
-        path: "historial-pagos",
-        label: "Historial de Pagos",
         category: "membresia",
       },
     ],

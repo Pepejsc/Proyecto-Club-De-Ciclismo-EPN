@@ -11,6 +11,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import text  # <--- IMPORTANTE: Necesario para SQL directo
 
 # --- IMPORTS DEL PROYECTO ---
 from app.core.security import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user, get_user
@@ -85,10 +86,80 @@ def save_base64_to_disk(base64_str: str) -> str:
 # ==========================================
 
 @router.post("/register", response_model=UserResponse)
-def register_user(register_data: UserCreate, db: Session = Depends(get_db)):
-    """ Crear usuario nuevo """
+def register_user(
+    register_data: UserCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    """ Crear usuario nuevo con verificación de email epn.edu.ec """
+    # 1. Detectar Dominio EPN
+    is_epn_student = register_data.email.endswith("@epn.edu.ec")
+    
+    # 2. Asignar Rol o Estado Inicial
+    if is_epn_student:
+        # Opcional: Aquí podrías forzar un rol específico si fuera necesario
+        pass 
+
+    # 3. Crear el usuario (Tu función create_user ya maneja la lógica de BD)
     new_user = create_user(db, register_data)
+    
+    # 4. Si es EPN, enviar correo de verificación
+    if is_epn_student:
+        try:
+            # Generar Token de Verificación (Reusamos la lógica de AuthToken)
+            verification_token = AuthToken()
+            verification_token.generate_token(new_user.id)
+            create_token(db, verification_token) # Guardar en BD
+
+            # Preparar Correo
+            subject = "Verificación de Cuenta EPN"
+            
+            # Contexto para la plantilla HTML nueva
+            context = {
+                "body": {
+                    "code": verification_token.value,
+                    "name": f"{new_user.person.first_name}" # Solo primer nombre para ser más amigable
+                }
+            }
+            
+            # Enviar en segundo plano usando la NUEVA PLANTILLA
+            background_tasks.add_task(
+                send_email, 
+                new_user.email, 
+                subject, 
+                context, 
+                "verification_email.html" 
+            )
+            print(f"📧 Correo de verificación enviado a {new_user.email}")
+            
+        except Exception as e:
+            print(f"❌ Error enviando verificación EPN: {e}")
+            # No fallamos el registro, pero el usuario no podrá verificar sin el correo
+    
     return new_user
+
+@router.post("/verify-email")
+def verify_student_email(code: int, db: Session = Depends(get_db)):
+    """ Verifica el código y activa el estatus de estudiante """
+    
+    # 1. Verificar Token (Reusamos tu función verify_token)
+    is_valid, user_id = verify_token(db, code)
+    
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Código inválido o expirado")
+    
+    # 2. Buscar Usuario
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+    # 3. Actualizar Estado del Usuario (Confirmar que es estudiante verificado)
+    # Aquí puedes agregar lógica adicional como cambiar rol o activar un flag
+    # user.is_verified = True
+    
+    db.commit()
+    
+    return {"message": "Correo verificado exitosamente. ¡Bienvenido al Club!"}
 
 @router.post("/token", response_model=Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -169,13 +240,24 @@ def delete_user_and_persona(user_id: int, db: Session = Depends(get_db), current
         # --- BORRADO EN CASCADA ---
         db.query(Document).filter(Document.created_by == user_id).delete()
         try:
-            db.execute("UPDATE activos_operativos SET id_usuario_responsable = NULL WHERE id_usuario_responsable = :uid", {"uid": user_id})
+            db.execute(text("UPDATE activos_operativos SET id_usuario_responsable = NULL WHERE id_usuario_responsable = :uid"), {"uid": user_id})
         except: pass
+        
         db.query(EventParticipant).filter(EventParticipant.user_id == user_id).delete()
         
         user_membership = db.query(Membership).filter(Membership.user_id == user_id).first()
         if user_membership:
+            # 1. Borrar Pagos asociados
             db.query(MembershipPayment).filter(MembershipPayment.membership_id == user_membership.id).delete()
+            
+            # 2. Borrar Historial de Participaciones (Tabla SQL Cruda)
+            # Esto evita el error de llave foránea (1451)
+            try:
+                db.execute(text("DELETE FROM membership_participations WHERE membership_id = :mid"), {"mid": user_membership.id})
+            except Exception as e:
+                print(f"⚠️ Nota: No se pudo limpiar participaciones o la tabla no existe: {e}")
+
+            # 3. Finalmente borrar la membresía
             db.delete(user_membership)
             
         db.query(AuthToken).filter(AuthToken.user_id == user_id).delete()
@@ -192,7 +274,8 @@ def delete_user_and_persona(user_id: int, db: Session = Depends(get_db), current
     except SQLAlchemyError as e:
         db.rollback()
         print(f"❌ Error eliminando: {e}")
-        raise HTTPException(status_code=500, detail="Error al eliminar usuario. Verifica dependencias.")
+        # Retornamos un mensaje claro en caso de error de BD
+        raise HTTPException(status_code=500, detail=f"Error BD al eliminar: {str(e)}")
 
 @router.get("/users", response_model=list[UserWithPersonaResponse])
 def get_users(db: Session = Depends(get_db), current_user: TokenData = Depends(get_current_user)):

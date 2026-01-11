@@ -60,10 +60,6 @@ const RenewMembershipModal = ({ membership, onClose, onRenew }) => {
             <i className="fas fa-check-circle" style={{color: '#10B981'}}></i>
             <span>Participación en competencias</span>
           </div>
-          <div className="benefit-item">
-            <i className="fas fa-check-circle" style={{color: '#10B981'}}></i>
-            <span>Seguro durante actividades</span>
-          </div>
         </div>
       </div>
 

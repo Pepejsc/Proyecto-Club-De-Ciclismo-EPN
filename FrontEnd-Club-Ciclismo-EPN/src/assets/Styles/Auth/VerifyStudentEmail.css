@@ -1,0 +1,97 @@
+.verify-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  padding: 20px;
+  background-color: #f7f9fc; /* Un color de fondo suave opcional */
+}
+
+.verify-box {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 450px;
+  text-align: center;
+  border: 1px solid #e1e4e8;
+}
+
+.verify-title {
+  color: #1a202c;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.verify-icon-wrapper {
+  margin-bottom: 20px;
+}
+
+.verify-icon {
+  font-size: 3rem;
+}
+
+.verify-description {
+  color: #4a5568;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.verify-input {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.5rem;
+  text-align: center;
+  letter-spacing: 8px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  margin: 20px 0;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+/* Efecto al hacer clic en el input */
+.verify-input:focus {
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+/* Ocultar flechas del input number en Chrome, Safari, Edge, Opera */
+.verify-input::-webkit-outer-spin-button,
+.verify-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Ocultar flechas del input number en Firefox */
+.verify-input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.verify-button {
+  background-color: #3182ce;
+  color: white;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.verify-button:hover:not(:disabled) {
+  background-color: #2b6cb0;
+}
+
+.verify-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: #63b3ed;
+}

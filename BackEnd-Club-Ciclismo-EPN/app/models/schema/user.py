@@ -1,7 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, validator
 from enum import Enum
 from typing import Optional
-from pydantic import EmailStr
 
 # Imports de tus otros schemas
 from app.models.schema.membership import MembershipStatusResponse
@@ -51,6 +50,9 @@ class UserUpdate(BaseModel):
 class RegisterUser(PersonaCreate):
     email: EmailStr
     password: str
+    @validator('email')
+    def validate_email_domain(cls, v):
+        return v.lower()
 
 # --- AQUÍ ESTÁ EL CAMBIO CRÍTICO ---
 class UserWithPersonaResponse(BaseModel):

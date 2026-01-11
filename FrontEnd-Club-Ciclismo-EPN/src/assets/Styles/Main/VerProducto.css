@@ -30,7 +30,7 @@
 .producto-imagen-principal img {
   width: 100%;
   max-width: 500px; 
-  height: auto; /* <-- (CAMBIO) Altura automática, no cuadrada */
+  height: auto; 
   object-fit: cover; 
   border-radius: 10px;
   display: block;
@@ -38,10 +38,10 @@
   border: 1px solid #eee;
 }
 
-/* --- Galería de Thumbnails (como en tu prototipo) --- */
+/* --- Galería de Thumbnails --- */
 .producto-galeria-thumbnails {
   display: flex;
-  justify-content: flex-start; /* Alineados a la izquierda (como en la foto) */
+  justify-content: flex-start; 
   gap: 15px;
   flex-wrap: wrap; 
   max-width: 500px; 
@@ -81,8 +81,8 @@
 .producto-info {
   display: flex;
   flex-direction: column;
-  align-items: center; /* (CAMBIO) Alineación centrada */
-  text-align: center; /* (CAMBIO) */
+  align-items: center; 
+  text-align: center; 
   height: 100%;
 }
 
@@ -100,18 +100,18 @@
   line-height: 1.6;
   color: #333;
   margin-bottom: 30px;
-  text-align: center; /* (CAMBIO) */
+  text-align: center; 
 }
 
-/* (MODIFICADO) 'precio' ahora está solo */
+/* Precio */
 .precio {
   font-size: 24px;
   font-weight: bold;
   color: #000;
-  margin-bottom: 20px; /* Espacio antes de las tallas */
+  margin-bottom: 20px; 
 }
 
-/* --- (NUEVO) Sección de Tallas --- */
+/* --- Sección de Tallas --- */
 .producto-tallas-container {
   width: 100%;
   margin-bottom: 30px;
@@ -128,7 +128,7 @@
   color: #333;
   font-weight: 600;
 }
-.guia-tallas { /* (Lo dejamos por si lo quieres reactivar) */
+.guia-tallas { 
   font-size: 14px;
   color: #666;
   text-decoration: underline;
@@ -138,7 +138,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  justify-content: center; /* (AÑADIDO) Centra las tallas */
+  justify-content: center; 
 }
 .talla-box {
   min-width: 50px;
@@ -165,7 +165,7 @@
 /* --- FIN TALLAS --- */
 
 
-/* --- (NUEVO) Estilos de Agotado y Botones Desactivados --- */
+/* --- Estilos de Agotado y Botones Desactivados --- */
 .talla-box:disabled {
   background: #f4f4f4;
   color: #aaa;
@@ -180,10 +180,8 @@
   padding: 15px;
   border-radius: 5px;
 }
-/* --- FIN NUEVO --- */
 
-
-/* --- (NUEVO) Contenedor de Botones --- */
+/* --- Contenedor de Botones --- */
 .producto-botones-container {
   display: flex;
   flex-direction: column;
@@ -191,7 +189,8 @@
   width: 100%;
 }
 
-.btn-comprar, .btn-whatsapp {
+/* CAMBIO: Actualizado a .btn-telegram */
+.btn-comprar, .btn-telegram {
   border: none;
   padding: 15px 40px;
   font-size: 16px;
@@ -199,7 +198,7 @@
   border-radius: 5px;
   cursor: pointer;
   text-transform: uppercase;
-  width: 100%; /* (CAMBIO) Ocupan todo el ancho */
+  width: 100%; 
   transition: opacity 0.3s ease, background-color 0.3s ease;
   display: flex;
   align-items: center;
@@ -208,34 +207,36 @@
 }
 
 .btn-comprar {
-  background: #000; /* Botón principal negro */
+  background: #000; 
   color: white;
 }
 .btn-comprar:hover {
   opacity: 0.8;
 }
 
-.btn-whatsapp {
-  background: #25D366; /* Color WhatsApp */
+/* CAMBIO: Estilo Azul Telegram */
+.btn-telegram {
+  background: #0088cc; /* Color Telegram */
   color: white;
 }
-.btn-whatsapp:hover {
-  opacity: 0.8;
+.btn-telegram:hover {
+  background-color: #0077b5; /* Azul más oscuro al hover */
 }
 
-/* --- (NUEVO) Estilos para botones desactivados --- */
+/* --- Estilos para botones desactivados --- */
 .btn-comprar:disabled,
-.btn-whatsapp:disabled {
+.btn-telegram:disabled {
   background-color: #aaa;
   cursor: not-allowed;
   opacity: 0.7;
 }
 .btn-comprar:disabled:hover,
-.btn-whatsapp:disabled:hover {
-  background-color: #aaa; /* Evita cambio de color en hover */
+.btn-telegram:disabled:hover {
+  background-color: #aaa; 
   opacity: 0.7;
 }
-/* --- FIN NUEVO --- */
+
+
 /* === ESTILOS DEL MODAL DE COMPRA === */
 .modal-compra {
   text-align: center;
@@ -274,17 +275,17 @@
   font-style: italic;
 }
 
-/* Reutilizando tus botones del modal de admin, pero adaptados */
-.btn-whatsapp-modal {
-  background-color: #25D366 !important;
+/* CAMBIO: Clase específica para el botón del Modal de Telegram */
+.btn-telegram-modal {
+  background-color: #0088cc !important; /* Azul Telegram */
   color: white !important;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
 }
-.btn-whatsapp-modal:hover {
-  background-color: #1ebc57 !important;
+.btn-telegram-modal:hover {
+  background-color: #0077b5 !important; /* Azul más oscuro */
 }
 
 /* Asegurarse que el overlay esté encima de todo */
@@ -292,7 +293,7 @@
   z-index: 10000;
 }
 
-/* Botón Ver Carrito (Aparece si hay items) */
+/* Botón Ver Carrito */
 .btn-ver-carrito {
   background-color: #333;
   color: #fff;
@@ -369,7 +370,7 @@
 }
 
 .producto-imagen-principal {
-  position: relative; /* Necesario para el overlay */
+  position: relative; 
 }
 
 .imagen-overlay-agotado {
@@ -385,7 +386,7 @@
   border: 2px solid #dc3545;
   border-radius: 8px;
   z-index: 10;
-  pointer-events: none; /* Para poder dar clic en la imagen si quisieras */
+  pointer-events: none; 
 }
 
 /* --- Botón de Cerrar X en Modal --- */
@@ -405,10 +406,8 @@
   color: #000;
 }
 
-/* Aseguramos que el modal-content tenga position relative para ubicar la X */
 .modal-content {
   position: relative; 
-  /* ... tus otros estilos de modal-content ... */
 }
 
 /* --- Responsive --- */
@@ -433,7 +432,7 @@
   }
   .tallas-header {
     padding: 0 5px; 
-    justify-content: center; /* Centramos el label 'TALLA' */
+    justify-content: center;
   }
   .tallas-selector {
     justify-content: center;

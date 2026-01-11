@@ -27,6 +27,10 @@ class MembershipBase(BaseModel):
     emergency_contact: str
     emergency_phone: str
     medical_conditions: Optional[str] = None
+    
+    # --- NUEVO: Campos opcionales para estudiantes EPN ---
+    unique_code: Optional[str] = None         # Código Único (ej. 201820616)
+    matriculation_url: Optional[str] = None   # URL de la foto/pdf de matrícula
 
 # --- SCHEMA DE CREACIÓN ---
 class MembershipCreate(MembershipBase):
@@ -42,7 +46,7 @@ class MembershipResponse(MembershipBase):
     created_at: datetime
 
     class Config:
-        from_attributes = True # <--- CAMBIO 1: Actualizado para Pydantic v2
+        from_attributes = True 
 
 # --- SCHEMA PARA ACTUALIZACIÓN ---
 class MembershipUpdate(BaseModel):
@@ -55,12 +59,16 @@ class MembershipUpdate(BaseModel):
     emergency_phone: Optional[str] = None
     medical_conditions: Optional[str] = None
     admin_notes: Optional[str] = None
+    
+    # --- NUEVO: Permitir actualizar estos datos si hubo error ---
+    unique_code: Optional[str] = None
+    matriculation_url: Optional[str] = None
 
     class Config:
         from_attributes = True
 
 
-# --- SCHEMA PARA STATUS (El que usa la lista de usuarios) ---
+# --- SCHEMA PARA STATUS (El que usa la lista de usuarios y MiMembresia) ---
 class MembershipStatusResponse(BaseModel):
     id: int
     user_id: int
@@ -73,10 +81,13 @@ class MembershipStatusResponse(BaseModel):
     emergency_phone: Optional[str]
     medical_conditions: Optional[str]
     
-    # --- CAMBIO 2: Hacerlos opcionales con default None ---
-    # Esto evita que falle la lista de admin donde estos datos no se calculan
+    # --- NUEVO: Para que el Admin pueda ver el comprobante y código ---
+    unique_code: Optional[str] = None
+    matriculation_url: Optional[str] = None
+    
+    # Campos calculados (ya existían)
     member_name: Optional[str] = None
     profile_picture_url: Optional[str] = None
 
     class Config:
-        from_attributes = True # <--- CAMBIO 3: Actualizado para Pydantic v2
+        from_attributes = True

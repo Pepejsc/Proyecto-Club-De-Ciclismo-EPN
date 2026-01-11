@@ -1,80 +1,130 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
+import json
+import os
+import shutil
+import uuid
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, UploadFile, File, Form
 from sqlalchemy.orm import Session, joinedload
 from app.db.database import get_db
-from typing import List, Optional
-from app.models.schema.venta import SaleOrderRead
+
 from app.models.domain.recurso import InventarioComercial
 from app.models.domain.venta import SaleOrder, SaleOrderItem
-from app.models.schema.venta import CheckoutSchema, SaleOrderRead
+# Quitamos CheckoutSchema de los argumentos directos porque ahora usamos Form
+from app.models.schema.venta import SaleOrderRead 
 from app.services.invoice_generator import generar_factura_pdf
 from app.services.notification_service import notificar_intencion_compra, notificar_venta_exitosa
 
-
 router = APIRouter()
+
+# Configuración de carpeta para comprobantes
+UPLOAD_DIR_COMPROBANTES = "uploads/comprobantes"
+os.makedirs(UPLOAD_DIR_COMPROBANTES, exist_ok=True)
+
+def save_upload_file(upload_file: UploadFile) -> str:
+    """Guarda el comprobante y retorna la ruta relativa"""
+    try:
+        filename = f"{uuid.uuid4()}_{upload_file.filename}"
+        file_path = os.path.join(UPLOAD_DIR_COMPROBANTES, filename)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(upload_file.file, buffer)
+            
+        return f"/uploads/comprobantes/{filename}"
+    except Exception as e:
+        print(f"Error guardando comprobante: {e}")
+        return None
 
 @router.post("/checkout", status_code=status.HTTP_201_CREATED)
 def procesar_orden(
-    order_data: CheckoutSchema,
-    background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db)):
-
+    # Recibimos datos como Form Data
+    customer_name: str = Form(...),
+    customer_phone: str = Form(...),
+    total: float = Form(...),
+    items_json: str = Form(...), # Recibimos la lista de items como string JSON
+    payment_proof: UploadFile = File(...), # El archivo es obligatorio
+    
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db)
+):
     try:
-        # 1. Crear la Cabecera de la Orden
+        # 1. Parsear los items que vienen como texto JSON
+        try:
+            items_list = json.loads(items_json)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Formato de items inválido")
+
+        # 2. Guardar el comprobante
+        proof_url = save_upload_file(payment_proof)
+        if not proof_url:
+            raise HTTPException(status_code=500, detail="Error al guardar el comprobante")
+
+        # 3. Crear la Cabecera de la Orden
         new_order = SaleOrder(
-            customer_name=order_data.customer_name,
-            customer_phone=order_data.customer_phone,
-            total_amount=order_data.total,
-            status="PENDING"
+            customer_name=customer_name,
+            customer_phone=customer_phone,
+            total_amount=total,
+            status="PENDING",
+            payment_proof_url=proof_url # Guardamos la URL
         )
         db.add(new_order)
-        db.flush() # Para obtener el ID de la orden antes del commit final
+        db.flush() 
 
-        # 2. Procesar cada item
-        for item in order_data.items:
-            # Buscar el producto en inventario
+        # 4. Procesar cada item
+        for item in items_list:
+            # item es un diccionario ahora, no un objeto Pydantic
+            id_recurso = item.get('id_recurso')
+            quantity = item.get('quantity')
+            precio = item.get('precio_venta')
+            nombre = item.get('nombre')
+            talla = item.get('talla', "Única") # Capturamos la talla si viene
+
+            # Buscar producto
             producto_db = db.query(InventarioComercial).filter(
-                InventarioComercial.id_recurso == item.id_recurso
+                InventarioComercial.id_recurso == id_recurso
             ).first()
 
             if not producto_db:
-                raise HTTPException(status_code=404, detail=f"Producto {item.nombre} no encontrado")
+                raise HTTPException(status_code=404, detail=f"Producto {nombre} no encontrado")
 
-            # Verificar Stock suficiente
-            if producto_db.stock_actual < item.quantity:
+            if producto_db.stock_actual < quantity:
                 raise HTTPException(
                     status_code=400, 
-                    detail=f"Stock insuficiente para {item.nombre}. Disponibles: {producto_db.stock_actual}"
+                    detail=f"Stock insuficiente para {nombre}. Disponibles: {producto_db.stock_actual}"
                 )
 
-            # Crear Detalle de Venta
+            # Crear Detalle
             new_item = SaleOrderItem(
                 sale_id=new_order.id_sale,
-                resource_id=item.id_recurso,
-                quantity=item.quantity,
-                unit_price=item.precio_venta,
-                subtotal=item.quantity * item.precio_venta
+                resource_id=id_recurso,
+                quantity=quantity,
+                unit_price=precio,
+                subtotal=quantity * precio,
+                size=talla 
             )
             db.add(new_item)
 
-        # 3. Confirmar todo
+        # 5. Confirmar todo
         db.commit()
         db.refresh(new_order)
+        
+        # Notificar (ajusta tu servicio si necesitas enviar la foto)
         background_tasks.add_task(notificar_intencion_compra, new_order)
+        
         return {
             "order_id": new_order.id_sale,
-            "message": "Orden creada. En espera de confirmación de pago."}
+            "message": "Orden creada. Comprobante recibido."
+        }
 
     except HTTPException as e:
         raise e
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-
+        print(f"Error procesando orden: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
 
 
 @router.get("/", response_model=List[SaleOrderRead])
 def listar_ordenes(status: Optional[str] = None, db: Session = Depends(get_db)):
-    # Usamos joinedload para traer la orden y sus items
     query = db.query(SaleOrder).options(joinedload(SaleOrder.items).joinedload(SaleOrderItem.resource))
     
     if status and status != 'ALL':
@@ -112,9 +162,8 @@ def confirmar_pago(
         if recurso.stock_actual < item.quantity:
              raise HTTPException(status_code=400, detail=f"Stock insuficiente para {recurso.nombre}. Quedan {recurso.stock_actual}")
 
-        # Aquí sí restamos
         recurso.stock_actual -= item.quantity
-    # 2. Actualizamos estado
+        
     orden.status = 'PAID'
     db.commit()
 
@@ -137,7 +186,6 @@ def cancelar_orden(id_sale: int, db: Session = Depends(get_db)):
     if not orden:
         raise HTTPException(status_code=404, detail="Orden no encontrada")
     
-    # Si ya estaba cancelada, no hacemos nada
     if orden.status == 'CANCELLED':
         return {"message": "La orden ya estaba cancelada"}
     

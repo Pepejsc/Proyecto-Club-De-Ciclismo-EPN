@@ -15,7 +15,6 @@ class MembershipStatus(str, enum.Enum):
     INACTIVE = "INACTIVE"
     PENDING = "PENDING"
 
-
 class ParticipationLevel(str, enum.Enum):
     BEGINNER = "BEGINNER"
     INTERMEDIATE = "INTERMEDIATE"
@@ -51,6 +50,11 @@ class Membership(Base):
     emergency_phone = Column(String(15))
     medical_conditions = Column(Text)
     participation_level = Column(Enum(ParticipationLevel), default=ParticipationLevel.BEGINNER)
+    
+    # --- NUEVOS CAMPOS PARA ESTUDIANTES EPN ---
+    # nullable=True porque los externos no tienen esto
+    unique_code = Column(String(20), nullable=True)  # Código Único (Ej: 201820616)
+    matriculation_url = Column(String(1024), nullable=True) # URL del archivo/foto de matrícula
     
     admin_notes = Column(Text)
     

@@ -1,4 +1,5 @@
 import { jwtDecode } from "jwt-decode";
+import axios from "axios";
 
 const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
@@ -211,4 +212,9 @@ export const getFullImageUrl = (path) => {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   
   return `${baseUrl}${cleanPath}`;
+};
+
+export const verifyStudentEmail = async (code) => {
+  const response = await axios.post(`${apiUrl}/auth/verify-email?code=${code}`);
+  return response.data;
 };

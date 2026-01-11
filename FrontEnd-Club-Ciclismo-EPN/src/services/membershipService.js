@@ -33,19 +33,30 @@ export const checkUserMembership = async () => {
   }
 };
 
-// 2. Crear nueva membresía (MANTENER)
+// 2. Crear nueva membresía (MODIFICADO PARA SOPORTAR ARCHIVOS)
 export const createMembership = async (membershipData) => {
   const token = getToken();
   if (!token) throw new Error("No estás autenticado");
 
+  // Detectamos si estamos enviando un formulario con archivos (FormData) o datos normales
+  const isFormData = membershipData instanceof FormData;
+
+  const headers = {
+    "Authorization": `Bearer ${token}`,
+    // IMPORTANTE: Si es FormData, NO ponemos Content-Type.
+    // El navegador lo pondrá automáticamente con el "boundary" correcto.
+  };
+
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
+
   try {
     const response = await fetch(`${API_URL}/memberships/`, {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(membershipData),
+      headers: headers,
+      // Si es FormData lo mandamos directo, si es objeto lo convertimos a JSON
+      body: isFormData ? membershipData : JSON.stringify(membershipData),
     });
 
     if (!response.ok) {
@@ -111,7 +122,7 @@ export const updateMembership = async (userId, formData) => {
   }
 };
 
-// 4. Renovar membresía (CORREGIR - usar API_URL y getToken)
+// 4. Renovar membresía
 export const renewMembership = async (userId) => {
   try {
     const token = getToken();
@@ -127,7 +138,7 @@ export const renewMembership = async (userId) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Error al renovar membresía');
+      throw new Error(errorData.detail || errorData.error || 'Error al renovar membresía');
     }
 
     return await response.json();
@@ -137,7 +148,7 @@ export const renewMembership = async (userId) => {
   }
 };
 
-// 5. Solicitar reactivación (CORREGIR - usar API_URL y getToken)
+// 5. Solicitar reactivación
 export const requestReactivation = async (userId) => {
   try {
     const token = getToken();
@@ -151,13 +162,13 @@ export const requestReactivation = async (userId) => {
       },
       body: JSON.stringify({
         request_date: new Date().toISOString(),
-        reason: 'Falta de participación en eventos'
+        reason: 'Solicitud de usuario'
       })
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Error al solicitar reactivación');
+      throw new Error(errorData.detail || errorData.error || 'Error al solicitar reactivación');
     }
 
     return await response.json();
@@ -167,7 +178,7 @@ export const requestReactivation = async (userId) => {
   }
 };
 
-// 6. Verificar participación en eventos (CORREGIR - usar API_URL y getToken)
+// 6. Verificar participación en eventos
 export const checkEventParticipation = async (userId) => {
   try {
     const token = getToken();
@@ -191,7 +202,7 @@ export const checkEventParticipation = async (userId) => {
   }
 };
 
-// 7. Obtener estadísticas de membresías (NUEVA - para dashboard)
+// 7. Obtener estadísticas de membresías
 export const getMembershipStats = async () => {
   try {
     const token = getToken();

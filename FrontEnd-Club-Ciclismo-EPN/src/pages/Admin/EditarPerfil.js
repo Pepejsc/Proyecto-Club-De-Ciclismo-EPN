@@ -15,16 +15,22 @@ const getPhotoUrl = (path) => {
   if (!path) return null;
   // Si ya es base64 (data:...) o url completa (http...), devolver tal cual
   if (path.startsWith("http") || path.startsWith("data:")) return path;
-  
+
   // Si es ruta relativa (/uploads...), pegarle el backend
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
   return `${BACKEND_URL}${cleanPath}`;
 };
 
 const EditarPerfil = () => {
   const [formData, setFormData] = useState({
-    first_name: "", last_name: "", phone_number: "", city: "",
-    neighborhood: "", blood_type: "", skill_level: "", profile_picture: "",
+    first_name: "",
+    last_name: "",
+    phone_number: "",
+    city: "",
+    neighborhood: "",
+    blood_type: "",
+    skill_level: "",
+    profile_picture: "",
   });
 
   const [personaId, setPersonaId] = useState(null);
@@ -76,7 +82,9 @@ const EditarPerfil = () => {
       // Vista previa inmediata (Base64)
       setFormData((prev) => ({ ...prev, profile_picture: result }));
     };
-    reader.onerror = () => { toast.error("Error al leer la imagen."); };
+    reader.onerror = () => {
+      toast.error("Error al leer la imagen.");
+    };
     reader.readAsDataURL(file);
   };
 
@@ -85,48 +93,59 @@ const EditarPerfil = () => {
   };
 
   const validateForm = () => {
-     // (Tus validaciones siguen igual, no las toqué)
-     const phoneRegex = /^\d{7,10}$/;
-     if (!formData.first_name.trim()) { toast.error("Nombre requerido"); return false; }
-     // ... resto de validaciones ...
-     return true;
+    // (Tus validaciones siguen igual, no las toqué)
+    const phoneRegex = /^\d{7,10}$/;
+    if (!formData.first_name.trim()) {
+      toast.error("Nombre requerido");
+      return false;
+    }
+    // ... resto de validaciones ...
+    return true;
   };
 
   const handleSubmit = async () => {
     try {
-      if (!personaId) { toast.error("No se encontró ID"); return; }
-      
+      if (!personaId) {
+        toast.error("No se encontró ID");
+        return;
+      }
+
       // Preparamos payload
       const payload = { ...formData };
-      
+
       // Si la foto es una URL del servidor (no cambió), la quitamos del payload
       // para no enviar texto innecesario. Si es Base64 (cambió), se envía.
-      if (payload.profile_picture && !payload.profile_picture.startsWith("data:")) {
-          delete payload.profile_picture;
+      if (
+        payload.profile_picture &&
+        !payload.profile_picture.startsWith("data:")
+      ) {
+        delete payload.profile_picture;
       }
 
       await updatePersona(personaId, payload);
       toast.success("Perfil actualizado correctamente");
-  
+
       // Recargar datos frescos del servidor
       const perfilActualizado = await fetchMyProfile();
       setUserData(perfilActualizado);
-      
+
       // Actualizar formulario con la nueva URL
-      setFormData(prev => ({...prev, profile_picture: perfilActualizado.profile_picture}));
-      
+      setFormData((prev) => ({
+        ...prev,
+        profile_picture: perfilActualizado.profile_picture,
+      }));
+
       // Disparar evento para actualizar Sidebar
       window.dispatchEvent(new Event("profile_updated"));
-      
+
       // Actualizar timestamp para refrescar imagen visualmente
       setImgTimestamp(Date.now());
-
     } catch (error) {
       console.error("Error al actualizar:", error);
       toast.error("Hubo un problema al guardar los cambios");
     }
   };
-  
+
   // Lógica para decidir qué mostrar en el src
   const getImageSrc = () => {
     const pic = formData.profile_picture;
@@ -150,22 +169,31 @@ const EditarPerfil = () => {
             src={getImageSrc()}
             alt="Foto de perfil"
             className="profile-picture"
-            onError={(e) => { e.target.onerror = null; e.target.src = defaultProfile; }}
-            style={{objectFit: 'cover'}}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = defaultProfile;
+            }}
+            style={{ objectFit: "cover" }}
           />
-          
+
           <label htmlFor="file-input" className="camera-icon">
             <i className="fas fa-camera"></i>
           </label>
           <input
-            id="file-input" type="file" accept="image/*"
+            id="file-input"
+            type="file"
+            accept="image/*"
             onChange={handleImageChange}
             style={{ display: "none" }}
           />
 
           {formData.profile_picture && (
-            <button type="button" className="remove-icon"
-              onClick={() => setFormData((prev) => ({ ...prev, profile_picture: "" }))}
+            <button
+              type="button"
+              className="remove-icon"
+              onClick={() =>
+                setFormData((prev) => ({ ...prev, profile_picture: "" }))
+              }
             >
               <i className="fas fa-times"></i>
             </button>
@@ -173,30 +201,84 @@ const EditarPerfil = () => {
         </div>
       </div>
 
-      {/* FORMULARIO (Igual que antes) */}
+      {/* FORMULARIO */}
       <div className="form-grid">
-        <div><label>Nombre:</label><input name="first_name" value={formData.first_name} onChange={handleChange} /></div>
-        <div><label>Apellido:</label><input name="last_name" value={formData.last_name} onChange={handleChange} /></div>
-        <div className="grid-full"><label>Teléfono:</label><input name="phone_number" value={formData.phone_number} onChange={handleChange} /></div>
         <div>
-            <label>Tipo de Sangre:</label>
-            <select name="blood_type" value={formData.blood_type} onChange={handleChange}>
-                <option value="">Seleccionar</option><option value="A+">A+</option><option value="O+">O+</option>
-            </select>
+          <label>Nombre:</label>
+          <input
+            name="first_name"
+            value={formData.first_name}
+            onChange={handleChange}
+          />
         </div>
         <div>
-            <label>Nivel:</label>
-            <select name="skill_level" value={formData.skill_level} onChange={handleChange}>
-                <option value="">Seleccionar</option><option value="Alto">Alto</option><option value="Medio">Medio</option><option value="Bajo">Bajo</option>
-            </select>
+          <label>Apellido:</label>
+          <input
+            name="last_name"
+            value={formData.last_name}
+            onChange={handleChange}
+          />
         </div>
-        <div><label>Ciudad:</label><input name="city" value={formData.city} onChange={handleChange} /></div>
-        <div><label>Barrio:</label><input name="neighborhood" value={formData.neighborhood} onChange={handleChange} /></div>
+        <div className="grid-full">
+          <label>Teléfono:</label>
+          <input
+            name="phone_number"
+            value={formData.phone_number}
+            onChange={handleChange}
+          />
+        </div>
+        <div>
+          <label>Tipo de Sangre:</label>
+          <select
+            name="blood_type"
+            value={formData.blood_type}
+            onChange={handleChange}
+          >
+            <option value="">Seleccionar</option>
+            <option value="A+">A+</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B-">B-</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB-</option>
+            <option value="O+">O+</option>
+            <option value="O-">O-</option>
+          </select>
+        </div>
+        <div>
+          <label>Nivel:</label>
+          <select
+            name="skill_level"
+            value={formData.skill_level}
+            onChange={handleChange}
+          >
+            <option value="">Seleccionar</option>
+            <option value="Alto">Alto</option>
+            <option value="Medio">Medio</option>
+            <option value="Bajo">Bajo</option>
+          </select>
+        </div>
+        <div>
+          <label>Ciudad:</label>
+          <input name="city" value={formData.city} onChange={handleChange} />
+        </div>
+        <div>
+          <label>Barrio:</label>
+          <input
+            name="neighborhood"
+            value={formData.neighborhood}
+            onChange={handleChange}
+          />
+        </div>
       </div>
 
       <div className="form-buttons-inline">
-        <button className="btn-send" onClick={handleSubmit}>Guardar</button>
-        <button className="btn-cancel" onClick={handleCancel}>Cancelar</button>
+        <button className="btn-send" onClick={handleSubmit}>
+          Guardar
+        </button>
+        <button className="btn-cancel" onClick={handleCancel}>
+          Cancelar
+        </button>
       </div>
     </div>
   );

@@ -22,6 +22,7 @@ import Products from './pages/Main/Productos';
 import Contacto from './pages/Main/Contacto';
 import Auspiciantes from './pages/Main/Auspiciantes';
 import VerProducto from './pages/Main/VerProducto';
+import VerifyStudentEmail from './pages/Auth/VerifyStudentEmail';
 
 // --- (CORREGIDO) Ruta correcta al contexto ---
 import { CartProvider } from './pages/Main/CarContext';
@@ -51,6 +52,7 @@ const App = () => {
               <Route path="/productos" element={<Products/>}/>
               <Route path="/auspiciantes" element={<Auspiciantes/>}/>
               <Route path="/contacto" element={<Contacto/>}/>
+              <Route path="/verify-student-email" element={<VerifyStudentEmail />} />
               
               {/* Ruta dinámica de producto */}
               <Route path="/producto/:id" element={<VerProducto />} />

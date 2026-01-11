@@ -5,9 +5,9 @@ import ProductosCarrusel from '../../components/Main/ProductosCarrusel';
 import '../../assets/Styles/Main/VerProducto.css';
 import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faTimes } from '@fortawesome/free-solid-svg-icons';
-import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
-import { useCart } from '../Main/CarContext'; // Asegúrate de que la ruta sea correcta
+import { faTrash, faTimes, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faTelegram } from '@fortawesome/free-brands-svg-icons';
+import { useCart } from '../Main/CarContext';
 
 const apiUrl = process.env.REACT_APP_API_URL;
 const placeholderImg = "https://placehold.co/500x500/e8f0fe/10325c?text=EPN+Cycling";
@@ -31,11 +31,13 @@ const VerProducto = () => {
     telefono: '',
     cedula: ''
   });
+
+  // --- NUEVO ESTADO: Para el archivo de transferencia ---
+  const [transferFile, setTransferFile] = useState(null);
   
   const { id } = useParams();
   const navigate = useNavigate();
   
-  // Hooks del Carrito
   const { cartItems, addToCart, removeFromCart, cartTotal, cartCount, clearCart, getQuantityInCart } = useCart();
 
   // --- 1. CARGAR PRODUCTO ---
@@ -54,7 +56,6 @@ const VerProducto = () => {
         setProducto(data);
         setSelectedTalla(null);
         
-        // Seleccionar imagen principal
         if (data.imagen_url) setSelectedImage(data.imagen_url);
         else if (data.imagenes_secundarias && data.imagenes_secundarias.length > 0) setSelectedImage(data.imagenes_secundarias[0].imagen_url);
         else setSelectedImage(placeholderImg);
@@ -71,16 +72,14 @@ const VerProducto = () => {
   const isAgotado = !producto || producto.stock_actual <= 0;
   const tallasArray = producto?.tallas_disponibles ? producto.tallas_disponibles.split(',').map(t => t.trim()) : [];
 
-  // --- 2. MANEJAR CARRITO (AÑADIR) ---
+  // --- 2. MANEJAR CARRITO ---
   const handleAddToCart = () => {
     if (!selectedTalla && tallasArray.length > 0) {
       toast.warning("Por favor selecciona una talla.");
       return;
     }
 
-    // Verificar stock acumulado en carrito
     const currentInCart = getQuantityInCart(producto.id_recurso);
-    
     if (currentInCart + 1 > producto.stock_actual) {
         toast.error(`¡No hay suficiente stock! Solo quedan ${producto.stock_actual} unidades.`);
         return;
@@ -89,11 +88,18 @@ const VerProducto = () => {
     addToCart(producto, selectedTalla || "Única");
     toast.success("Producto añadido al carrito");
     setShowCartModal(true);
-    setStep(1); // Siempre abrir en el paso 1
+    setStep(1); 
   };
 
-  // --- 3. CHECKOUT (ENVIAR AL BACKEND) ---
-  const handleWhatsAppCheckout = async () => {
+  // --- NUEVO: Manejar cambio de archivo ---
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setTransferFile(e.target.files[0]);
+    }
+  };
+
+  // --- 3. CHECKOUT (AHORA TELEGRAM) ---
+  const handleTelegramCheckout = async () => {
     if (cartItems.length === 0) return;
 
     // Validación
@@ -102,26 +108,40 @@ const VerProducto = () => {
         return;
     }
 
+    // Validación del Comprobante (Obligatorio)
+    if (!transferFile) {
+        toast.warning("Por favor sube la foto del comprobante de transferencia.");
+        return;
+    }
+
     setIsProcessing(true);
     try {
-      // Payload
-      const orderPayload = {
-        customer_name: `${cliente.nombre} ${cliente.cedula ? `(CI: ${cliente.cedula})` : ''}`,
-        customer_phone: cliente.telefono,
-        total: cartTotal,
-        items: cartItems.map(item => ({
-            id_recurso: item.id_recurso,
-            quantity: item.quantity,
-            precio_venta: item.precio_venta,
-            nombre: item.nombre
-        }))
-      };
+      // --- FormData ---
+      const formData = new FormData();
+      
+      const fullName = `${cliente.nombre} ${cliente.cedula ? `(CI: ${cliente.cedula})` : ''}`;
+      
+      // Agregamos campos de texto
+      formData.append("customer_name", fullName);
+      formData.append("customer_phone", cliente.telefono);
+      formData.append("total", cartTotal);
+      
+      const itemsData = cartItems.map(item => ({
+        id_recurso: item.id_recurso,
+        quantity: item.quantity,
+        precio_venta: item.precio_venta,
+        nombre: item.nombre,
+        talla: item.selectedTalla
+      }));
+      formData.append("items_json", JSON.stringify(itemsData));
+
+      // Agregamos el archivo
+      formData.append("payment_proof", transferFile);
 
       // Fetch al Backend
       const response = await fetch(`${apiUrl}/ventas/checkout`, { 
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderPayload)
+        body: formData 
       });
 
       if (!response.ok) {
@@ -130,18 +150,16 @@ const VerProducto = () => {
       }
 
       // --- ÉXITO ---
-      // 1. Limpieza Forzada
       localStorage.removeItem('cartItems'); 
       localStorage.removeItem('cart'); 
       clearCart();
       
-      // 2. Reset UI
       setCliente({ nombre: '', telefono: '', cedula: '' });
+      setTransferFile(null); // Limpiar archivo
       setShowCartModal(false);
       setStep(1);
       
-      // 3. Notificación y Recarga
-      toast.success("¡Pedido enviado correctamente! Te contactaremos.");
+      toast.success("¡Pedido enviado por Telegram correctamente!");
       
       setTimeout(() => {
           window.location.reload();
@@ -155,10 +173,10 @@ const VerProducto = () => {
     }
   };
 
-  // Función para cerrar y resetear modal
   const handleCloseModal = () => {
     setShowCartModal(false);
     setCliente({ nombre: '', telefono: '', cedula: '' });
+    setTransferFile(null);
     setStep(1);
   };
 
@@ -242,7 +260,7 @@ const VerProducto = () => {
           </div>
         </div>
 
-        {/* --- MODAL DEL CARRITO (2 PASOS) --- */}
+        {/* --- MODAL DEL CARRITO --- */}
         {showCartModal && (
           <div className="modal-overlay">
             <div className="modal-content modal-compra">
@@ -268,7 +286,7 @@ const VerProducto = () => {
                             <p className="c-detalles">
                                  Talla: {item.selectedTalla} | ${item.precio_venta} 
                                  <span style={{fontWeight: 'bold', color: '#238CBC', marginLeft: '8px'}}>
-                                    x{item.quantity}
+                                   x{item.quantity}
                                  </span>
                             </p>
                           </div>
@@ -288,7 +306,6 @@ const VerProducto = () => {
                   )}
 
                   <div className="modal-buttons">
-                    {/* Botón para ir al Paso 2 */}
                     <button 
                         className="btn-primary" 
                         onClick={() => setStep(2)}
@@ -307,7 +324,7 @@ const VerProducto = () => {
               {step === 2 && cartItems.length > 0 && (
                 <div className="step-container">
                   <div className="guest-form">
-                      <p className="form-note">Ingresa tus datos para generar la orden.</p>
+                      <p className="form-note">Ingresa tus datos y el comprobante para generar la orden.</p>
                       
                       <div className="form-group">
                           <label>Nombre Completo *</label>
@@ -322,7 +339,8 @@ const VerProducto = () => {
                       
                       <div className="form-row">
                           <div className="form-group" style={{flex: 1}}>
-                            <label>Celular (WhatsApp) *</label>
+                            {/* CAMBIO 2: Etiqueta actualizada para Telegram */}
+                            <label>Celular (Telegram) *</label>
                             <input 
                                 type="tel" 
                                 className="form-input"
@@ -343,6 +361,24 @@ const VerProducto = () => {
                           </div>
                       </div>
 
+                      {/* --- NUEVO CAMPO: SUBIR COMPROBANTE --- */}
+                      <div className="form-group" style={{marginTop: '10px'}}>
+                        <label>Comprobante de Pago (Imagen) *</label>
+                        <div style={{border: '1px dashed #ccc', padding: '10px', borderRadius: '5px', textAlign: 'center'}}>
+                            <input 
+                                type="file" 
+                                accept="image/*"
+                                id="file-upload"
+                                onChange={handleFileChange}
+                                style={{display: 'none'}}
+                            />
+                            <label htmlFor="file-upload" style={{cursor: 'pointer', color: '#238CBC', display: 'block', width: '100%'}}>
+                                <FontAwesomeIcon icon={faUpload} style={{marginRight: '5px'}}/>
+                                {transferFile ? transferFile.name : "Subir Captura / Foto"}
+                            </label>
+                        </div>
+                      </div>
+
                       <div className="carrito-total" style={{marginTop: '1rem', borderTop: '1px dashed #eee'}}>
                           <span>Total a Pagar:</span>
                           <span className="total-precio">${cartTotal.toFixed(2)}</span>
@@ -353,14 +389,14 @@ const VerProducto = () => {
                   
                   <div className="modal-buttons">
                     <button 
-                        className="btn-primary btn-whatsapp-modal" 
-                        onClick={handleWhatsAppCheckout} 
+                        /* CAMBIO 3: Clase y función para Telegram */
+                        className="btn-primary btn-telegram-modal" 
+                        onClick={handleTelegramCheckout} 
                         disabled={isProcessing}
                     >
-                        <FontAwesomeIcon icon={faWhatsapp} /> {isProcessing ? "Procesando..." : "Confirmar Pedido"}
+                        <FontAwesomeIcon icon={faTelegram} /> {isProcessing ? "Procesando..." : "Confirmar Pedido"}
                     </button>
                     
-                    {/* Botón para volver al Paso 1 */}
                     <button className="btn-secondary" onClick={() => setStep(1)} disabled={isProcessing}>
                        Atrás
                     </button>

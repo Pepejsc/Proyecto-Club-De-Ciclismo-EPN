@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import "../../assets/Styles/Normal/MiMembresia.css";
 import { toast } from "react-toastify";
 import RenewMembershipModal from "../Normal/RenovarMembresiaModal";
+
 const MiMembresia = () => {
   const [membership, setMembership] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -76,7 +77,6 @@ const MiMembresia = () => {
     }
   };
 
-  // Manejar renovación simple - SIN parámetros de plan
   const handleSimpleRenew = async () => {
     try {
       const toastId = toast.loading("Renovando membresía...");
@@ -100,7 +100,6 @@ const MiMembresia = () => {
     }
   };
 
-  // Manejar solicitud de reactivación
   const handleRequestReactivation = async () => {
     try {
       const toastId = toast.loading("Enviando solicitud...");
@@ -120,13 +119,11 @@ const MiMembresia = () => {
     }
   };
 
-  // Lógica de colores
   const getStatusClass = (status) => {
     switch (status) {
       case "ACTIVE": return "card-active";
       case "PENDING": return "card-pending";
-      case "EXPIRED": return "card-expired";
-      case "CANCELLED": return "card-cancelled";
+      case "INACTIVE": return "card-inactive";
       default: return "card-pending";
     }
   };
@@ -142,7 +139,6 @@ const MiMembresia = () => {
     });
   };
 
-  // Calcular días restantes
   const getDaysRemaining = () => {
     if (!membership?.end_date) return 0;
     const end = new Date(membership.end_date);
@@ -153,20 +149,40 @@ const MiMembresia = () => {
 
   if (loading) return <div className="loading-spinner">Cargando...</div>;
 
+  // --- SECCIÓN MEJORADA: SIN MEMBRESÍA ---
   if (!membership) {
     return (
       <div className="no-membership-container">
-        <div className="no-membership-card">
-          <div className="icon-wrapper" style={{ marginBottom: "15px", color: "#238CBC" }}>
-            <i className="fas fa-bicycle fa-4x"></i>
+        <div className="welcome-card">
+          <div className="welcome-header">
+             <div className="welcome-icon-circle">
+                <i className="fas fa-biking pulse-animation"></i>
+             </div>
+             <h2>¡Bienvenido al Club!</h2>
+             <p className="subtitle">Tu aventura sobre ruedas comienza aquí</p>
           </div>
-          <h2>¡Únete al Club!</h2>
-          <p>Adquiere tu membresía para acceder a todos los beneficios.</p>
+          
+          <div className="benefits-list">
+             <div className="benefit-item">
+                <i className="fas fa-route"></i>
+                <span>Acceso a rutas exclusivas</span>
+             </div>
+             <div className="benefit-item">
+                <i className="fas fa-users"></i>
+                <span>Comunidad activa de ciclistas</span>
+             </div>
+             <div className="benefit-item">
+                <i className="fas fa-medal"></i>
+                <span>Eventos y competencias</span>
+             </div>
+          </div>
+
           <button
             onClick={() => navigate("/user/crear-membresia")}
-            className="btn-crear-nuevo"
+            className="btn-join-now"
           >
-            Adquirir Membresía
+            Inscribirme Ahora
+            <i className="fas fa-arrow-right" style={{marginLeft: '8px'}}></i>
           </button>
         </div>
       </div>
@@ -182,9 +198,8 @@ const MiMembresia = () => {
       <div className={`digital-id-card ${statusClass}`}>
         <div className="status-stripe"></div>
 
-        {/* Sección Foto */}
         <div className="card-photo-section">
-          <div className="club-logo-small">CLUB CICLISMO EPN</div>
+          <div className="club-logo-small">CLUB DE CICLISMO EPN</div>
           <div className="photo-frame">
             {membership.profile_picture_url ? (
               <img
@@ -206,7 +221,7 @@ const MiMembresia = () => {
         <div className="card-data-section">
           <div className="card-header">
             <h1 className="member-name">{membership.member_name}</h1>
-            {(membership.status === "ACTIVE" || membership.status === "PENDING") && (
+            {membership.status === "ACTIVE"&& (
               <button
                 onClick={() => setShowEditModal(true)}
                 className="btn-edit-card"
@@ -245,14 +260,12 @@ const MiMembresia = () => {
             </div>
 
             <div className="card-actions">
-              {/* ESTADO: ACTIVA */}
               {membership.status === "ACTIVE" && (
                 <span className="status-text">
                   <i className="fas fa-check-circle"></i> MEMBRESÍA ACTIVA
                 </span>
               )}
 
-              {/* ESTADO: PENDIENTE - NUEVO BOTÓN */}
               {membership.status === "PENDING" && (
                 <button
                   onClick={handleRequestReactivation}
@@ -262,8 +275,7 @@ const MiMembresia = () => {
                 </button>
               )}
 
-              {/* ESTADO: VENCIDA */}
-              {membership.status === "EXPIRED" && (
+              {membership.status === "INACTIVE" && (
                 <button
                   onClick={() => setShowRenewModal(true)}
                   className="btn-renew"
@@ -271,19 +283,11 @@ const MiMembresia = () => {
                   <i className="fas fa-sync-alt"></i> Renovar
                 </button>
               )}
-
-              {/* ESTADO: CANCELADA */}
-              {membership.status === "CANCELLED" && (
-                <span className="status-text">
-                  <i className="fas fa-ban"></i> MEMBRESÍA INACTIVA
-                </span>
-              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modal de Editar (mantener igual) */}
       {showEditModal && (
         <div className="modal-overlay membresia-modal-overlay">
           <div className="membresia-modal-container">
@@ -330,14 +334,13 @@ const MiMembresia = () => {
         </div>
       )}
 
-      {/* Modal de Renovación - AHORA USA RenewMembershipModal */}
       {showRenewModal && (
         <div className="modal-overlay membresia-modal-overlay">
           <div className="membresia-modal-container">
             <RenewMembershipModal 
               membership={membership}
               onClose={() => setShowRenewModal(false)}
-              onRenew={handleSimpleRenew} // Sin parámetros de plan
+              onRenew={handleSimpleRenew}
             />
           </div>
         </div>

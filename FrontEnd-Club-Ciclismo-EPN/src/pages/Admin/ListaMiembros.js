@@ -61,9 +61,9 @@ const ListaMiembros = () => {
       <table className="tabla-miembros">
         <thead>
           <tr>
-            <th>Ciclista</th>
+            <th>Usuario</th>
             <th>Contacto</th>
-            <th>Membresía</th>
+            <th>Tipo Membresía</th>
             <th>Estado</th>
             <th>Vigencia</th>
             <th style={{textAlign: 'center'}}>Acciones</th>
@@ -79,8 +79,8 @@ const ListaMiembros = () => {
 
             return (
               <tr key={u.id}>
-                {/* 1. Ciclista */}
-                <td data-label="Ciclista">
+                {/* 1. Usuario */}
+                <td data-label="Usuario">
                   <div className="user-cell">
                     <img 
                       src={u.person?.profile_picture ? getFullImageUrl(u.person.profile_picture) : defaultProfile} 

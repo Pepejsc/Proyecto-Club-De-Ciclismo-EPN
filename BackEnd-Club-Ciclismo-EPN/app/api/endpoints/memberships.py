@@ -1,57 +1,91 @@
 import base64
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-from sqlalchemy import func
-from typing import Any
+import os
+import uuid
+import shutil
+from typing import Any, Optional
 from datetime import date, timedelta, datetime
-from app.models.domain.notification import Notification
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from sqlalchemy.orm import Session
+from sqlalchemy import text, func
+
 
 from app.db.database import get_db
 from app.core.security import get_current_user
 from app.models.domain.user import User
-# Asegúrate de que MembershipStatus en domain ya tenga ACTIVO, INACTIVO, PENDIENTE
-from app.models.domain.membership import Membership, MembershipStatus 
+from app.models.domain.membership import Membership, MembershipStatus, MembershipType, ParticipationLevel
 from app.models.schema.membership import MembershipCreate, MembershipResponse, MembershipStatusResponse, MembershipUpdate
 from app.models.domain.persona import Persona
+from app.models.domain.notification import Notification
 
 router = APIRouter()
 
+# Configuración de carpeta para matrículas
+UPLOAD_DIR_MATRICULAS = "uploads/matriculas"
+os.makedirs(UPLOAD_DIR_MATRICULAS, exist_ok=True)
+
+def save_upload_file(upload_file: UploadFile) -> str:
+    """Guarda un archivo subido y retorna su ruta relativa"""
+    try:
+        filename = f"{uuid.uuid4()}_{upload_file.filename}"
+        file_path = os.path.join(UPLOAD_DIR_MATRICULAS, filename)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(upload_file.file, buffer)
+            
+        return f"/uploads/matriculas/{filename}"
+    except Exception as e:
+        print(f"Error guardando archivo: {e}")
+        return None
+
 @router.post("/", response_model=MembershipResponse)
 def create_membership(
-    membership_in: MembershipCreate,
+    # --- CAMBIO: Recibir datos como Form Data ---
+    membership_type: MembershipType = Form(...),
+    participation_level: ParticipationLevel = Form(...),
+    emergency_contact: str = Form(...),
+    emergency_phone: str = Form(...),
+    medical_conditions: Optional[str] = Form(None),
+    unique_code: Optional[str] = Form(None),
+    matriculation_file: Optional[UploadFile] = File(None),
+    
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Any:
     """
-    Crea una nueva membresía para el usuario logueado.
+    Crea una nueva membresía. Soporta subida de archivo de matrícula.
     """
     # 1. Verificar si ya existe
     existing_membership = db.query(Membership).filter(Membership.user_id == current_user.id).first()
-    
     if existing_membership:
         raise HTTPException(
             status_code=400,
             detail="El usuario ya tiene una membresía registrada."
         )
 
-    # --- CALCULAR FECHAS ---
+    # 2. Procesar Archivo de Matrícula (Si existe)
+    matricula_url = None
+    if matriculation_file:
+        matricula_url = save_upload_file(matriculation_file)
+
+    # 3. Calcular Fechas
     today = date.today()
-    expiration_date = today + timedelta(days=365) # Membresía válida por 1 año
+    expiration_date = today + timedelta(days=365)
     now = datetime.now()
 
-    # 2. Crear el objeto Membership
+    # 4. Crear Objeto
     new_membership = Membership(
         user_id=current_user.id,
-        membership_type=membership_in.membership_type,
-        participation_level=membership_in.participation_level,
-        emergency_contact=membership_in.emergency_contact,
-        emergency_phone=membership_in.emergency_phone,
-        medical_conditions=membership_in.medical_conditions,
+        membership_type=membership_type,
+        participation_level=participation_level,
+        emergency_contact=emergency_contact,
+        emergency_phone=emergency_phone,
+        medical_conditions=medical_conditions,
         
-        # CORRECCIÓN: Usar estado en Español
-        status=MembershipStatus.ACTIVO, 
+        # Nuevos campos
+        unique_code=unique_code,
+        matriculation_url=matricula_url,
         
+        status=MembershipStatus.ACTIVE, 
         start_date=today,
         end_date=expiration_date,
         created_at=now,
@@ -62,12 +96,17 @@ def create_membership(
     db.commit()
     db.refresh(new_membership)
     
+    # 5. Notificar
     try:
+        msg = "Tu membresía ha sido activada."
+        if unique_code:
+            msg += " Se ha registrado tu información de estudiante EPN."
+
         welcome_notification = Notification(
             user_id=current_user.id,
             category="MEMBRESIA",
             title="¡Membresía Creada Exitosamente!",
-            message="Tu membresía ha sido activada. ¡Bienvenido al Club de Ciclismo!",
+            message=msg,
             is_read=False,
             priority="MEDIA",
             action_link="/user/mi-membresia",
@@ -96,8 +135,6 @@ def read_my_membership_status(
         raise HTTPException(status_code=404, detail="Datos personales no encontrados")
 
     full_name = f"{person_data.first_name} {person_data.last_name}"
-
-    # --- PROCESAMIENTO DE IMAGEN ---
     final_profile_pic = None
     if person_data.profile_picture:
         if isinstance(person_data.profile_picture, bytes):
@@ -160,10 +197,10 @@ def update_membership(
 
     # 3. Actualizar campos
     update_data = membership_in.dict(exclude_unset=True)
-    
+
     # Si es usuario normal, NO dejar cambiar STATUS
     if not is_admin and "status" in update_data:
-        del update_data["status"] 
+        del update_data["status"]
 
     for key, value in update_data.items():
         setattr(membership, key, value)
@@ -177,9 +214,6 @@ def update_membership(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error al actualizar: {str(e)}")
 
-# =============================================================================
-# ENDPOINTS ADICIONALES (RENOVACIÓN Y ESTADÍSTICAS)
-# =============================================================================
 
 @router.post("/{user_id}/renew")
 def renew_membership(
@@ -199,7 +233,7 @@ def renew_membership(
         raise HTTPException(status_code=404, detail="Membresía no encontrada")
 
     # CORRECCIÓN: Verificar INACTIVO (Antes EXPIRED)
-    if membership.status != MembershipStatus.INACTIVO:
+    if membership.status != MembershipStatus.INACTIVE:
         raise HTTPException(
             status_code=400, 
             detail="Solo se pueden renovar membresías inactivas o vencidas"
@@ -211,7 +245,7 @@ def renew_membership(
 
     # Actualizar estado a ACTIVO
     membership.end_date = new_end_date
-    membership.status = MembershipStatus.ACTIVO
+    membership.status = MembershipStatus.ACTIVE
     membership.updated_at = datetime.now()
 
     # Registrar en historial (SQL directo)
@@ -259,7 +293,7 @@ def request_reactivation(
         raise HTTPException(status_code=404, detail="Membresía no encontrada")
 
     # CORRECCIÓN: Usar PENDIENTE
-    if membership.status != MembershipStatus.PENDIENTE:
+    if membership.status != MembershipStatus.PENDING:
         raise HTTPException(
             status_code=400, 
             detail="Solo se puede solicitar reactivación para membresías PENDIENTES"
@@ -284,7 +318,7 @@ def request_reactivation(
             pass
 
     db.commit()
-    return {"success": True, "message": "Solicitud enviada"}
+    return {"success": True, "message": "Solicitud enviada al administrador."}
 
 @router.get("/{user_id}/participation-stats")
 def get_participation_stats(
