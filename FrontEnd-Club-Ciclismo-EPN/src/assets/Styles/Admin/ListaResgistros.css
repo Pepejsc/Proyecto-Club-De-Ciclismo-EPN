@@ -1,358 +1,333 @@
-/* src/assets/Styles/Admin/ListaResgistros.css */
-
-/* --- CONFIGURACIÓN BASE --- */
+/* =========================================
+   1. CONFIGURACIÓN BASE (MODO COMPACTO PARA PANTALLA)
+   ========================================= */
 .gestion-ventas-container {
-  padding: 1.5rem;
+  padding: 1rem;
   background-color: #F8FAFC;
   min-height: 100vh;
   width: 100%;
-  box-sizing: border-box; /* Crucial para que el padding no rompa el ancho */
+  box-sizing: border-box;
   font-family: 'Montserrat', sans-serif;
 }
 
 .main-title {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  color: #111827;
-  margin-bottom: 2rem;
-  text-align: center;
+  color: #1e293b;
+  margin-bottom: 1.5rem;
 }
 
-/* --- BARRA DE CONTROLES (FILTROS Y BOTÓN NUEVO) --- */
+/* =========================================
+   2. BARRA DE CONTROLES
+   ========================================= */
 .sales-controls {
   display: flex;
-  justify-content: space-between; /* Filtros a la izq, Botón a la der */
+  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap; /* Permite que bajen si no hay espacio */
+  flex-wrap: nowrap;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .filters-group {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .filter-btn {
-  border: 1px solid #E5E7EB;
+  border: 1px solid #E2E8F0;
   background: white;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
-  color: #6B7280;
-  transition: all 0.2s;
+  color: #64748B;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
+  gap: 6px;
 }
 
 .filter-btn:hover {
-  background-color: #F3F4F6;
-  color: #111827;
+  background-color: #F1F5F9;
+  color: #0F172A;
+  border-color: #CBD5E1;
 }
 
 .filter-btn.active {
-  background-color: #3B82F6 !important;
+  background-color: #238CBC !important;
   color: white !important;
-  border-color: #3B82F6 !important;
+  border-color: #238CBC !important;
+  box-shadow: 0 2px 4px rgba(35, 140, 188, 0.2);
 }
 
-/* Botón Nuevo Registro (Destacado) */
 .btn-new {
-  background-color: #238CBC;
+  background-color: #10B981;
   color: white;
   border: none;
-  padding: 0.7rem 1.5rem;
-  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 6px rgba(35, 140, 188, 0.2);
+  gap: 6px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
   transition: transform 0.2s;
 }
 
 .btn-new:hover {
-  background-color: #1b6ca8;
-  transform: translateY(-2px);
+  background-color: #059669;
+  transform: translateY(-1px);
 }
 
-/* --- TABLA FULL WIDTH CON SCROLL --- */
+/* =========================================
+   3. TABLA COMPACTA (AJUSTADA A TU MONITOR)
+   ========================================= */
 .sales-card {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   border: 1px solid #E2E8F0;
   width: 100%;
-  overflow: hidden; /* Mantiene las esquinas redondeadas */
-  display: flex;
-  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
 }
 
-/* Contenedor responsivo para la tabla */
 .table-responsive {
   width: 100%;
-  overflow-x: auto; /* Habilita scroll horizontal en móviles */
-  -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sales-table {
   width: 100%;
-  border-collapse: collapse;
-  min-width: 900px; /* Ancho mínimo para forzar scroll si la pantalla es chica */
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
 }
 
 .sales-table th {
-  background-color: #F9FAFB;
+  background-color: #F8FAFC;
   text-align: left;
-  padding: 1rem 1.5rem;
-  font-size: 0.8rem;
+  padding: 0.75rem 0.8rem; /* Padding compacto */
+  font-size: 0.75rem;
   font-weight: 700;
   color: #64748B;
   text-transform: uppercase;
   border-bottom: 1px solid #E2E8F0;
-  white-space: nowrap; /* Evita que los encabezados se rompan en dos líneas */
+  white-space: nowrap;
 }
 
 .sales-table td {
-  padding: 1rem 1.5rem;
+  padding: 0.6rem 0.8rem; /* Padding compacto */
   border-bottom: 1px solid #F1F5F9;
   vertical-align: middle;
-  color: #1F2937;
-  font-size: 0.95rem;
+  color: #334155;
+  font-size: 0.85rem;
 }
 
-.sales-table tbody tr:hover {
-  background-color: #F8FAFC;
-}
-
-/* --- ESTILOS DE COLUMNAS --- */
+/* Ajustes de columnas */
 .col-id {
   font-weight: 700;
-  color: #6B7280;
-}
-
-.client-info h4 {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.client-phone {
-  font-size: 0.85rem;
-  color: #6B7280;
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.items-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-.item-row {
-  margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-}
-
-.item-qty {
-  font-weight: 700;
-  margin-right: 8px;
-  color: #3B82F6;
-  background: #EFF6FF;
-  padding: 2px 6px;
-  border-radius: 4px;
+  color: #475569;
+  font-family: monospace;
   font-size: 0.8rem;
+  width: 80px;
+}
+
+.sales-table td:nth-child(4) {
+  min-width: 180px;
+  max-width: 300px;
+  white-space: normal;
+  line-height: 1.3;
 }
 
 .total-amount {
+  font-family: 'Roboto Mono', monospace;
   font-weight: 700;
-  color: #10B981;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
-/* BADGES DE ESTADO */
+/* =========================================
+   4. ETIQUETAS (BADGES)
+   ========================================= */
 .status-badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
   font-weight: 700;
-  display: inline-block;
   text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .status-badge.PENDING { background-color: #FFF7ED; color: #C2410C; border: 1px solid #FFEDD5; }
-.status-badge.PAID { background-color: #ECFDF5; color: #047857; border: 1px solid #D1FAE5; }
-.status-badge.CANCELLED { background-color: #FEF2F2; color: #B91C1C; border: 1px solid #FEE2E2; }
-.status-badge.INGRESO { background-color: #ECFDF5; color: #047857; }
-.status-badge.EGRESO { background-color: #FEF2F2; color: #B91C1C; }
+.status-badge.PAID, .status-badge.COMPLETADO, .status-badge.ACTIVE { background-color: #ECFDF5; color: #047857; border: 1px solid #D1FAE5; }
+.status-badge.CANCELLED, .status-badge.DE_BAJA { background-color: #FEF2F2; color: #B91C1C; border: 1px solid #FEE2E2; }
+.status-badge.REGISTRADO { background-color: #EFF6FF; color: #1D4ED8; border: 1px solid #DBEAFE; }
+.status-badge.INSCRIPCION { background-color: #EFF6FF; color: #2563EB; border: 1px solid #DBEAFE; }
 
-/* ACCIONES */
+/* =========================================
+   5. BOTONES ACCIÓN
+   ========================================= */
 .actions-group {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .action-btn {
-  border: none;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
+  border: none;
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: all 0.2s;
+  font-size: 0.8rem;
 }
 
-.btn-confirm { background-color: #DCFCE7; color: #166534; }
-.btn-confirm:hover { background-color: #10B981; color: white; }
+.btn-confirm { background-color: #DCFCE7; color: #15803D; }
+.btn-confirm:hover { background-color: #16A34A; color: white; }
 
-.btn-cancel { background-color: #FEE2E2; color: #991B1B; }
-.btn-cancel:hover { background-color: #EF4444; color: white; }
+.btn-cancel { background-color: #FEE2E2; color: #B91C1C; }
+.btn-cancel:hover { background-color: #DC2626; color: white; }
 
-/* --- MODAL --- */
+/* =========================================
+   6. MODAL (DISEÑO RESTAURADO: GRANDE Y ELEGANTE)
+   ========================================= */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 1rem; /* Margen en móviles */
+  padding: 1rem;
 }
 
 .modal-content {
   background: white;
-  padding: 2rem;
+  padding: 2.5rem;
   border-radius: 16px;
   width: 100%;
-  max-width: 450px;
+  max-width: 480px;
   position: relative;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  animation: fadeIn 0.3s ease-out;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-close-x {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: 1.2rem; right: 1.2rem;
+  background: #F1F5F9;
   border: none;
-  background: none;
-  font-size: 1.5rem;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
   cursor: pointer;
-  color: #9CA3AF;
-  padding: 0;
-  line-height: 1;
+  color: #64748B;
+  transition: all 0.2s;
+  font-size: 1.1rem;
 }
+.modal-close-x:hover { background: #E2E8F0; color: #EF4444; transform: rotate(90deg); }
 
-.finance-form {
-  display: flex;
-  flex-direction: column;
+.finance-form { 
+  display: flex; 
+  flex-direction: column; 
   gap: 1.2rem;
-  margin-top: 1rem;
+  margin-top: 1.5rem; 
 }
 
-.finance-form label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 0.4rem;
-  font-size: 0.9rem;
-  color: #374151;
+.finance-form label { 
+  font-size: 0.9rem; 
+  font-weight: 700; 
+  color: #334155; 
+  margin-bottom: 0.4rem; 
 }
 
-.finance-form select,
-.finance-form input {
-  width: 100%;
-  padding: 0.8rem;
-  border: 1px solid #D1D5DB;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-family: inherit;
-  box-sizing: border-box; /* Importante para que no se salga del contenedor */
-  transition: border-color 0.2s;
+.finance-form input, .finance-form select {
+  width: 100%; 
+  padding: 0.8rem 1rem;
+  border: 1px solid #CBD5E1; 
+  border-radius: 10px;
+  font-size: 1rem; 
+  transition: all 0.2s;
+  background: #F8FAFC;
 }
 
-.finance-form select:focus,
-.finance-form input:focus {
+.finance-form input:focus, .finance-form select:focus {
+  border-color: #238CBC; 
+  background: white;
   outline: none;
-  border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(35, 140, 188, 0.15);
 }
+
+/* CONTENEDOR DE BOTONES (CANCELAR + GUARDAR) */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn-cancel-modal {
+  flex: 1;
+  padding: 1rem;
+  background-color: #D93E3E;
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-cancel-modal:hover { background-color: #b93535; color: white; }
 
 .btn-save {
-  background-color: #238CBC;
+  flex: 1;
+  padding: 1rem;
+  background: #2196F3;    /* COLOR AZUL SOLICITADO */
   color: white;
-  border: none;
-  padding: 0.9rem;
-  border-radius: 8px;
   font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  border-radius: 10px;
   cursor: pointer;
-  margin-top: 0.5rem;
-  transition: background-color 0.2s;
+  transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 6px rgba(33, 150, 243, 0.25); /* Sombra ajustada al azul */
+}
+.btn-save:hover { 
+  background: #1976D2;    /* Un poco más oscuro al pasar el mouse */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(33, 150, 243, 0.3);
 }
 
-.btn-save:hover {
-  background-color: #1b6ca8;
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- MEDIA QUERIES (RESPONSIVE) --- */
-
-/* Tablet y menores (max 1024px) */
-@media (max-width: 1024px) {
-  .sales-controls {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .filters-group {
-    width: 100%;
-    overflow-x: auto; /* Scroll horizontal en los filtros si son muchos */
-    padding-bottom: 5px;
-  }
-  
-  .btn-new {
-    width: 100%; /* Botón full width en tablet/móvil */
-    justify-content: center;
-  }
-}
-
-/* Móvil (max 640px) */
-@media (max-width: 640px) {
+/* =========================================
+   7. AJUSTES PARA PANTALLAS PEQUEÑAS
+   ========================================= */
+@media screen and (max-width: 1366px) {
   .gestion-ventas-container {
-    padding: 1rem;
+      padding: 0.8rem;
   }
-
-  .main-title {
-    font-size: 1.5rem;
+  .sales-table th, .sales-table td {
+      padding: 0.5rem 0.6rem;
   }
-
-  .sales-table th, 
-  .sales-table td {
-    padding: 0.8rem 1rem; /* Reducir padding en celdas */
-  }
-  
-  .status-badge {
-    font-size: 0.7rem;
-    padding: 4px 8px;
+  .modal-content {
+      max-height: 90vh;
+      overflow-y: auto;
   }
 }

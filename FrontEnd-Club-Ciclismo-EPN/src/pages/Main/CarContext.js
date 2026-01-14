@@ -8,50 +8,79 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState(() => {
-    const savedCart = localStorage.getItem('epn_cart');
-    return savedCart ? JSON.parse(savedCart) : [];
+    try {
+      const savedCart = localStorage.getItem('epn_cart');
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch (error) {
+      console.error("Error al cargar carrito:", error);
+      return [];
+    }
   });
 
   useEffect(() => {
     localStorage.setItem('epn_cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // --- (MODIFICADO) Lógica de Agrupación ---
+  // =================================================================
+  // FUNCIÓN AGREGAR AL CARRITO (VERSIÓN ROBUSTA)
+  // =================================================================
   const addToCart = (product, talla) => {
+    // 1. Normalizar datos para evitar errores de comparación
+    // Convertimos IDs a String y limpiamos espacios en la talla
+    const tallaNormalizada = talla ? String(talla).trim() : "unico";
+    const idProducto = product.id_recurso || product.id; // Busca cualquiera de los dos IDs
+
+    if (!idProducto) {
+        console.error("Error: Intentando agregar producto sin ID", product);
+        return;
+    }
+
+    console.log(`🛒 Agregando: ID=${idProducto} | Talla=${tallaNormalizada}`);
+
     setCartItems((prevItems) => {
-      // Buscamos si ya existe el mismo producto con la misma talla
-      const existingItemIndex = prevItems.findIndex(
-        item => item.id_recurso === product.id_recurso && item.selectedTalla === talla
-      );
+      // 2. Buscamos si YA existe este producto exacto (Mismo ID + Misma Talla)
+      const existingItemIndex = prevItems.findIndex(item => {
+         const itemId = item.id_recurso || item.id;
+         const itemTalla = item.selectedTalla ? String(item.selectedTalla).trim() : "unico";
+         
+         // Comparación flexible (convierte números a texto para comparar '33' con 33)
+         return String(itemId) === String(idProducto) && itemTalla === tallaNormalizada;
+      });
 
       if (existingItemIndex > -1) {
-        // Si existe, creamos una copia y aumentamos la cantidad
+        // --- CASO A: YA EXISTE -> SUMAMOS CANTIDAD ---
+        console.log("✅ Producto encontrado en carrito. Aumentando cantidad.");
         const newItems = [...prevItems];
         newItems[existingItemIndex].quantity += 1;
         return newItems;
       } else {
-        // Si no existe, lo añadimos con cantidad 1
+        // --- CASO B: NO EXISTE -> CREAMOS FILA NUEVA ---
+        console.log("➕ Producto nuevo. Creando fila.");
         const newItem = {
           ...product,
-          uniqueId: `${product.id_recurso}-${talla}`, // ID único combinado
-          selectedTalla: talla,
-          quantity: 1 // Empezamos en 1
+          id_recurso: idProducto, // Estandarizamos el ID
+          selectedTalla: tallaNormalizada,
+          uniqueId: `${idProducto}-${tallaNormalizada}`, // ID único para borrar luego
+          quantity: 1
         };
         return [...prevItems, newItem];
       }
     });
   };
 
-  // --- (MODIFICADO) Eliminar o Restar ---
+  // =================================================================
+  // FUNCIÓN ELIMINAR / RESTAR
+  // =================================================================
   const removeFromCart = (uniqueId, removeAll = false) => {
     setCartItems((prevItems) => {
       if (removeAll) {
+         // Borrar toda la fila (papelera roja)
          return prevItems.filter(item => item.uniqueId !== uniqueId);
       }
 
+      // Restar 1 (si llegara a implementarse botón menos)
       return prevItems.map(item => {
         if (item.uniqueId === uniqueId) {
-          // Si queda 1 y restamos, se borra. Si no, restamos 1.
           return { ...item, quantity: item.quantity - 1 };
         }
         return item;
@@ -64,17 +93,14 @@ export const CartProvider = ({ children }) => {
     localStorage.removeItem('epn_cart');
   };
 
-  // Calcular total ($)
+  // Totales
   const cartTotal = cartItems.reduce((total, item) => total + (parseFloat(item.precio_venta) * item.quantity), 0);
-  
-  // Calcular total de items (cantidad)
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  // --- (NUEVO) Función para verificar stock en el carrito ---
-  // Devuelve cuántos items de este ID ya tengo en el carrito
+  // Verificar Stock en Carrito
   const getQuantityInCart = (recursoId) => {
     return cartItems
-      .filter(item => item.id_recurso === recursoId)
+      .filter(item => String(item.id_recurso || item.id) === String(recursoId))
       .reduce((total, item) => total + item.quantity, 0);
   };
 
@@ -85,7 +111,7 @@ export const CartProvider = ({ children }) => {
     clearCart,
     cartTotal,
     cartCount,
-    getQuantityInCart // Exportamos esta función útil
+    getQuantityInCart
   };
 
   return (

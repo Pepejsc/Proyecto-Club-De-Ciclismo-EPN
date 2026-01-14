@@ -9,6 +9,7 @@ import {
   unregisterFromEvent,
 } from "../../services/eventService";
 import MapaPoup from "./MapaPoup";
+import { toast } from "react-toastify"; // <--- IMPORTANTE: Importar toast
 
 const EventosDisponibles = () => {
   const [eventos, setEventos] = useState([]);
@@ -18,8 +19,6 @@ const EventosDisponibles = () => {
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
   const [mostrarMapa, setMostrarMapa] = useState(false);
   const [marcadorMapa, setMarcadorMapa] = useState(null);
-
-
 
   useEffect(() => {
     const cargarEventos = async () => {
@@ -52,17 +51,36 @@ const EventosDisponibles = () => {
     cargarEventos();
   }, []);
 
+  // --- FUNCIÓN MEJORADA PARA MANEJAR ERRORES ---
   const manejarInscripcion = async (eventoId, yaInscrito) => {
     try {
       if (yaInscrito) {
+        // Cancelar inscripción
         await unregisterFromEvent(eventoId);
         setInscritos(inscritos.filter((id) => id !== eventoId));
+        toast.info("Inscripción cancelada correctamente.");
       } else {
+        // Inscribirse (Aquí es donde el backend puede rechazar por falta de membresía)
         await registerToEvent(eventoId);
         setInscritos([...inscritos, eventoId]);
+        toast.success("¡Te has inscrito al evento exitosamente!");
       }
     } catch (error) {
-      console.error("Error al inscribirse/cancelar:", error.message);
+      console.error("Error al inscribirse/cancelar:", error);
+
+      // Detectamos si el error viene del backend (axios/fetch response)
+      const errorMsg = error.response?.data?.detail || error.message;
+
+      // Si es un error de permisos (403), mostramos mensaje claro de membresía
+      if (errorMsg.includes("membresía") || errorMsg.includes("activa") || error.response?.status === 403) {
+          toast.error("⚠️ Acceso denegado: Necesitas una MEMBRESÍA ACTIVA para inscribirte a eventos.", {
+              autoClose: 5000,
+              position: "top-center",
+              style: { fontSize: '1rem', textAlign: 'center' }
+          });
+      } else {
+          toast.error(`Error: ${errorMsg}`);
+      }
     }
   };
 
@@ -74,38 +92,32 @@ const EventosDisponibles = () => {
   const confirmarChecklist = async () => {
     setMostrarChecklist(false);
     if (eventoSeleccionado) {
+      // Llamamos a la función mejorada
       await manejarInscripcion(eventoSeleccionado.id, false);
       setEventoSeleccionado(null);
     }
   };
 
-const abrirMapa = (direccion) => {
-  console.log("📍 Dirección recibida:", direccion);
+  const abrirMapa = (direccion) => {
+    console.log("📍 Dirección recibida:", direccion);
 
-  if (!window.google || !window.google.maps) {
-    console.error("❌ Google Maps no está disponible");
-    return;
-  }
-
-  const geocoder = new window.google.maps.Geocoder();
-  geocoder.geocode({ address: direccion }, (results, status) => {
-    console.log("📦 Resultado del geocoder:", results);
-    console.log("📄 Status del geocoder:", status);
-
-    if (status === "OK" && results[0]) {
-      const location = results[0].geometry.location;
-      console.log("✅ Coordenadas obtenidas:", location.lat(), location.lng());
-
-      setMarcadorMapa({ lat: location.lat(), lng: location.lng() });
-      setMostrarMapa(true);
-    } else {
-      console.error("❌ Geocodificación fallida:", status);
+    if (!window.google || !window.google.maps) {
+      console.error("❌ Google Maps no está disponible");
+      return;
     }
-  });
-};
 
-
-
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ address: direccion }, (results, status) => {
+      if (status === "OK" && results[0]) {
+        const location = results[0].geometry.location;
+        setMarcadorMapa({ lat: location.lat(), lng: location.lng() });
+        setMostrarMapa(true);
+      } else {
+        console.error("❌ Geocodificación fallida:", status);
+        toast.error("No se pudo ubicar la dirección en el mapa.");
+      }
+    });
+  };
 
   if (loading) return <p style={{ padding: "30px" }}>Cargando eventos...</p>;
 
@@ -157,16 +169,14 @@ const abrirMapa = (direccion) => {
                 rawFecha: new Date(evento.creation_date),
               }}
               inscrito={yaInscrito}
-              onToggleInscripcion={() =>
-                manejarInscripcion(evento.id, yaInscrito)
-              }
+              // Ahora pasamos la función que tiene los Toast
+              onToggleInscripcion={() => manejarInscripcion(evento.id, yaInscrito)}
               onAbrirChecklist={() => abrirChecklist(evento)}
               onAbrirMapa={() => abrirMapa(evento.meeting_point)}
             />
           );
         })}
       </div>
-
 
       {mostrarMapa && marcadorMapa && (
         <MapaPoup marker={marcadorMapa} onClose={() => setMostrarMapa(false)} />

@@ -418,6 +418,27 @@
   background-color: #EF4444 !important;
 }
 
+.filter-select, .filter-input {
+    padding: 8px 12px;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #475569;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    background-color: #F8FAFC;
+}
+
+.filter-select:hover, .filter-input:hover {
+    border-color: #CBD5E1;
+}
+
+.filter-select:focus, .filter-input:focus {
+    border-color: #3B82F6;
+    background-color: white;
+}
+
 /* RESPONSIVE */
 @media (max-width: 1200px) {
   .top-section {

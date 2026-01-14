@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getMembershipStats } from "../../services/membershipService";
+import { getToken } from "../../services/authService"; // Importamos token por si acaso
 import { toast } from "react-toastify";
 import {
   AreaChart,
@@ -18,20 +19,50 @@ const DashboardAdmin = () => {
   const [stats, setStats] = useState(null);
   const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [chartFilter, setChartFilter] = useState("6M");
-  const [showModal, setShowmodal] = useState(false);
+  
+  // --- ESTADOS DE LOS FILTROS (NUEVO) ---
+  const [tipoFiltro, setTipoFiltro] = useState("ANUAL");
+  const [yearSel, setYearSel] = useState(new Date().getFullYear());
+  const [quarterSel, setQuarterSel] = useState(1);
+  const [dateSel, setDateSel] = useState(new Date().toISOString().split('T')[0]);
 
+  // Recargar cuando cambien los filtros
   useEffect(() => {
     loadAllData();
-  }, []);
+  }, [tipoFiltro, yearSel, quarterSel, dateSel]);
 
   const loadAllData = async () => {
     try {
       setLoading(true);
+
+      // 1. Construir parámetros de fecha (LÓGICA NUEVA)
+      let queryParams = "";
+      
+      if (tipoFiltro === "ANUAL") {
+          queryParams = `?start_date=${yearSel}-01-01&end_date=${yearSel}-12-31`;
+      } 
+      else if (tipoFiltro === "TRIMESTRAL") {
+          const startMonth = (quarterSel - 1) * 3 + 1;
+          const endMonth = startMonth + 2;
+          const lastDay = new Date(yearSel, endMonth, 0).getDate(); 
+          const sM = startMonth.toString().padStart(2, '0');
+          const eM = endMonth.toString().padStart(2, '0');
+          queryParams = `?start_date=${yearSel}-${sM}-01&end_date=${yearSel}-${eM}-${lastDay}`;
+      }
+      else if (tipoFiltro === "DIARIO") {
+          queryParams = `?start_date=${dateSel}&end_date=${dateSel}`;
+      }
+      // Si es HISTORICO, queryParams se queda vacío
+
+      // 2. Fetch con Token
+      const token = getToken(); 
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+
       const [membersData, balanceRes] = await Promise.all([
         getMembershipStats(),
-        fetch(`${apiUrl}/finanzas/balance`).then((res) => res.json()),
+        fetch(`${apiUrl}/finanzas/balance${queryParams}`, { headers }).then((res) => res.json()),
       ]);
+
       setStats(membersData);
       setBalance(balanceRes);
     } catch (error) {
@@ -48,7 +79,7 @@ const DashboardAdmin = () => {
   };
 
   if (loading)
-    return <div className="dashboard-wrapper loading">Cargando Panel...</div>;
+    return <div className="dashboard-wrapper loading"><i className="fas fa-spinner fa-spin"></i> Cargando...</div>;
   if (!stats || !balance) return null;
 
   // --- DATOS PROCESADOS ---
@@ -62,25 +93,29 @@ const DashboardAdmin = () => {
   const stop1 = activePct;
   const stop2 = activePct + pendingPct;
 
-  const chartData =
-    chartFilter === "6M" ? balance.grafico.slice(-6) : balance.grafico;
+  // El gráfico siempre muestra los últimos 12 meses (según backend)
+  const chartData = balance.grafico;
 
   // --- LÓGICA FINANCIERA ---
   const totalIngresos = balance.resumen.ingresos_totales;
   const totalEgresos = balance.resumen.egresos_totales;
-  const ratioGasto =
-    totalIngresos > 0 ? (totalEgresos / totalIngresos) * 100 : 0;
+  const ratioGasto = totalIngresos > 0 ? (totalEgresos / totalIngresos) * 100 : 0;
   const ES_CRITICO = ratioGasto > 70;
 
-const getTrendUI = (kpi) => {
+  const getTrendUI = (kpi) => {
     let arrow = '↑';
     let colorClass = 'neutral';
-    let valueToShow = kpi.trend;
+    let valueToShow = kpi.trend; // Si el backend no manda tendencia, mostrar algo default
 
     if (kpi.type === 'INGRESOS') {
-        arrow = kpi.trend >= 0 ? '↑' : '↓';
-        colorClass = kpi.trend >= 0 ? 'positive' : 'negative';
-        valueToShow = Math.abs(kpi.trend).toFixed(1) + '%';
+        // Si hay tendencia calculada
+        if(kpi.trend !== undefined) {
+             arrow = kpi.trend >= 0 ? '↑' : '↓';
+             colorClass = kpi.trend >= 0 ? 'positive' : 'negative';
+             valueToShow = Math.abs(kpi.trend).toFixed(1) + '%';
+        } else {
+             valueToShow = '-';
+        }
     } 
     else if (kpi.type === 'EGRESOS') {
         if (ES_CRITICO) {
@@ -95,12 +130,21 @@ const getTrendUI = (kpi) => {
     return { arrow, colorClass, text: valueToShow };
   };
 
+  // Helper para mostrar etiqueta de periodo en la tarjeta
+  const getPeriodLabel = () => {
+      if (tipoFiltro === "HISTORICO") return "Histórico Total";
+      if (tipoFiltro === "ANUAL") return `Año ${yearSel}`;
+      if (tipoFiltro === "TRIMESTRAL") return `Trim. ${quarterSel} - ${yearSel}`;
+      if (tipoFiltro === "DIARIO") return `${dateSel}`;
+      return "";
+  };
+
   const kpiCards = [
     {
       title: "Ingresos Totales",
       value: `$${totalIngresos.toFixed(2)}`,
       trend: balance.kpis_calculados.ingresos.trend_percent,
-      sub: "Acumulado histórico",
+      sub: getPeriodLabel(), // Cambiamos el subtítulo dinámicamente
       type: "INGRESOS",
     },
     {
@@ -127,13 +171,75 @@ const getTrendUI = (kpi) => {
   ];
 
   return (
-<div className="dashboard-wrapper">
+    <div className="dashboard-wrapper">
       <div className="main-header-row">
         <h1 className="main-title">Panel Financiero</h1>
-        <div className="chart-controls">
-            {/* Aquí tus botones */}
-            <button className="btn-refresh" onClick={loadAllData}>
-                <i className="fas fa-sync-alt" style={{marginRight: '8px'}}></i> Actualizar Panel
+        
+        {/* --- CONTROLES / FILTROS INTEGRADOS --- */}
+        <div className="chart-controls" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            
+            {/* SELECTOR TIPO */}
+            <select 
+                className="filter-select" 
+                value={tipoFiltro} 
+                onChange={(e) => setTipoFiltro(e.target.value)}
+                style={{padding: '6px 10px', borderRadius: '6px', border: '1px solid #E2E8F0', fontWeight:'600', color:'#475569'}}
+            >
+                <option value="HISTORICO">Histórico</option>
+                <option value="ANUAL">Por Año</option>
+                <option value="TRIMESTRAL">Por Trimestre</option>
+                <option value="DIARIO">Por Día</option>
+            </select>
+
+            {/* SELECTORES DINÁMICOS */}
+            {tipoFiltro === "ANUAL" && (
+                <select 
+                    className="filter-select" 
+                    value={yearSel} 
+                    onChange={(e) => setYearSel(e.target.value)}
+                    style={{padding: '6px', borderRadius: '6px', border: '1px solid #E2E8F0'}}
+                >
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                </select>
+            )}
+
+            {tipoFiltro === "TRIMESTRAL" && (
+                <>
+                    <select 
+                        className="filter-select" 
+                        value={quarterSel} 
+                        onChange={(e) => setQuarterSel(e.target.value)}
+                        style={{padding: '6px', borderRadius: '6px', border: '1px solid #E2E8F0'}}
+                    >
+                        <option value="1">Q1</option>
+                        <option value="2">Q2</option>
+                        <option value="3">Q3</option>
+                        <option value="4">Q4</option>
+                    </select>
+                    <select 
+                        className="filter-select" 
+                        value={yearSel} 
+                        onChange={(e) => setYearSel(e.target.value)}
+                        style={{padding: '6px', borderRadius: '6px', border: '1px solid #E2E8F0'}}
+                    >
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                </>
+            )}
+
+            {tipoFiltro === "DIARIO" && (
+                <input 
+                    type="date" 
+                    value={dateSel}
+                    onChange={(e) => setDateSel(e.target.value)}
+                    style={{padding: '5px', borderRadius: '6px', border: '1px solid #E2E8F0'}}
+                />
+            )}
+
+            <button className="btn-refresh" onClick={loadAllData} style={{marginLeft: '5px'}}>
+                <i className="fas fa-sync-alt"></i>
             </button>
         </div>
       </div>
@@ -164,7 +270,7 @@ const getTrendUI = (kpi) => {
             })}
           </div>
 
-          {/* --- DONA MODIFICADA --- */}
+          {/* --- DONA --- */}
           <div className="donut-card">
              <h3>Estado de Membresías</h3>
              <div className="donut-wrapper">
@@ -182,7 +288,6 @@ const getTrendUI = (kpi) => {
              </div>
              
              <div className="donut-legend">
-                {/* Mostramos NÚMEROS en lugar de % */}
                 <div className="legend-row">
                   <div className="legend-label-group"><span className="dot" style={{background: '#3B82F6'}}></span><span className="label">Activas</span></div>
                   <span className="val">{activeMembers}</span>
@@ -211,32 +316,28 @@ const getTrendUI = (kpi) => {
                 </tr>
               </thead>
               <tbody>
-                {balance.top_productos.map((prod, idx) => (
-                  <tr key={idx}>
-                    <td>
-                      <span className="prod-rank">#{idx + 1}</span>
-                    </td>
-                    <td className="prod-name">{prod.nombre}</td>
-                    <td className="prod-val">
-                      $ {prod.ingresos_generados.toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
+                {balance.top_productos.length > 0 ? (
+                    balance.top_productos.map((prod, idx) => (
+                      <tr key={idx}>
+                        <td>
+                          <span className="prod-rank">#{idx + 1}</span>
+                        </td>
+                        <td className="prod-name">{prod.nombre}</td>
+                        <td className="prod-val">
+                          $ {prod.ingresos_generados.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))
+                ) : (
+                    <tr><td colSpan="3" style={{textAlign:'center', padding:'20px', color:'#94A3B8'}}>No hay ventas en este periodo</td></tr>
+                )}
               </tbody>
             </table>
           </div>
 
           <div className="chart-card-large">
             <div className="chart-header-row" style={{ marginBottom: "1rem" }}>
-              <h3>Evolución Ingresos</h3>
-              <select
-                className="chart-select"
-                value={chartFilter}
-                onChange={(e) => setChartFilter(e.target.value)}
-              >
-                <option value="6M">Últimos 6 Meses</option>
-                <option value="1Y">Todo el Año</option>
-              </select>
+              <h3>Evolución Ingresos (12 Meses)</h3>
             </div>
             <div style={{ width: "100%", height: 280 }}>
               <ResponsiveContainer>

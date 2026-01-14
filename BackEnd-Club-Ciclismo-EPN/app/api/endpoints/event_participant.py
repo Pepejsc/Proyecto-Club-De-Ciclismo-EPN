@@ -12,6 +12,9 @@ from app.models.schema.event_participant import EventParticipantCreate, Particip
 from app.models.schema.persona import PersonaResponse
 from app.models.schema.user import UserBasicResponse
 
+# --- NUEVO IMPORT PARA VALIDAR MEMBRESÍA ---
+from app.models.domain.membership import Membership, MembershipStatus
+
 router = APIRouter()
 ALL_AUTH_ROLES = [Role.ADMIN, Role.NORMAL]
 
@@ -28,24 +31,32 @@ def register_user_to_event(
     English:
     --------
     Allows a user with role 'Normal' to register for a cycling event.
-
-    - Requires authentication.
-    - Only users with role 'Normal' can register.
-    - Returns an error if the user is already registered.
-    - **event_id** (required): ID of the event to register.
+    Requires an ACTIVE membership.
 
     Español:
     --------
     Permite que un usuario con rol 'Normal' se inscriba en un evento de ciclismo.
-
-    - Requiere autenticación.
-    - Solo los usuarios con rol 'Normal' pueden registrarse.
-    - Devuelve error si el usuario ya está inscrito.
-    - **event_id** (requerido): ID del evento al que se desea registrar.
+    Requiere tener una membresía ACTIVA.
 
     """
     if current_user.role != Role.NORMAL:
         raise HTTPException(status_code=403, detail="Not enough permissions")
+
+    # --- NUEVA VALIDACIÓN: Verificar Membresía Activa ---
+    membership = db.query(Membership).filter(Membership.user_id == current_user.id).first()
+    
+    if not membership:
+        raise HTTPException(
+            status_code=403, 
+            detail="Debes adquirir una membresía para inscribirte a eventos."
+        )
+    
+    if membership.status != MembershipStatus.ACTIVE:
+        raise HTTPException(
+            status_code=403, 
+            detail="Tu membresía no está activa. Por favor renuévala o solicita reactivación."
+        )
+    # ----------------------------------------------------
 
     existing = (
         db.query(EventParticipant)
@@ -79,22 +90,6 @@ def get_participants(event_id: int, db: Session = Depends(get_db),
 
     """
     Get Event Participants / Obtener Participantes del Evento
-
-    English:
-    --------
-    Retrieve the list of users registered for a specific event.
-    - Only accessible by users with the 'Admin' role.
-    - Returns participant information including user and personal details.
-    - **event_id** (int): ID of the event to retrieve participants for.
-
-    Español:
-    --------
-    Obtiene la lista de usuarios inscritos en un evento específico.
-    - Solo accesible para usuarios con rol 'Admin'.
-    - Devuelve información del participante, incluyendo detalles del usuario y su persona asociada.
-    - **event_id** (int): ID del evento del cual se desea obtener los participantes.
-
-
     """
     if current_user.role.value not in Role.ADMIN:
         raise HTTPException(status_code=403, detail="Not enough permissions")
@@ -131,25 +126,6 @@ def unregister_user_from_event(
 ):
     """
     Unregister from Event / Cancelar Inscripción en un Evento
-
-    English:
-    --------
-    Allows a user with role 'Normal' to cancel their registration for a cycling event.
-
-    - Requires authentication.
-    - Only users with role 'Normal' can unregister.
-    - Returns an error if the user is not enrolled or the event does not exist.
-    - **event_id** (int): ID of the event to unregister from.
-
-    Español:
-    --------
-    Permite que un usuario con rol 'Normal' cancele su inscripción en un evento de ciclismo.
-
-    - Requiere autenticación.
-    - Solo los usuarios con rol 'Normal' pueden cancelar su inscripción.
-    - Devuelve error si el evento no existe o el usuario no está inscrito.
-    - **event_id** (int): ID del evento del cual se desea cancelar la inscripción.
-
     """
 
     if current_user.role != Role.NORMAL:
@@ -173,22 +149,6 @@ def get_my_registered_events(
 ):
     """
     Get My Registered Events / Obtener mis eventos inscritos
-
-    English:
-    --------
-    Returns a list of event IDs the current user is registered in.
-
-    - Requires authentication.
-    - Only users with role 'Normal' are allowed.
-    - Returns a list of integers (event IDs) the user is enrolled in.
-
-    Español:
-    --------
-    Devuelve una lista de los IDs de eventos en los que el usuario actual está inscrito.
-
-    - Requiere autenticación.
-    - Solo permitido para usuarios con rol 'Normal'.
-    - Devuelve una lista de enteros (IDs de eventos en los que está inscrito).
     """
     if current_user.role != Role.NORMAL:
         raise HTTPException(status_code=403, detail="No autorizado")

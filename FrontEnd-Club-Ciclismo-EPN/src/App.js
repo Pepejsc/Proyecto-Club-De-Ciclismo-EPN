@@ -23,8 +23,6 @@ import Contacto from './pages/Main/Contacto';
 import Auspiciantes from './pages/Main/Auspiciantes';
 import VerProducto from './pages/Main/VerProducto';
 import VerifyStudentEmail from './pages/Auth/VerifyStudentEmail';
-
-// --- (CORREGIDO) Ruta correcta al contexto ---
 import { CartProvider } from './pages/Main/CarContext';
 
 

@@ -67,9 +67,10 @@ def create_membership(
     if matriculation_file:
         matricula_url = save_upload_file(matriculation_file)
 
-    # 3. Calcular Fechas
+    # 3. Calcular Fechas (CAMBIO: 6 MESES)
     today = date.today()
-    expiration_date = today + timedelta(days=365)
+    # Usamos 180 días como aproximación estándar de 6 meses
+    expiration_date = today + timedelta(days=180) 
     now = datetime.now()
 
     # 4. Crear Objeto
@@ -98,7 +99,7 @@ def create_membership(
     
     # 5. Notificar
     try:
-        msg = "Tu membresía ha sido activada."
+        msg = "Tu membresía semestral ha sido activada."
         if unique_code:
             msg += " Se ha registrado tu información de estudiante EPN."
 
@@ -222,7 +223,7 @@ def renew_membership(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Renueva una membresía INACTIVA (vencida) por 1 año adicional
+    Renueva una membresía INACTIVA (vencida) por 6 meses adicionales
     """
     # Permisos
     if current_user.id != user_id and current_user.role.value != "Admin":
@@ -232,15 +233,15 @@ def renew_membership(
     if not membership:
         raise HTTPException(status_code=404, detail="Membresía no encontrada")
 
-    # CORRECCIÓN: Verificar INACTIVO (Antes EXPIRED)
+    # Verificar INACTIVO
     if membership.status != MembershipStatus.INACTIVE:
         raise HTTPException(
             status_code=400, 
             detail="Solo se pueden renovar membresías inactivas o vencidas"
         )
 
-    # Calcular nueva fecha
-    new_end_date = date.today() + timedelta(days=365)
+    # Calcular nueva fecha (CAMBIO: 6 MESES)
+    new_end_date = date.today() + timedelta(days=180)
     previous_end_date = membership.end_date
 
     # Actualizar estado a ACTIVO
@@ -261,7 +262,7 @@ def renew_membership(
                 'membership_id': membership.id,
                 'participation_date': date.today(),
                 'event_type': 'SOCIAL',
-                'notes': f'Renovación de membresía - De {previous_end_date} a {new_end_date}',
+                'notes': f'Renovación semestral - De {previous_end_date} a {new_end_date}',
                 'created_at': datetime.now()
             })
     except Exception as e:
@@ -272,7 +273,7 @@ def renew_membership(
 
     return {
         "success": True,
-        "message": "Membresía renovada exitosamente",
+        "message": "Membresía renovada por 6 meses exitosamente",
         "new_end_date": new_end_date
     }
 
@@ -326,10 +327,6 @@ def get_participation_stats(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # (El código de participaciones SQL puro no necesita cambios de Enum, 
-    #  a menos que la tabla participation use status, pero parece usar event_type)
-    
-    # ... (código existente de verificación de permisos y búsqueda de membresía) ...
     if current_user.id != user_id and current_user.role.value != "Admin":
         raise HTTPException(status_code=403, detail="No autorizado")
 
@@ -337,7 +334,6 @@ def get_participation_stats(
     if not membership:
         raise HTTPException(status_code=404, detail="Membresía no encontrada")
 
-    # ... (Lógica de conteo SQL igual que tenías) ...
     participation_count = 0
     try:
         table_exists = db.execute(text("SHOW TABLES LIKE 'membership_participations'")).fetchone()
@@ -351,7 +347,7 @@ def get_participation_stats(
     return {
         "membership_id": membership.id,
         "participation_count": participation_count,
-        "current_status": membership.status.value # Devolverá 'ACTIVO', 'INACTIVO', etc.
+        "current_status": membership.status.value 
     }
 
 @router.get("/stats")
@@ -359,21 +355,14 @@ def get_membership_stats(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Obtiene estadísticas generales. 
-    Este endpoint reemplaza la necesidad de 'app/services/membership_service.py'
-    si el dashboard llama a este endpoint directamente.
-    """
     if current_user.role.value != "Admin":
         raise HTTPException(status_code=403, detail="Acceso denegado")
 
-    # Estadísticas por ESTADO (Ahora agrupará por ACTIVO, INACTIVO, PENDIENTE)
     status_stats = db.query(
         Membership.status,
         func.count(Membership.id)
     ).group_by(Membership.status).all()
 
-    # Membresías del mes
     current_month = datetime.now().month
     current_year = datetime.now().year
     new_this_month = db.query(Membership).filter(
@@ -381,12 +370,11 @@ def get_membership_stats(
         func.extract('year', Membership.created_at) == current_year
     ).count()
 
-    # Formatear respuesta para el Dashboard
     stats_by_status = {status: count for status, count in status_stats}
 
     return {
         "total_memberships": sum(stats_by_status.values()),
-        "by_status": stats_by_status, # Claves serán: ACTIVO, INACTIVO, PENDIENTE
+        "by_status": stats_by_status, 
         "new_this_month": new_this_month,
         "last_updated": datetime.now()
     }
