@@ -1,15 +1,13 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import "../../assets/Styles/Admin/ListaDocumentos.css";
 
-// =============================================================================
-// 🎯 UTILIDADES Y FUNCIONES DE AYUDA
-// =============================================================================
+const API_BASE_URL = "http://localhost:8000/api/documents";
 
 /**
- * Formatea bytes a un string legible (KB, MB, GB)
+ * Formatea bytes a un string legible (KB, MB, GB).
  */
 const formatearTamaño = (bytes) => {
   if (!bytes) return "N/A";
@@ -20,7 +18,7 @@ const formatearTamaño = (bytes) => {
 };
 
 /**
- * Formatea fecha a formato español
+ * Formatea fecha ISO a formato local español.
  */
 const formatearFecha = (fecha) => {
   if (!fecha) return "Fecha no disponible";
@@ -36,7 +34,7 @@ const formatearFecha = (fecha) => {
 };
 
 /**
- * Retorna un ícono según el tipo de documento
+ * Retorna un emoji/icono basado en el tipo de documento.
  */
 const getIconoPorTipo = (tipo) => {
   const iconos = {
@@ -50,7 +48,7 @@ const getIconoPorTipo = (tipo) => {
 };
 
 /**
- * Limita la longitud de la descripción y agrega puntos suspensivos
+ * Trunca textos largos.
  */
 const limitarDescripcion = (descripcion, maxLength = 120) => {
   if (!descripcion) return "";
@@ -59,12 +57,8 @@ const limitarDescripcion = (descripcion, maxLength = 120) => {
     : descripcion.substring(0, maxLength) + "...";
 };
 
-// =============================================================================
-// 🎯 HOOK PERSONALIZADO PARA MANEJO DE API
-// =============================================================================
-
 /**
- * Hook personalizado para manejar autenticación y requests a la API
+ * Hook para manejar peticiones autenticadas.
  */
 const useApi = () => {
   const getToken = useCallback(() => {
@@ -90,7 +84,6 @@ const useApi = () => {
       if (response.status === 401) {
         toast.error("Sesión expirada. Por favor, inicie sesión nuevamente.");
       }
-
       return response;
     },
     [getToken]
@@ -99,18 +92,13 @@ const useApi = () => {
   return { fetchConAuth, getToken };
 };
 
-// =============================================================================
-// 🎯 COMPONENTES DE MODALES
-// =============================================================================
-
 /**
- * Modal para editar documentos existentes
+ * Modal para edición de metadatos de documentos.
  */
 const EditorDocumentoModal = ({ documento, onClose, onGuardar }) => {
   const [formData, setFormData] = useState({});
-  const [cargando, setCargando] = useState(false);
+  const [guardando, setGuardando] = useState(false);
 
-  // Cargar datos del documento cuando el modal se abre
   useEffect(() => {
     if (documento) {
       setFormData({
@@ -125,24 +113,19 @@ const EditorDocumentoModal = ({ documento, onClose, onGuardar }) => {
     }
   }, [documento]);
 
-  /**
-   * Maneja el envío del formulario de edición
-   */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setCargando(true);
+    setGuardando(true);
     try {
       await onGuardar(documento.id, formData);
     } finally {
-      setCargando(false);
+      setGuardando(false);
     }
   };
 
-  /**
-   * Maneja cambios en los campos del formulario
-   */
   const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   if (!documento) return null;
@@ -151,14 +134,9 @@ const EditorDocumentoModal = ({ documento, onClose, onGuardar }) => {
     <div className="modal-overlay">
       <div className="editor-documento-modal">
         <div className="modal-header">
-          <h3>✏️ Editar {documento.name}</h3>
-          <button className="btn-cerrar" onClick={onClose}>
-            ✕
-          </button>
+          <h3>Editar {documento.name}</h3>
         </div>
-
         <form onSubmit={handleSubmit} className="form-editor">
-          {/* Campos dinámicos del formulario */}
           {["name", "description", "responsable"].map((field) => (
             <div key={field} className="form-group">
               <label>
@@ -174,11 +152,8 @@ const EditorDocumentoModal = ({ documento, onClose, onGuardar }) => {
                   value={formData[field] || ""}
                   onChange={handleChange}
                   rows="3"
-                  placeholder={`Ingrese ${
-                    field === "name" ? "el nombre" : "la descripción"
-                  }`}
+                  placeholder="Ingrese la descripción"
                   maxLength="500"
-                  required={field !== "description"}
                 />
               ) : (
                 <input
@@ -186,16 +161,13 @@ const EditorDocumentoModal = ({ documento, onClose, onGuardar }) => {
                   name={field}
                   value={formData[field] || ""}
                   onChange={handleChange}
-                  placeholder={`Ingrese ${
-                    field === "name" ? "el nombre" : "el responsable"
-                  }`}
+                  placeholder={`Ingrese ${field === "name" ? "el nombre" : "el responsable"}`}
                   required
                 />
               )}
             </div>
           ))}
 
-          {/* Fila de campos: Tipo de documento y Fecha */}
           <div className="form-row">
             <div className="form-group">
               <label>Tipo de Documento *</label>
@@ -225,14 +197,12 @@ const EditorDocumentoModal = ({ documento, onClose, onGuardar }) => {
               />
             </div>
           </div>
-
-          {/* Acciones del modal */}
           <div className="modal-actions">
+            <button type="submit" className="btn-actualizar" disabled={guardando}>
+              {guardando ? "Actualizando..." : "Actualizar"}
+            </button>
             <button type="button" className="btn-cancelar" onClick={onClose}>
               Cancelar
-            </button>
-            <button type="submit" className="btn-guardar" disabled={cargando}>
-              {cargando ? "💾 Guardando..." : "💾 Guardar Cambios"}
             </button>
           </div>
         </form>
@@ -242,72 +212,63 @@ const EditorDocumentoModal = ({ documento, onClose, onGuardar }) => {
 };
 
 /**
- * Modal para visualizar documentos
+ * Modal para visualizar documentos.
  */
-// 🎯 COMPONENTE VISUALIZADOR MEJORADO CON VISOR REAL
 const VisualizadorDocumento = ({ documento, onClose }) => {
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(true);
   const [urlVisualizacion, setUrlVisualizacion] = useState("");
   const { fetchConAuth } = useApi();
 
-  useEffect(() => {
-    configurarVisualizacion();
-  }, [documento]);
+  const tipoArchivo = useMemo(() => 
+    documento.file_name?.split(".").pop()?.toLowerCase() || "", 
+    [documento.file_name]
+  );
 
-  /**
-   * Configura la URL de visualización según el tipo de archivo
-   */
-  const configurarVisualizacion = async () => {
+  const configurarVisualizacion = useCallback(async () => {
     try {
       setCargando(true);
       setError("");
-      
-      const tipoArchivo = documento.file_name?.split('.').pop()?.toLowerCase() || '';
-      
-      // Para PDFs - usar visor nativo del navegador
-      if (tipoArchivo === 'pdf') {
+
+      if (tipoArchivo === "pdf" || tipoArchivo === "txt") {
         const response = await fetchConAuth(
-          `http://localhost:8000/api/documents/${documento.id}/download`
+          `${API_BASE_URL}/${documento.id}/download`
         );
-        
-        if (!response.ok) throw new Error('Error al cargar el PDF');
-        
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        setUrlVisualizacion(url);
-      }
-      // Para archivos de texto
-      else if (tipoArchivo === 'txt') {
-        const response = await fetchConAuth(
-          `http://localhost:8000/api/documents/${documento.id}/download`
-        );
-        
-        if (!response.ok) throw new Error('Error al cargar el archivo');
-        
-        const texto = await response.text();
-        // Mostrar texto en un elemento pre
-        setUrlVisualizacion(texto);
-      }
-      else {
+
+        if (!response.ok) throw new Error("Error al cargar el archivo");
+
+        if (tipoArchivo === "pdf") {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          setUrlVisualizacion(url);
+        } else {
+          const texto = await response.text();
+          setUrlVisualizacion(texto);
+        }
+      } else {
         setError("Vista previa no disponible para este tipo de archivo");
       }
-      
-    } catch (error) {
-      console.error("Error cargando archivo:", error);
+    } catch (err) {
+      console.error("Error cargando archivo:", err);
       setError("No se pudo cargar el archivo para visualización");
     } finally {
       setCargando(false);
     }
-  };
+  }, [documento.id, tipoArchivo, fetchConAuth]);
 
-  /**
-   * Maneja la descarga del documento
-   */
+  useEffect(() => {
+    configurarVisualizacion();
+    return () => {
+      if (urlVisualizacion && typeof urlVisualizacion === "string" && urlVisualizacion.startsWith("blob:")) {
+        URL.revokeObjectURL(urlVisualizacion);
+      }
+    };
+  }, [configurarVisualizacion]);
+
   const descargarDocumento = async () => {
     try {
       const response = await fetchConAuth(
-        `http://localhost:8000/api/documents/${documento.id}/download`
+        `${API_BASE_URL}/${documento.id}/download`
       );
 
       if (!response.ok) throw new Error("Error al descargar");
@@ -320,22 +281,11 @@ const VisualizadorDocumento = ({ documento, onClose }) => {
       link.click();
       window.URL.revokeObjectURL(url);
 
-      toast.success(`📥 Descargando: ${documento.file_name}`);
-    } catch (error) {
+      toast.success(`Descargando: ${documento.file_name}`);
+    } catch {
       toast.error("Error al descargar el documento");
     }
   };
-
-  const tipoArchivo = documento.file_name?.split(".").pop()?.toLowerCase() || "";
-
-  // Limpiar URL al desmontar el componente
-  useEffect(() => {
-    return () => {
-      if (urlVisualizacion && urlVisualizacion.startsWith('blob:')) {
-        URL.revokeObjectURL(urlVisualizacion);
-      }
-    };
-  }, [urlVisualizacion]);
 
   return (
     <div className="modal-overlay">
@@ -348,16 +298,10 @@ const VisualizadorDocumento = ({ documento, onClose }) => {
             </span>
           </div>
           <div className="visualizador-actions">
-            <button 
-              className="btn-descargar"
-              onClick={descargarDocumento}
-              title="Descargar documento"
-            >
+            <button className="btn-descargar" onClick={descargarDocumento} title="Descargar documento">
               <i className="fas fa-download"></i> Descargar
             </button>
-            <button className="btn-cerrar" onClick={onClose}>
-              ✕
-            </button>
+            <button className="btn-cerrar" onClick={onClose}>✕</button>
           </div>
         </div>
 
@@ -372,24 +316,21 @@ const VisualizadorDocumento = ({ documento, onClose }) => {
               <i className="fas fa-exclamation-triangle"></i>
               <h4>No se puede visualizar</h4>
               <p>{error}</p>
-              <button
-                className="btn-descargar-grande"
-                onClick={descargarDocumento}
-              >
+              <button className="btn-descargar-grande" onClick={descargarDocumento}>
                 <i className="fas fa-download"></i> Descargar Archivo
               </button>
             </div>
-          ) : tipoArchivo === 'pdf' ? (
+          ) : tipoArchivo === "pdf" ? (
             <div className="visor-pdf">
               <iframe
                 src={urlVisualizacion}
                 width="100%"
                 height="100%"
                 title={`PDF - ${documento.name}`}
-                style={{ border: 'none' }}
+                style={{ border: "none" }}
               />
             </div>
-          ) : tipoArchivo === 'txt' ? (
+          ) : tipoArchivo === "txt" ? (
             <div className="visor-texto">
               <pre>{urlVisualizacion}</pre>
             </div>
@@ -398,10 +339,7 @@ const VisualizadorDocumento = ({ documento, onClose }) => {
               <i className="fas fa-file-download"></i>
               <h4>Vista previa no disponible</h4>
               <p>Este tipo de archivo ({tipoArchivo}) no puede visualizarse en el navegador.</p>
-              <button
-                className="btn-descargar-grande"
-                onClick={descargarDocumento}
-              >
+              <button className="btn-descargar-grande" onClick={descargarDocumento}>
                 <i className="fas fa-download"></i> Descargar Archivo
               </button>
             </div>
@@ -412,49 +350,27 @@ const VisualizadorDocumento = ({ documento, onClose }) => {
   );
 };
 
-// =============================================================================
-// 🎯 COMPONENTE PRINCIPAL - LISTA DE DOCUMENTOS
-// =============================================================================
-
+/**
+ * Componente Principal: Lista de Documentos
+ */
 const ListaDocumentos = () => {
-  // ===========================================================================
-  // ESTADOS Y HOOKS
-  // ===========================================================================
-  
-  const [state, setState] = useState({
-    documentos: [],
-    documentosFiltrados: [],
-    busqueda: "",
-    cargando: false,
-    error: "",
-  });
-
-  const [modales, setModales] = useState({
-    visualizador: false,
-    editor: false,
-  });
-
+  const [documentos, setDocumentos] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [modales, setModales] = useState({ visualizador: false, editor: false });
   const [documentoSeleccionado, setDocumentoSeleccionado] = useState(null);
+  
   const navigate = useNavigate();
   const { fetchConAuth } = useApi();
 
-  // ===========================================================================
-  // FUNCIONES PRINCIPALES
-  // ===========================================================================
-
-  /**
-   * Carga los documentos desde la API
-   */
   const cargarDocumentos = useCallback(async () => {
-    setState((prev) => ({ ...prev, cargando: true, error: "" }));
-
+    setIsLoading(true);
     try {
-      const response = await fetchConAuth("http://localhost:8000/api/documents/");
-
+      const response = await fetchConAuth(`${API_BASE_URL}/`);
       if (!response.ok) throw new Error(`Error ${response.status}`);
 
       const result = await response.json();
-      const documentos = (result.documents || result || []).map((doc, index) => ({
+      const docs = (result.documents || result || []).map((doc, index) => ({
         id: doc.id || index,
         name: doc.name || "Sin nombre",
         document_type: doc.document_type || "otro",
@@ -465,113 +381,83 @@ const ListaDocumentos = () => {
         file_size: doc.file_size || 0,
       }));
 
-      setState((prev) => ({
-        ...prev,
-        documentos,
-        documentosFiltrados: documentos,
-      }));
-      toast.success(`✅ ${documentos.length} documentos cargados`);
-    } catch (error) {
-      setState((prev) => ({ ...prev, error: error.message }));
-      toast.error("❌ Error al cargar documentos");
+      setDocumentos(docs);
+    } catch (err) {
+      toast.error("Error al cargar documentos: " + err.message);
     } finally {
-      setState((prev) => ({ ...prev, cargando: false }));
+      setIsLoading(false);
     }
   }, [fetchConAuth]);
 
-  /**
-   * Guarda los cambios realizados a un documento
-   */
+  useEffect(() => {
+    cargarDocumentos();
+  }, [cargarDocumentos]);
+
+  const documentosFiltrados = useMemo(() => {
+    if (!busqueda) return documentos;
+    const lowerBusqueda = busqueda.toLowerCase();
+    return documentos.filter((doc) =>
+      Object.values(doc).some((val) =>
+        String(val).toLowerCase().includes(lowerBusqueda)
+      )
+    );
+  }, [busqueda, documentos]);
+
   const guardarCambiosDocumento = async (documentoId, datos) => {
     try {
-      console.log("📤 Enviando datos:", { documentoId, datos });
-
-      // Crear FormData para enviar archivos + datos
       const formData = new FormData();
       formData.append("name", datos.name);
       formData.append("responsible", datos.responsable);
       formData.append("document_type", datos.document_type);
       formData.append("entry_date", datos.entry_date);
-
-      if (datos.description) {
-        formData.append("description", datos.description);
-      }
+      if (datos.description) formData.append("description", datos.description);
 
       const token = localStorage.getItem("token") || localStorage.getItem("authToken");
-      const headers = {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      };
+      const headers = { ...(token && { Authorization: `Bearer ${token}` }) };
 
-      const response = await fetch(
-        `http://localhost:8000/api/documents/${documentoId}`,
-        {
-          method: "PUT",
-          headers,
-          body: formData,
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/${documentoId}`, {
+        method: "PUT",
+        headers,
+        body: formData,
+      });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Error ${response.status}: ${errorText || "No se pudo actualizar el documento"}`);
+        throw new Error(errorText || "No se pudo actualizar");
       }
 
-      const resultado = await response.json();
-      toast.success("✅ Documento actualizado correctamente");
+      toast.success("Documento actualizado correctamente");
       cargarDocumentos();
-      setModales((prev) => ({ ...prev, editor: false }));
-
-      return resultado;
+      cerrarModal("editor");
     } catch (error) {
-      console.error("💥 Error completo al guardar:", error);
-      toast.error(`❌ ${error.message || "Error al actualizar documento"}`);
-      throw error;
+      console.error("Error al guardar:", error);
+      toast.error(error.message || "Error al actualizar documento");
     }
   };
 
-  /**
-   * Elimina un documento con confirmación
-   */
   const eliminarDocumento = async (documento) => {
     const result = await Swal.fire({
       title: "¿Estás seguro?",
-      html: `
-        <div style="text-align: left;">
-          <p>Se eliminará permanentemente el documento:</p>
-          <p><strong>${documento.name}</strong></p>
-          <p><small>Archivo: ${documento.file_name}</small></p>
-          <p><small>Tipo: ${documento.document_type}</small></p>
-          <p style="color: #dc3545; font-weight: bold;">⚠️ Esta acción no se puede deshacer</p>
-        </div>
-      `,
+      text: "Esta acción eliminará el documento de forma permanente.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
+      confirmButtonColor: "#2196F3",
+      cancelButtonColor: "#D93E3E",
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
-      reverseButtons: true,
       showLoaderOnConfirm: true,
       preConfirm: async () => {
         try {
           const token = localStorage.getItem("token") || localStorage.getItem("authToken");
-          const headers = {
-            ...(token && { Authorization: `Bearer ${token}` }),
-          };
-
-          const response = await fetch(
-            `http://localhost:8000/api/documents/${documento.id}`,
-            {
-              method: "DELETE",
-              headers,
-            }
-          );
+          const response = await fetch(`${API_BASE_URL}/${documento.id}`, {
+            method: "DELETE",
+            headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+          });
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(errorText || `Error ${response.status}`);
+            throw new Error(errorText);
           }
-
           return await response.json();
         } catch (error) {
           Swal.showValidationMessage(`Error: ${error.message}`);
@@ -580,152 +466,38 @@ const ListaDocumentos = () => {
     });
 
     if (result.isConfirmed) {
-      toast.success(`✅ "${documento.name}" eliminado correctamente`);
+      toast.success("Documento eliminado correctamente");
       cargarDocumentos();
     }
   };
 
-  // ===========================================================================
-  // MANEJADORES DE INTERFAZ
-  // ===========================================================================
-
-  /**
-   * Abre un modal (visualizador o editor)
-   */
   const abrirModal = (tipo, documento) => {
     setDocumentoSeleccionado(documento);
     setModales((prev) => ({ ...prev, [tipo]: true }));
   };
 
-  /**
-   * Cierra un modal
-   */
   const cerrarModal = (tipo) => {
     setModales((prev) => ({ ...prev, [tipo]: false }));
   };
 
-  // ===========================================================================
-  // USE EFFECTS
-  // ===========================================================================
-
-  // Cargar documentos al montar el componente
-  useEffect(() => {
-    cargarDocumentos();
-  }, [cargarDocumentos]);
-
-  // Filtrar documentos cuando cambia la búsqueda
-  useEffect(() => {
-    const filtrados = state.documentos.filter((doc) =>
-      Object.values(doc).some((val) =>
-        String(val).toLowerCase().includes(state.busqueda.toLowerCase())
-      )
-    );
-    setState((prev) => ({ ...prev, documentosFiltrados: filtrados }));
-  }, [state.busqueda, state.documentos]);
-
-  // ===========================================================================
-  // COMPONENTES INTERNOS
-  // ===========================================================================
-
-  /**
-   * Componente de tarjeta individual de documento
-   */
-  const DocumentoCard = ({ documento }) => (
-    <div className="documento-card">
-      <div className="documento-header">
-        <span className="documento-icon">
-          {getIconoPorTipo(documento.document_type)}
-        </span>
-        <div className="documento-title">
-          <h3>{documento.name}</h3>
-          <span className={`documento-tipo ${documento.document_type}`}>
-            {documento.document_type}
-          </span>
-        </div>
-      </div>
-
-      <div className="documento-info">
-        {[
-          { icon: "user", text: documento.responsable },
-          { icon: "calendar", text: formatearFecha(documento.entry_date) },
-          { icon: "file", text: documento.file_name },
-          { icon: "weight-hanging", text: formatearTamaño(documento.file_size) },
-        ].map(
-          (item, index) =>
-            item.text && (
-              <div key={index} className="info-item">
-                <i className={`fas fa-${item.icon}`}></i>
-                <span>{item.text}</span>
-              </div>
-            )
-        )}
-      </div>
-
-      {documento.description && (
-        <div className="documento-descripcion">
-          <p title={documento.description}>
-            {limitarDescripcion(documento.description)}
-          </p>
-        </div>
-      )}
-
-      <div className="documento-actions">
-        <button
-          className="btn-action visualizar"
-          onClick={() => abrirModal("visualizador", documento)}
-        >
-          <i className="fas fa-eye"></i> Ver
-        </button>
-        <button
-          className="btn-action editar"
-          onClick={() => abrirModal("editor", documento)}
-        >
-          <i className="fas fa-edit"></i>
-        </button>
-        <button
-          className="btn-action descargar"
-          onClick={() => abrirModal("visualizador", documento)}
-        >
-          <i className="fas fa-download"></i>
-        </button>
-        <button
-          className="btn-action eliminar"
-          onClick={() => eliminarDocumento(documento)}
-        >
-          <i className="fas fa-trash"></i>
-        </button>
-      </div>
-    </div>
-  );
-
-  // ===========================================================================
-  // RENDER PRINCIPAL
-  // ===========================================================================
-
   return (
     <div className="documentos-container">
-      {/* Header con título y estadísticas */}
       <div className="documentos-header">
-        <h2>📚 Lista de Documentos</h2>
+        <h2>Lista de Documentos</h2>
         <div className="documentos-stats">
-          <span className="stat-total">Total: {state.documentos.length}</span>
-          <span className="stat-filtrados">
-            Mostrando: {state.documentosFiltrados.length}
-          </span>
+          <span className="stat-total">Total: {documentos.length}</span>
+          <span className="stat-filtrados">Mostrando: {documentosFiltrados.length}</span>
         </div>
       </div>
 
-      {/* Barra de búsqueda y acciones */}
       <div className="documentos-filters">
         <div className="search-box">
           <i className="fas fa-search"></i>
           <input
             type="text"
             placeholder="Buscar documentos..."
-            value={state.busqueda}
-            onChange={(e) =>
-              setState((prev) => ({ ...prev, busqueda: e.target.value }))
-            }
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
             className="search-input"
           />
         </div>
@@ -735,42 +507,74 @@ const ListaDocumentos = () => {
           onClick={() => navigate("/admin/crear-documento")}
           title="Crear nuevo documento"
         >
-          <i className="fas fa-plus"></i>
-          Nuevo Documento
+          <i className="fas fa-plus"></i> Nuevo Documento
         </button>
         
         <button
           onClick={cargarDocumentos}
           className="btn-refresh"
-          disabled={state.cargando}
+          disabled={isLoading}
         >
-          <i className={`fas fa-sync-alt ${state.cargando ? "fa-spin" : ""}`}></i>
-          Actualizar
+          <i className={`fas fa-sync-alt ${isLoading ? "fa-spin" : ""}`}></i> Actualizar
         </button>
       </div>
 
-      {/* Lista de documentos */}
       <div className="documentos-list">
-        {state.cargando ? (
+        {isLoading ? (
           <div className="loading-state">
             <i className="fas fa-spinner fa-spin"></i>
             <p>Cargando documentos...</p>
           </div>
-        ) : state.documentosFiltrados.length === 0 ? (
+        ) : documentosFiltrados.length === 0 ? (
           <div className="empty-state">
             <i className="fas fa-folder-open"></i>
-            <p>{state.busqueda ? "No hay resultados" : "No hay documentos"}</p>
+            <p>{busqueda ? "No hay resultados para la búsqueda" : "No hay documentos disponibles"}</p>
           </div>
         ) : (
           <div className="documentos-grid">
-            {state.documentosFiltrados.map((doc) => (
-              <DocumentoCard key={doc.id} documento={doc} />
+            {documentosFiltrados.map((doc) => (
+              <div key={doc.id} className="documento-card">
+                <div className="documento-header">
+                  <span className="documento-icon">{getIconoPorTipo(doc.document_type)}</span>
+                  <div className="documento-title">
+                    <h3>{doc.name}</h3>
+                    <span className={`documento-tipo ${doc.document_type}`}>{doc.document_type}</span>
+                  </div>
+                </div>
+
+                <div className="documento-info">
+                  <div className="info-item"><i className="fas fa-user"></i><span>{doc.responsable}</span></div>
+                  <div className="info-item"><i className="fas fa-calendar"></i><span>{formatearFecha(doc.entry_date)}</span></div>
+                  <div className="info-item"><i className="fas fa-file"></i><span>{doc.file_name}</span></div>
+                  <div className="info-item"><i className="fas fa-weight-hanging"></i><span>{formatearTamaño(doc.file_size)}</span></div>
+                </div>
+
+                {doc.description && (
+                  <div className="documento-descripcion">
+                    <p title={doc.description}>{limitarDescripcion(doc.description)}</p>
+                  </div>
+                )}
+
+                <div className="documento-actions">
+                  <button className="btn-action visualizar" onClick={() => abrirModal("visualizador", doc)}>
+                    <i className="fas fa-eye"></i> Ver
+                  </button>
+                  <button className="btn-action editar" onClick={() => abrirModal("editor", doc)}>
+                    <i className="fas fa-edit"></i>
+                  </button>
+                  <button className="btn-action descargar" onClick={() => abrirModal("visualizador", doc)}>
+                    <i className="fas fa-download"></i>
+                  </button>
+                  <button className="btn-action eliminar" onClick={() => eliminarDocumento(doc)}>
+                    <i className="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Modales */}
       {modales.visualizador && documentoSeleccionado && (
         <VisualizadorDocumento
           documento={documentoSeleccionado}

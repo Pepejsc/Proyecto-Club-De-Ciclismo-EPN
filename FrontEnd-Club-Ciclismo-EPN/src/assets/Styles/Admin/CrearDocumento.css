@@ -1,4 +1,7 @@
-.editar-perfil-container {
+/* =========================================
+   CONTENEDOR PRINCIPAL
+   ========================================= */
+.crear-documento-container {
   background: white;
   padding: 40px;
   width: 90%;
@@ -9,14 +12,16 @@
   font-family: 'Montserrat', sans-serif;
 }
 
-.editar-perfil-container h2 {
+.crear-documento-container h2 {
   text-align: center;
   margin-bottom: 25px;
   font-size: 24px;
   color: #11182f;
 }
 
-/* Formulario */
+/* =========================================
+   FORMULARIO (GRID)
+   ========================================= */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -62,60 +67,18 @@
 .form-grid input:focus,
 .form-grid select:focus,
 .form-grid textarea:focus {
-  border-color: #80bdff;
+  border-color: #2196F3;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.25);
 }
 
 .grid-full {
   grid-column: span 2;
 }
 
-/* Botones */
-.form-buttons-inline {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.btn-send,
-.btn-cancel {
-  width: 140px;
-  padding: 12px;
-  font-size: 16px;
-  font-weight: bold;
-  font-family: 'Montserrat', sans-serif;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.btn-send {
-  background-color: #2196f3;
-  color: white;
-}
-
-.btn-send:hover {
-  background-color: #4dabf7;
-  box-shadow: 0 4px 10px rgba(33, 150, 243, 0.25);
-  transform: translateY(-1px);
-}
-
-.btn-cancel {
-  background-color: #D93E3E;
-  color: white;
-}
-
-.btn-cancel:hover {
-  background-color: #f1646c;
-  box-shadow: 0 4px 10px rgba(220, 53, 69, 0.25);
-  transform: translateY(-1px);
-}
-
-/* Subir archivo*/
+/* =========================================
+   SUBIDA DE ARCHIVOS
+   ========================================= */
 .file-upload-section {
   margin-bottom: 15px;
 }
@@ -126,6 +89,7 @@
   border: 2px dashed #ddd;
   border-radius: 4px;
   background: #f9f9f9;
+  cursor: pointer;
 }
 
 .file-info {
@@ -133,32 +97,107 @@
   font-style: italic;
   margin-top: 5px;
   display: block;
+  font-size: 12px;
 }
 
 .selected-file {
   margin-top: 10px;
-  padding: 8px;
+  padding: 10px;
   background: #e8f5e8;
   border: 1px solid #4caf50;
   border-radius: 4px;
   color: #2e7d32;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
-/* Responsive */
+/* =========================================
+   BOTONES
+   ========================================= */
+.form-buttons-inline {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.btn-send,
+.btn-cancel {
+  width: 140px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  font-family: 'Montserrat', sans-serif;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: white;
+}
+
+/* Botón Guardar - #2196F3 */
+.btn-send {
+  background-color: #2196F3;
+}
+
+.btn-send:hover:not(:disabled) {
+  background-color: #1976D2; /* Tono más oscuro */
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
+}
+
+/* Botón Cancelar - #D93E3E */
+.btn-cancel {
+  background-color: #D93E3E !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background-color: #B71C1C !important; /* Rojo más oscuro al pasar el mouse */
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(217, 62, 62, 0.3);
+}
+
+/* Estado Deshabilitado */
+.btn-send:disabled,
+.btn-cancel:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
 @media (max-width: 768px) {
+  .crear-documento-container {
+    width: 95%;
+    padding: 20px;
+    margin: 20px auto;
+  }
+
   .form-grid {
     grid-template-columns: 1fr;
   }
 
-  .form-buttons {
+  .grid-full {
+    grid-column: span 1;
+  }
+
+  .form-buttons-inline {
     flex-direction: column;
     align-items: center;
     gap: 10px;
   }
 
-  .form-buttons .guardar,
-  .form-buttons .cancelar {
+  .btn-send,
+  .btn-cancel {
+    width: 100%;
     max-width: 100%;
   }
 }
-

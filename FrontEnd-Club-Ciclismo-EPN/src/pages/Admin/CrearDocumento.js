@@ -3,7 +3,16 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import "../../assets/Styles/Admin/CrearDocumento.css";
 
+const API_BASE_URL = "http://localhost:8000/api/documents/";
+
+/**
+ * Componente para crear y subir nuevos documentos al sistema.
+ */
 const CrearDocumento = () => {
+  // ===========================================================================
+  // ESTADOS
+  // ===========================================================================
+  
   const [formData, setFormData] = useState({
     nombre_documento: "",
     tipo_documento: "",
@@ -14,31 +23,41 @@ const CrearDocumento = () => {
   
   const [archivo, setArchivo] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const navigate = useNavigate();
 
+  // ===========================================================================
+  // MANEJADORES DE EVENTOS
+  // ===========================================================================
+
+  /**
+   * Maneja los cambios en los inputs de texto.
+   */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * Maneja la selección y validación del archivo.
+   * Valida extensión y tamaño (máx 50MB).
+   */
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       // Validar tipo de archivo
-      const allowedTypes = ['.pdf', '.doc', '.docx', '.txt', '.odt'];
-      const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+      const allowedTypes = [".pdf", ".doc", ".docx", ".txt", ".odt"];
+      const fileExtension = "." + file.name.split(".").pop().toLowerCase();
       
       if (!allowedTypes.includes(fileExtension)) {
-        toast.error(`Tipo de archivo no permitido. Formatos aceptados: ${allowedTypes.join(', ')}`);
-        e.target.value = ''; // Limpiar input
+        toast.error(`Tipo de archivo no permitido. Formatos aceptados: ${allowedTypes.join(", ")}`);
+        e.target.value = ""; // Limpiar input
         return;
       }
 
       // Validar tamaño (50MB)
       if (file.size > 50 * 1024 * 1024) {
         toast.error("El archivo es demasiado grande. Máximo 50MB");
-        e.target.value = '';
+        e.target.value = "";
         return;
       }
 
@@ -47,10 +66,21 @@ const CrearDocumento = () => {
     }
   };
 
+  /**
+   * Regresa a la página anterior.
+   */
   const handleCancel = () => {
     navigate(-1);
   };
 
+  // ===========================================================================
+  // LOGICA DE NEGOCIO Y VALIDACIÓN
+  // ===========================================================================
+
+  /**
+   * Valida los campos del formulario antes de enviar.
+   * @returns {boolean} True si es válido, False si hay errores.
+   */
   const validateForm = () => {
     if (
       !formData.nombre_documento.trim() ||
@@ -70,6 +100,9 @@ const CrearDocumento = () => {
 
     const selectedDate = new Date(formData.fecha_ingreso);
     const today = new Date();
+    // Normalizar horas para comparar solo fechas
+    today.setHours(0, 0, 0, 0);
+    
     if (selectedDate > today) {
       toast.error("La fecha de ingreso no puede ser futura.");
       return false;
@@ -83,64 +116,9 @@ const CrearDocumento = () => {
     return true;
   };
 
-  const handleSubmit = async () => {
-  try {
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    // 🎯 VERIFICACIÓN EXTREMA DE DATOS
-    console.log("🔍 VERIFICACIÓN EXTREMA DE FORM DATA:");
-    console.log("formData.responsable:", formData.responsable);
-    console.log("typeof formData.responsable:", typeof formData.responsable);
-    console.log("formData.responsable.length:", formData.responsable.length);
-
-    // ✅ ENVIAR DATOS DE MANERA MUY EXPLÍCITA
-    const formDataToSend = new FormData();
-    
-    // Agregar cada campo de manera explícita
-    formDataToSend.append('name', String(formData.nombre_documento));
-    formDataToSend.append('responsible', String(formData.responsable)); // ← FORZAR A STRING
-    formDataToSend.append('document_type', String(formData.tipo_documento));
-    formDataToSend.append('entry_date', String(formData.fecha_ingreso));
-    formDataToSend.append('description', String(formData.descripcion));
-    formDataToSend.append('file', archivo);
-
-    // VERIFICAR FormData
-    console.log("📤 CONTENIDO DE FormData:");
-    for (let [key, value] of formDataToSend.entries()) {
-      console.log(`  ${key}:`, value, `(tipo: ${typeof value})`);
-    }
-
-    // Enviar sin token para simplificar
-    const response = await fetch('http://localhost:8000/api/documents/', {
-      method: 'POST',
-      body: formDataToSend
-    });
-
-    const result = await response.json();
-    console.log("📥 RESPUESTA COMPLETA:", result);
-
-    if (response.ok) {
-      toast.success("✅ Documento creado correctamente");
-      resetForm();
-      setTimeout(() => navigate('/admin/lista-documentos'), 2000);
-    } else {
-      throw new Error(result.detail || "Error al crear documento");
-    }
-
-  } catch (error) {
-    console.error("❌ Error:", error);
-    toast.error(`❌ ${error.message}`);
-  } finally {
-    setIsSubmitting(false);
-  }
-  
-};
-
-  // Función para resetear el formulario
+  /**
+   * Resetea el formulario a su estado inicial.
+   */
   const resetForm = () => {
     setFormData({
       nombre_documento: "",
@@ -154,11 +132,55 @@ const CrearDocumento = () => {
     if (fileInput) fileInput.value = "";
   };
 
+  /**
+   * Envía los datos al servidor.
+   */
+  const handleSubmit = async () => {
+    try {
+      if (!validateForm()) return;
+
+      setIsSubmitting(true);
+
+      const formDataToSend = new FormData();
+      formDataToSend.append("name", String(formData.nombre_documento));
+      formDataToSend.append("responsible", String(formData.responsable));
+      formDataToSend.append("document_type", String(formData.tipo_documento));
+      formDataToSend.append("entry_date", String(formData.fecha_ingreso));
+      formDataToSend.append("description", String(formData.descripcion));
+      formDataToSend.append("file", archivo);
+
+      const response = await fetch(API_BASE_URL, {
+        method: "POST",
+        body: formDataToSend,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success("Documento creado correctamente");
+        resetForm();
+        setTimeout(() => navigate("/admin/lista-documentos"), 2000);
+      } else {
+        throw new Error(result.detail || "Error al crear documento");
+      }
+    } catch (error) {
+      console.error("Error al crear documento:", error);
+      toast.error(`❌ ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ===========================================================================
+  // RENDERIZADO
+  // ===========================================================================
+
   return (
-    <div className="editar-perfil-container">
+    <div className="crear-documento-container">
       <h2>Crear Documento</h2>
 
       <div className="form-grid">
+        {/* Fila 1 */}
         <div>
           <label>Nombre de documento *</label>
           <input 
@@ -188,6 +210,7 @@ const CrearDocumento = () => {
           </select>
         </div>
 
+        {/* Fila 2 */}
         <div>
           <label>Fecha de ingreso *</label>
           <input 
@@ -210,6 +233,7 @@ const CrearDocumento = () => {
           />
         </div>
 
+        {/* Campos Anchos */}
         <div className="grid-full">
           <label>Descripción *</label>
           <textarea 
@@ -236,8 +260,8 @@ const CrearDocumento = () => {
             </small>
             {archivo && (
               <div className="selected-file">
-                📎 Archivo seleccionado: <strong>{archivo.name}</strong> 
-                ({Math.round(archivo.size / 1024)} KB)
+                Archivo seleccionado: <strong>{archivo.name}</strong> 
+                {" "}({Math.round(archivo.size / 1024)} KB)
               </div>
             )}
           </div>
@@ -250,7 +274,7 @@ const CrearDocumento = () => {
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
-          {isSubmitting ? "⏳ Guardando..." : "Guardar"}
+          {isSubmitting ? "Guardando..." : "Guardar"}
         </button>
         <button 
           className="btn-cancel" 
