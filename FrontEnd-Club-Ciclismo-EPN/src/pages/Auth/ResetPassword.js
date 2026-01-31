@@ -1,11 +1,9 @@
 import React, { useState } from "react";
-import { Form, Button } from "react-bootstrap";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { resetPassword } from "../../services/authService";
 import { toast } from "react-toastify";
 import "../../assets/Styles/Auth/ResetPassword.css";
 import AuthLayout from "../../pages/Auth/AuthLayout";
-
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -17,22 +15,25 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const code = searchParams.get("code");
 
+  // Regex de complejidad (Mín 8 caracteres, Mayúscula, Número, Especial)
   const isValidPassword = (password) =>
     /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*.,+]).{8,}$/.test(password);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
+    // 🛡️ NO sanitizamos contraseñas (permitimos caracteres especiales),
+    // pero controlamos la longitud en el estado.
     setFormData({
       ...formData,
-      [name]: value.slice(0, 50),
+      [name]: value, 
     });
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const newPassword = formData.new_password.trim();
-    const confirmPassword = formData.confirm_password.trim();
+    const newPassword = formData.new_password;
+    const confirmPassword = formData.confirm_password;
 
     if (!newPassword || !confirmPassword) {
       toast.error("Todos los campos son obligatorios.");
@@ -52,6 +53,7 @@ const ResetPassword = () => {
     }
 
     try {
+      // Enviamos el código y la contraseña
       await resetPassword(code, newPassword);
       toast.success("Contraseña restablecida correctamente.");
       localStorage.removeItem("emailToRecover");
@@ -80,6 +82,8 @@ const ResetPassword = () => {
               value={formData.new_password}
               onChange={handleInputChange}
               required
+              maxLength={128} // 🛡️ Límite de seguridad
+              autoComplete="new-password"
               style={{ width: "100%", paddingRight: "70px" }}
             />
             <button
@@ -109,6 +113,8 @@ const ResetPassword = () => {
               value={formData.confirm_password}
               onChange={handleInputChange}
               required
+              maxLength={128} // 🛡️ Límite de seguridad
+              autoComplete="new-password"
               style={{ width: "100%", paddingRight: "70px" }}
             />
             <button
@@ -140,12 +146,9 @@ const ResetPassword = () => {
               Cancelar
             </button>
           </div>
-
-
         </form>
       </div>
     </AuthLayout>
-
   );
 };
 

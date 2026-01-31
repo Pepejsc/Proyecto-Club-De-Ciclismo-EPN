@@ -6,6 +6,17 @@ import { getToken } from "../../services/authService";
 
 const apiUrl = process.env.REACT_APP_API_URL;
 
+// --- 🛡️ CONSTANTES DE SEGURIDAD ---
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+// --- 🛡️ FUNCIÓN DE SANITIZACIÓN ---
+const sanitizeInput = (input) => {
+  if (typeof input !== 'string') return input;
+  // Elimina caracteres peligrosos para evitar XSS
+  return input.replace(/[<>&"'/]/g, "");
+};
+
 const initialState = {
   tipo_recurso: "",
   nombre: "",
@@ -14,7 +25,7 @@ const initialState = {
   fecha_adquisicion: "",
   costo_adquisicion: "",
   observacion: "",
-  tallas_disponibles: "", // <-- (AÑADIDO)
+  tallas_disponibles: "",
   precio_venta: "",
   stock_inicial: "",
   sku: "",
@@ -32,60 +43,76 @@ const CrearRecurso = () => {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    // ... (sin cambios)
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    let safeValue = value;
+
+    // Validación según el tipo de input
+    if (type === 'number') {
+        // Evitar números negativos
+        if (value < 0) safeValue = 0;
+    } else {
+        // Sanitizar texto libre
+        safeValue = sanitizeInput(value);
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: safeValue }));
   };
+
   const handlePrincipalFileChange = (e) => {
-    // ... (sin cambios)
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) { 
+      if (file.size > MAX_FILE_SIZE) { 
         toast.error("El archivo es demasiado grande. Máximo 10MB.");
-        e.target.value = '';
+        e.target.value = ''; // Limpiar input inseguro
         return;
       }
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
+      
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
         toast.error("Tipo de archivo no permitido. Solo JPG, PNG o WebP.");
         e.target.value = '';
         return;
       }
+      
       setArchivoPrincipal(file);
       toast.success(`Imagen principal: ${file.name}`);
     }
   };
+
   const handleGalleryFileChange = (e) => {
-    // ... (sin cambios)
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
+    
     if (files.length > 3) {
       toast.error("Puedes subir un máximo de 3 imágenes de galería.");
       e.target.value = ''; 
       return;
     }
+
+    const validFiles = [];
     for (const file of files) {
-      if (file.size > 10 * 1024 * 1024) {
+      if (file.size > MAX_FILE_SIZE) {
         toast.error(`El archivo ${file.name} es demasiado grande (Máx 10MB).`);
         e.target.value = '';
         return;
       }
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
+      
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
         toast.error(`Archivo ${file.name} no permitido. Solo JPG, PNG o WebP.`);
         e.target.value = '';
         return;
       }
+      validFiles.push(file);
     }
-    setArchivosGaleria(files);
-    toast.success(`${files.length} imágenes de galería seleccionadas.`);
+    
+    setArchivosGaleria(validFiles);
+    toast.success(`${validFiles.length} imágenes de galería seleccionadas.`);
   };
+
   const handleCancel = () => {
-    // ... (sin cambios)
     navigate(-1);
   };
+
   const validateForm = () => {
-    // ... (sin cambios)
     const {
       tipo_recurso,
       nombre,
@@ -93,24 +120,24 @@ const CrearRecurso = () => {
       descripcion,
       costo_adquisicion,
     } = formData;
+
     if (!tipo_recurso) {
       toast.error("Debe seleccionar un tipo de recurso.");
       return false;
     }
-    if (
-      !nombre.trim() ||
-      !fecha_adquisicion ||
-      !descripcion.trim() ||
-      !costo_adquisicion
-    ) {
+    if (!nombre.trim() || !fecha_adquisicion || !descripcion.trim() || costo_adquisicion === "") {
       toast.error("Por favor, llene todos los campos comunes (*).");
       return false;
     }
+    if (parseFloat(costo_adquisicion) < 0) {
+        toast.error("El costo de adquisición no puede ser negativo.");
+        return false;
+    }
+
     return true;
   };
 
   const handleSubmit = async () => {
-    // ... (lógica de validación sin cambios)
     if (!validateForm()) {
       return;
     }
@@ -118,7 +145,7 @@ const CrearRecurso = () => {
     
     const formDataToSend = new FormData();
     
-    // 1. Añadir campos de texto
+    // 1. Añadir campos de texto (Ya sanitizados en handleChange, pero hacemos trim por si acaso)
     formDataToSend.append('tipo_recurso', formData.tipo_recurso);
     formDataToSend.append('nombre', formData.nombre.trim());
     formDataToSend.append('descripcion', formData.descripcion.trim());
@@ -126,7 +153,7 @@ const CrearRecurso = () => {
     formDataToSend.append('fecha_adquisicion', formData.fecha_adquisicion);
     formDataToSend.append('costo_adquisicion', parseFloat(formData.costo_adquisicion));
     formDataToSend.append('observacion', formData.observacion.trim() || '');
-    formDataToSend.append('tallas_disponibles', formData.tallas_disponibles.trim() || ''); // <-- (AÑADIDO)
+    formDataToSend.append('tallas_disponibles', formData.tallas_disponibles.trim() || ''); 
     
     // 2. Añadir archivos
     if (archivoPrincipal) {
@@ -140,18 +167,21 @@ const CrearRecurso = () => {
 
     // 3. Añadir campos condicionales
     if (formData.tipo_recurso === "COMERCIAL") {
-      // ... (sin cambios)
+      if(formData.precio_venta < 0 || formData.stock_inicial < 0){
+          toast.error("Precio y stock no pueden ser negativos");
+          setIsSubmitting(false);
+          return;
+      }
       formDataToSend.append('precio_venta', parseFloat(formData.precio_venta));
       formDataToSend.append('stock_inicial', parseInt(formData.stock_inicial));
       formDataToSend.append('sku', formData.sku.trim() || '');
     } else if (formData.tipo_recurso === "OPERATIVO") {
-      // ... (sin cambios)
       formDataToSend.append('codigo_activo', formData.codigo_activo.trim());
       formDataToSend.append('estado', formData.estado);
       formDataToSend.append('ubicacion', formData.ubicacion.trim() || '');
     }
 
-    // 4. Lógica de envío (sin cambios)
+    // 4. Lógica de envío
     try {
       const token = getToken();
       if (!token) {
@@ -183,7 +213,6 @@ const CrearRecurso = () => {
     <div className="editar-perfil-container">
       <h2>Crear Nuevo Recurso</h2>
       
-      {/* ... (Select de Tipo de Recurso sin cambios) ... */}
       <div className="form-grid">
         <div className="grid-full">
           <label>Tipo de Recurso *</label>
@@ -204,14 +233,13 @@ const CrearRecurso = () => {
         <>
           <h3 className="form-section-header">Campos Comunes</h3>
           <div className="form-grid">
-             {/* ... (campos nombre, categoria, fecha, costo, descripcion) ... */}
              <div>
               <label>Nombre recurso *</label>
-              <input name="nombre" value={formData.nombre} onChange={handleChange} placeholder="Ej: Jersey 2025" disabled={isSubmitting} />
+              <input name="nombre" value={formData.nombre} onChange={handleChange} placeholder="Ej: Jersey 2025" disabled={isSubmitting} maxLength={100} />
             </div>
             <div>
               <label>Categoría</label>
-              <input name="categoria" value={formData.categoria} onChange={handleChange} placeholder="Ej: Indumentaria" disabled={isSubmitting} />
+              <input name="categoria" value={formData.categoria} onChange={handleChange} placeholder="Ej: Indumentaria" disabled={isSubmitting} maxLength={50} />
             </div>
             <div>
               <label>Fecha de Adquisición *</label>
@@ -219,14 +247,13 @@ const CrearRecurso = () => {
             </div>
             <div>
               <label>Costo de Adquisición (USD) *</label>
-              <input type="number" name="costo_adquisicion" value={formData.costo_adquisicion} onChange={handleChange} placeholder="Ej: 25.50" min="0" disabled={isSubmitting} />
+              <input type="number" name="costo_adquisicion" value={formData.costo_adquisicion} onChange={handleChange} placeholder="Ej: 25.50" min="0" step="0.01" disabled={isSubmitting} />
             </div>
             <div className="grid-full">
               <label>Descripción *</label>
-              <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} placeholder="Describa el recurso..." rows="3" disabled={isSubmitting} />
+              <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} placeholder="Describa el recurso..." rows="3" disabled={isSubmitting} maxLength={500} />
             </div>
 
-            {/* --- (NUEVO CAMPO DE TALLAS) --- */}
             <div className="grid-full">
               <label>Tallas Disponibles (Opcional)</label>
               <input
@@ -236,11 +263,10 @@ const CrearRecurso = () => {
                 onChange={handleChange}
                 placeholder="Ej: S, M, L, XL ó Talla Única ó 10-13"
                 disabled={isSubmitting} 
+                maxLength={100}
               />
             </div>
-            {/* --- FIN CAMPO TALLAS --- */}
 
-            {/* --- (Campo Imagen Principal) --- */}
             <div className="grid-full">
               <label>Imagen Principal (Opcional)</label>
               <input
@@ -257,7 +283,6 @@ const CrearRecurso = () => {
               )}
             </div>
             
-            {/* --- (Campo Galería) --- */}
             <div className="grid-full">
               <label>Imágenes de Galería (Opcional, máx 3)</label>
               <input
@@ -277,14 +302,13 @@ const CrearRecurso = () => {
 
           </div> 
 
-          {/* ... (Secciones COMERCIAL y OPERATIVO sin cambios) ... */}
           {formData.tipo_recurso === "COMERCIAL" && (
             <>
               <h3 className="form-section-header">Detalles del Producto Comercial</h3>
               <div className="form-grid">
                 <div>
                   <label>Precio de Venta (USD) *</label>
-                  <input type="number" name="precio_venta" value={formData.precio_venta} onChange={handleChange} min="0" disabled={isSubmitting} />
+                  <input type="number" name="precio_venta" value={formData.precio_venta} onChange={handleChange} min="0" step="0.01" disabled={isSubmitting} />
                 </div>
                 <div>
                   <label>Stock Inicial *</label>
@@ -292,7 +316,7 @@ const CrearRecurso = () => {
                 </div>
                 <div>
                   <label>SKU (Opcional)</label>
-                  <input name="sku" value={formData.sku} onChange={handleChange} disabled={isSubmitting} />
+                  <input name="sku" value={formData.sku} onChange={handleChange} disabled={isSubmitting} maxLength={50} />
                 </div>
               </div>
             </>
@@ -303,7 +327,7 @@ const CrearRecurso = () => {
               <div className="form-grid">
                 <div>
                   <label>Código de Activo *</label>
-                  <input name="codigo_activo" value={formData.codigo_activo} onChange={handleChange} disabled={isSubmitting} />
+                  <input name="codigo_activo" value={formData.codigo_activo} onChange={handleChange} disabled={isSubmitting} maxLength={50} />
                 </div>
                 <div>
                   <label>Estado *</label>
@@ -317,22 +341,21 @@ const CrearRecurso = () => {
                 </div>
                 <div>
                   <label>Responsable (Opcional por ahora)</label>
-                  <input name="responsable" value={formData.responsable} onChange={handleChange} disabled={isSubmitting} />
+                  <input name="responsable" value={formData.responsable} onChange={handleChange} disabled={isSubmitting} maxLength={100} />
                 </div>
                 <div>
                   <label>Ubicación *</label>
-                  <input name="ubicacion" value={formData.ubicacion} onChange={handleChange} disabled={isSubmitting} />
+                  <input name="ubicacion" value={formData.ubicacion} onChange={handleChange} disabled={isSubmitting} maxLength={100} />
                 </div>
               </div>
             </>
           )}
 
-          {/* ... (Observación y Botones sin cambios) ... */}
           <h3 className="form-section-header">Información Adicional</h3>
           <div className="form-grid">
             <div className="grid-full">
               <label>Observación</label>
-              <textarea name="observacion" value={formData.observacion} onChange={handleChange} rows="3" disabled={isSubmitting} />
+              <textarea name="observacion" value={formData.observacion} onChange={handleChange} rows="3" disabled={isSubmitting} maxLength={500} />
             </div>
           </div>
           

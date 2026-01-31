@@ -36,17 +36,17 @@ const RenewMembershipModal = ({ membership, onClose, onRenew }) => {
 
       {/* Información de renovación */}
       <div className="renewal-details">
-        <h4>📋 Detalles de Renovación</h4>
+        <h4>Detalles de Renovación</h4>
         <div className="renewal-info-card">
           <p><strong>Nuevo vencimiento:</strong> {calculateNewEndDate()}</p>
-          <p><strong>Duración:</strong> 1 año adicional</p>
+          <p><strong>Duración:</strong> 6 meses adicionales</p>
           <p><strong>Estado después:</strong> <span style={{color: '#10B981', fontWeight: 'bold'}}>ACTIVA</span></p>
         </div>
       </div>
 
       {/* Beneficios */}
       <div className="renewal-benefits">
-        <h4>🎯 Beneficios al renovar:</h4>
+        <h4>Beneficios al renovar:</h4>
         <div className="benefits-list">
           <div className="benefit-item">
             <i className="fas fa-check-circle" style={{color: '#10B981'}}></i>
@@ -65,8 +65,8 @@ const RenewMembershipModal = ({ membership, onClose, onRenew }) => {
 
       {/* Nota importante */}
       <div className="renewal-notice">
-        <p>💡 <strong>Importante:</strong> Esta renovación será registrada para estadísticas del club.</p>
-        <p>📊 Ayudas a mantener el control de membresías activas.</p>
+        <p><strong>Importante:</strong> Esta renovación será registrada para estadísticas del club.</p>
+        <p>Ayudas a mantener el control de membresías activas.</p>
       </div>
 
       {/* Botones de acción */}

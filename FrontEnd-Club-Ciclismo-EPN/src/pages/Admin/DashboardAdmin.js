@@ -278,7 +278,7 @@ const DashboardAdmin = () => {
                     <div className="donut-chart" style={{
                         background: `conic-gradient(
                             #3B82F6 0% ${stop1}%, 
-                            #F59E0B ${stop1}% ${stop2}%, 
+                            #6B7280 ${stop1}% ${stop2}%, 
                             #EF4444 ${stop2}% 100%
                         )`
                     }}>

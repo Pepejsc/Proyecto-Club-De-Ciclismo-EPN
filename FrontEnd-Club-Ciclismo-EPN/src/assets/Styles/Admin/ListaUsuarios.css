@@ -1,4 +1,9 @@
-.usuarios-container {
+/* ==========================================================================
+   LISTA DE USUARIOS (lu-) - ESTILOS AISLADOS
+   ========================================================================== */
+
+/* Contenedor Principal */
+.lu-container {
   padding: 30px;
   background-color: #f4f6f8;
   border-radius: 10px;
@@ -8,14 +13,15 @@
   font-family: 'Montserrat', sans-serif;
 }
 
-.usuarios-container h2 {
+.lu-container h2 {
   color: #11182f;
   margin-bottom: 25px;
   text-align: center;
   font-size: 24px;
 }
 
-.tabla-usuarios {
+/* Tabla */
+.lu-tabla {
   width: 100%;
   border-collapse: collapse;
   background-color: white;
@@ -23,7 +29,7 @@
   overflow: hidden;
 }
 
-.tabla-usuarios thead {
+.lu-tabla thead {
   background-color: #238CBC;
   color: white;
   font-size: 16px;
@@ -31,27 +37,27 @@
   height: 60px;
 }
 
-.tabla-usuarios thead th {
+.lu-tabla thead th {
   font-weight: 600;
   padding: 12px 16px;
 }
 
-.tabla-usuarios th,
-.tabla-usuarios td {
+.lu-tabla th,
+.lu-tabla td {
   padding: 12px 16px;
   border-bottom: 1px solid #e5e5e5;
 }
 
-.tabla-usuarios tbody tr:hover {
+.lu-tabla tbody tr:hover {
   background-color: #f1f1f1;
 }
 
-.tabla-usuarios td {
+.lu-tabla td {
   font-size: 14px;
   color: #333;
 }
 
-.tabla-usuarios td:last-child {
+.lu-tabla td:last-child {
   min-width: 130px;
   text-align: center;
   display: flex;
@@ -59,8 +65,8 @@
   gap: 8px;
 }
 
-/* Botones de acción */
-.btn-action {
+/* Botones de Acción (Tabla) */
+.lu-btn-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -74,71 +80,22 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.btn-action.editar {
-  background-color: #007bff;
-}
-
-.btn-action.eliminar {
-  background-color: #dc3545;
-}
-
-.btn-action:hover {
+.lu-btn-action:hover {
   transform: scale(1.05);
   opacity: 0.9;
 }
 
-/* Responsive */
-@media screen and (max-width: 768px) {
-  .tabla-usuarios {
-    border: none;
-  }
-
-  /* Eliminamos el thead de la tabla */
-  .tabla-usuarios thead {
-    display: none;
-  }
-
-  .tabla-usuarios tr {
-    display: block;
-    background-color: white;
-    border-radius: 10px;
-    margin: 15px auto;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    padding: 15px;
-    width: 95%;
-    max-width: 500px;
-    border: none;
-  }
-
-  .tabla-usuarios td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 10px;
-    border: none;
-    border-bottom: 1px solid #eee;
-    font-size: 14px;
-  }
-
-  .tabla-usuarios td:last-child {
-    justify-content: center;
-    gap: 10px;
-    margin-top: 10px;
-    border-bottom: none;
-  }
-
-  .tabla-usuarios td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: #11182f;
-    margin-right: 10px;
-    min-width: 120px;
-  }
+/* --- COLORES UNIVERSALES --- */
+.lu-btn-edit {
+  background-color: #9E9E9E; /* Plomo */
 }
 
+.lu-btn-delete {
+  background-color: #D93E3E; /* Rojo */
+}
 
 /* ==== MODAL ==== */
-.modal-overlay {
+.lu-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -151,7 +108,7 @@
   z-index: 999;
 }
 
-.modal-content {
+.lu-modal-content {
   background-color: white;
   padding: 30px;
   border-radius: 10px;
@@ -161,19 +118,19 @@
   text-align: center;
 }
 
-.modal-content h3 {
+.lu-modal-content h3 {
   margin-bottom: 10px;
   font-size: 20px;
   color: #11182f;
 }
 
-.modal-content p {
+.lu-modal-content p {
   margin-bottom: 20px;
   font-weight: bold;
   color: #333;
 }
 
-.modal-content select {
+.lu-modal-select {
   width: 100%;
   padding: 10px;
   margin-bottom: 25px;
@@ -182,13 +139,14 @@
   font-size: 15px;
 }
 
-.modal-buttons {
+/* Botones del Modal */
+.lu-modal-buttons {
   display: flex;
   justify-content: center;
   gap: 15px;
 }
 
-.modal-buttons button {
+.lu-btn-modal {
   padding: 10px 20px;
   border: none;
   border-radius: 6px;
@@ -196,14 +154,66 @@
   font-weight: bold;
   cursor: pointer;
   transition: transform 0.2s ease;
-}
-
-.modal-buttons .editar {
-  background-color: #007bff;
   color: white;
 }
 
-.modal-buttons .eliminar {
-  background-color: #dc3545;
-  color: white;
+.lu-btn-save {
+  background-color: #2196F3; /* Azul (Guardar) */
+}
+
+.lu-btn-cancel {
+  background-color: #D93E3E; /* Rojo (Cancelar) */
+}
+
+.lu-btn-modal:hover {
+  filter: brightness(0.9);
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  .lu-tabla {
+    border: none;
+  }
+
+  .lu-tabla thead {
+    display: none;
+  }
+
+  .lu-tabla tr {
+    display: block;
+    background-color: white;
+    border-radius: 10px;
+    margin: 15px auto;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    padding: 15px;
+    width: 95%;
+    max-width: 500px;
+    border: none;
+  }
+
+  .lu-tabla td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 10px;
+    border: none;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+  }
+
+  .lu-tabla td:last-child {
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    border-bottom: none;
+  }
+
+  .lu-tabla td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #11182f;
+    margin-right: 10px;
+    min-width: 120px;
+    text-align: left;
+  }
 }

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333333; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 5px; overflow: hidden; }
+        .header { background-color: #10325c; padding: 20px; text-align: center; }
+        .header h1 { color: #ffffff; margin: 0; font-size: 20px; text-transform: uppercase; }
+        .content { padding: 30px; background-color: #ffffff; }
+        .section-title { color: #10325c; border-bottom: 2px solid #10325c; padding-bottom: 5px; margin-top: 20px; margin-bottom: 15px; font-size: 16px; font-weight: bold; }
+        .data-row { margin-bottom: 10px; }
+        .label { font-weight: bold; color: #555555; width: 140px; display: inline-block; }
+        .value { color: #000000; }
+        .proposal-box { background-color: #f9f9f9; padding: 15px; border-left: 4px solid #10325c; margin-top: 10px; font-style: italic; }
+        .footer { background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 12px; color: #888888; border-top: 1px solid #e0e0e0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="cid:club_logo" alt="Club Ciclismo EPN" width="80" style="display:block; margin: 0 auto 10px auto;">
+            <h1>Solicitud de Auspicio</h1>
+        </div>
+        
+        <div class="content">
+            <p>Estimado Administrador,</p>
+            <p>Se ha recibido una nueva solicitud de patrocinio a través del portal web. A continuación se detallan los datos del interesado:</p>
+
+            <div class="section-title">DATOS DE LA ORGANIZACIÓN</div>
+            
+            <div class="data-row">
+                <span class="label">Empresa / Marca:</span>
+                <span class="value">{{ company_name }}</span>
+            </div>
+
+            <div class="section-title">INFORMACIÓN DE CONTACTO</div>
+            
+            <div class="data-row">
+                <span class="label">Nombre Contacto:</span>
+                <span class="value">{{ contact_name }}</span>
+            </div>
+            <div class="data-row">
+                <span class="label">Cargo:</span>
+                <span class="value">{{ position }}</span>
+            </div>
+            <div class="data-row">
+                <span class="label">Correo:</span>
+                <span class="value"><a href="mailto:{{ contact_email }}">{{ contact_email }}</a></span>
+            </div>
+            <div class="data-row">
+                <span class="label">Teléfono:</span>
+                <span class="value">{{ contact_phone }}</span>
+            </div>
+
+            <div class="section-title">DETALLE DE LA PROPUESTA</div>
+            <div class="proposal-box">
+                "{{ proposal_description }}"
+            </div>
+            
+            <p style="margin-top: 20px; font-size: 13px; color: #666;">
+                * Si el usuario adjuntó un archivo, este se encuentra disponible en los adjuntos de este correo.
+            </p>
+        </div>
+
+        <div class="footer">
+            &copy; {{ current_year }} Club de Ciclismo EPN.<br>
+            Este es un mensaje automático, por favor no responder directamente.
+        </div>
+    </div>
+</body>
+</html>

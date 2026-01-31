@@ -410,6 +410,11 @@
   position: relative; 
 }
 
+/* --- Toastify Z-Index --- */
+.Toastify__toast-container {
+  z-index: 999999 !important;
+}
+
 /* --- Responsive --- */
 @media (max-width: 850px) {
   .producto-main {

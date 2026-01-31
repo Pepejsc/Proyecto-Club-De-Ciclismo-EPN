@@ -35,7 +35,7 @@ export const CartProvider = ({ children }) => {
         return;
     }
 
-    console.log(`🛒 Agregando: ID=${idProducto} | Talla=${tallaNormalizada}`);
+    console.log(`Agregando: ID=${idProducto} | Talla=${tallaNormalizada}`);
 
     setCartItems((prevItems) => {
       // 2. Buscamos si YA existe este producto exacto (Mismo ID + Misma Talla)
@@ -49,13 +49,13 @@ export const CartProvider = ({ children }) => {
 
       if (existingItemIndex > -1) {
         // --- CASO A: YA EXISTE -> SUMAMOS CANTIDAD ---
-        console.log("✅ Producto encontrado en carrito. Aumentando cantidad.");
+        console.log("Producto encontrado en carrito. Aumentando cantidad.");
         const newItems = [...prevItems];
         newItems[existingItemIndex].quantity += 1;
         return newItems;
       } else {
         // --- CASO B: NO EXISTE -> CREAMOS FILA NUEVA ---
-        console.log("➕ Producto nuevo. Creando fila.");
+        console.log("Producto nuevo. Creando fila.");
         const newItem = {
           ...product,
           id_recurso: idProducto, // Estandarizamos el ID

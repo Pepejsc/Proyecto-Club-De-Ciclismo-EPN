@@ -6,6 +6,13 @@ import "../../assets/Styles/Admin/ListaDocumentos.css";
 
 const API_BASE_URL = "http://localhost:8000/api/documents";
 
+// --- 🛡️ FUNCIÓN DE SANITIZACIÓN (ANTI-XSS) ---
+const sanitizeInput = (input) => {
+  if (typeof input !== 'string') return input;
+  // Elimina caracteres peligrosos para evitar XSS (<, >, ", ', /)
+  return input.replace(/[<>&"'/]/g, "");
+};
+
 /**
  * Formatea bytes a un string legible (KB, MB, GB).
  */
@@ -31,20 +38,6 @@ const formatearFecha = (fecha) => {
   } catch {
     return "Fecha inválida";
   }
-};
-
-/**
- * Retorna un emoji/icono basado en el tipo de documento.
- */
-const getIconoPorTipo = (tipo) => {
-  const iconos = {
-    estatuto: "📜",
-    reglamento: "📋",
-    acta: "📄",
-    informe: "📊",
-    contrato: "📝",
-  };
-  return iconos[tipo] || "📎";
 };
 
 /**
@@ -93,7 +86,7 @@ const useApi = () => {
 };
 
 /**
- * Modal para edición de metadatos de documentos.
+ * Modal para edición de metadatos de documentos (BLINDADO).
  */
 const EditorDocumentoModal = ({ documento, onClose, onGuardar }) => {
   const [formData, setFormData] = useState({});
@@ -115,9 +108,24 @@ const EditorDocumentoModal = ({ documento, onClose, onGuardar }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // --- 🛡️ VALIDACIÓN PREVIA ---
+    if (!formData.name.trim()) {
+        toast.error("El nombre es obligatorio.");
+        return;
+    }
+    // -----------------------------
+
     setGuardando(true);
     try {
-      await onGuardar(documento.id, formData);
+      // Enviamos datos limpios (trim)
+      const dataToSave = {
+          ...formData,
+          name: formData.name.trim(),
+          description: formData.description.trim(),
+          responsable: formData.responsable.trim()
+      };
+      await onGuardar(documento.id, dataToSave);
     } finally {
       setGuardando(false);
     }
@@ -125,7 +133,9 @@ const EditorDocumentoModal = ({ documento, onClose, onGuardar }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // 🛡️ Sanitización en tiempo real
+    const safeValue = sanitizeInput(value);
+    setFormData((prev) => ({ ...prev, [name]: safeValue }));
   };
 
   if (!documento) return null;
@@ -137,36 +147,44 @@ const EditorDocumentoModal = ({ documento, onClose, onGuardar }) => {
           <h3>Editar {documento.name}</h3>
         </div>
         <form onSubmit={handleSubmit} className="form-editor">
-          {["name", "description", "responsable"].map((field) => (
-            <div key={field} className="form-group">
-              <label>
-                {field === "name"
-                  ? "Nombre del Documento *"
-                  : field === "description"
-                  ? "Descripción"
-                  : "Responsable *"}
-              </label>
-              {field === "description" ? (
-                <textarea
-                  name={field}
-                  value={formData[field] || ""}
-                  onChange={handleChange}
-                  rows="3"
-                  placeholder="Ingrese la descripción"
-                  maxLength="500"
-                />
-              ) : (
-                <input
-                  type="text"
-                  name={field}
-                  value={formData[field] || ""}
-                  onChange={handleChange}
-                  placeholder={`Ingrese ${field === "name" ? "el nombre" : "el responsable"}`}
-                  required
-                />
-              )}
-            </div>
-          ))}
+          
+          <div className="form-group">
+            <label>Nombre del Documento *</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name || ""}
+              onChange={handleChange}
+              placeholder="Ingrese el nombre"
+              required
+              maxLength={100} // 🛡️ Límite
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Descripción</label>
+            <textarea
+              name="description"
+              value={formData.description || ""}
+              onChange={handleChange}
+              rows="3"
+              placeholder="Ingrese la descripción"
+              maxLength={500} // 🛡️ Límite
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Responsable *</label>
+            <input
+              type="text"
+              name="responsable"
+              value={formData.responsable || ""}
+              onChange={handleChange}
+              placeholder="Ingrese el responsable"
+              required
+              maxLength={100} // 🛡️ Límite
+            />
+          </div>
 
           <div className="form-row">
             <div className="form-group">
@@ -194,6 +212,7 @@ const EditorDocumentoModal = ({ documento, onClose, onGuardar }) => {
                 value={formData.entry_date || ""}
                 onChange={handleChange}
                 required
+                max={new Date().toISOString().split("T")[0]} // 🛡️ No fechas futuras
               />
             </div>
           </div>
@@ -535,7 +554,6 @@ const ListaDocumentos = () => {
             {documentosFiltrados.map((doc) => (
               <div key={doc.id} className="documento-card">
                 <div className="documento-header">
-                  <span className="documento-icon">{getIconoPorTipo(doc.document_type)}</span>
                   <div className="documento-title">
                     <h3>{doc.name}</h3>
                     <span className={`documento-tipo ${doc.document_type}`}>{doc.document_type}</span>

@@ -5,29 +5,49 @@ import '../../assets/Styles/Auth/ResetPassword.css';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from "../../pages/Auth/AuthLayout";
 
-
 const ResetPasswordRequest = () => {
   const [email, setEmail] = useState('');
   const navigate = useNavigate();
 
+  // --- 🛡️ 1. SEGURIDAD: Función de Sanitización ---
+  const sanitizeInput = (input) => {
+    // Elimina caracteres peligrosos para evitar inyecciones XSS
+    return input.replace(/[<>&"'/`]/g, "");
+  };
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    // Sanitizamos en tiempo real
+    setEmail(sanitizeInput(value));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!email) {
+    const cleanEmail = email.trim();
+
+    // --- 🛡️ 2. SEGURIDAD: Validaciones ---
+    if (!cleanEmail) {
       toast.error('Por favor, ingresa tu correo electrónico.');
       return;
     }
 
+    // Validación de formato de email (Regex seguro)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+        toast.error("Por favor ingrese un correo electrónico válido");
+        return;
+    }
+
     try {
-      const response = await sendPasswordResetEmail(email);
+      const response = await sendPasswordResetEmail(cleanEmail);
       toast.success(response.message);
-      localStorage.setItem('emailToRecover', email);
+      localStorage.setItem('emailToRecover', cleanEmail);
       navigate('/verify-code');
     } catch (error) {
       toast.error(error.message || 'Error al enviar el código de recuperación.');
     }
   };
-
 
   return (
     <AuthLayout>
@@ -38,14 +58,16 @@ const ResetPasswordRequest = () => {
             Ingresa el correo que fue registrado en el sistema.
           </p>
 
-
-          <label>Correo electrónico:</label>
+          <label htmlFor="email">Correo electrónico:</label>
           <input
+            id="email"
             type="email"
             placeholder="Ingresa tu correo electrónico"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailChange} // Usamos el handler seguro
             required
+            maxLength={100} // Límite de seguridad
+            autoComplete="email"
           />
 
           <div className="form-buttons-inline">
@@ -53,11 +75,9 @@ const ResetPasswordRequest = () => {
             <button type="button" className="btn-cancel" onClick={() => navigate('/login')}>Cancelar</button>
           </div>
 
-
         </form>
       </div>
     </AuthLayout>
-
   );
 };
 

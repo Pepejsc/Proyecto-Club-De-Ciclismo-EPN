@@ -16,6 +16,7 @@ const MiMembresia = () => {
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRenewModal, setShowRenewModal] = useState(false);
+  
   const [editFormData, setEditFormData] = useState({
     membership_type: "",
     participation_level: "",
@@ -50,14 +51,79 @@ const MiMembresia = () => {
     }
   };
 
+  // --- 🛡️ LÓGICA DE SEGURIDAD Y SANITIZACIÓN ---
+  
+  const sanitizeInput = (input) => {
+    // Elimina caracteres peligrosos para evitar inyecciones XSS
+    return input ? input.replace(/[<>&"'/]/g, "") : "";
+  };
+
   const handleEditChange = (e) => {
-    setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    let safeValue = value;
+
+    // 1. Validar Teléfono (Solo números, máximo 10 caracteres)
+    if (name === "emergency_phone") {
+        safeValue = value.replace(/[^0-9]/g, ""); // Solo números
+        if (safeValue.length > 10) return; // Límite 10
+    } 
+    // 2. Validar Nombre Contacto (Solo letras y espacios)
+    else if (name === "emergency_contact") {
+        // Regex: Solo letras (tildes, ñ) y espacios
+        if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) {
+            return;
+        }
+        safeValue = value;
+    }
+    // 3. Sanitización general (Condiciones médicas, etc.)
+    else if (name === "medical_conditions") {
+        safeValue = sanitizeInput(value);
+    }
+
+    setEditFormData({ ...editFormData, [name]: safeValue });
+  };
+
+  // --- 🛡️ VALIDACIÓN ANTES DE ENVIAR ---
+  const validateEditForm = () => {
+
+    if (!editFormData.emergency_contact.trim()) {
+      toast.error("El nombre de contacto es obligatorio.");
+      return false;
+    }
+    if (editFormData.emergency_contact.length < 3) {
+        toast.error("El nombre de contacto es muy corto.");
+        return false;
+    }
+
+    // Teléfono
+    const phoneRegex = /^09\d{8}$/;
+    if (!editFormData.emergency_phone.trim()) {
+      toast.error("El teléfono es obligatorio.");
+      return false;
+    }
+    if (!phoneRegex.test(editFormData.emergency_phone)) {
+      toast.error("El celular debe tener 10 dígitos y empezar con '09'.");
+      return false;
+    }
+
+    return true;
   };
 
   const handleEditSubmit = async () => {
+    // Ejecutar validación
+    if (!validateEditForm()) return;
+
     try {
       const toastId = toast.loading("Actualizando datos...");
-      await updateMembership(membership.user_id, editFormData);
+      
+      // Enviamos los datos limpios (trim)
+      const dataToUpdate = {
+          ...editFormData,
+          emergency_contact: editFormData.emergency_contact.trim(),
+          medical_conditions: editFormData.medical_conditions.trim()
+      };
+
+      await updateMembership(membership.user_id, dataToUpdate);
       
       setShowEditModal(false);
       setLoading(true);
@@ -149,7 +215,7 @@ const MiMembresia = () => {
 
   if (loading) return <div className="loading-spinner">Cargando...</div>;
 
-  // --- SECCIÓN MEJORADA: SIN MEMBRESÍA ---
+  // --- SECCIÓN: SIN MEMBRESÍA ---
   if (!membership) {
     return (
       <div className="no-membership-container">
@@ -293,39 +359,83 @@ const MiMembresia = () => {
           <div className="membresia-modal-container">
             <h2 className="membresia-modal-title">Actualizar Datos de Membresía</h2>
             <div className="membresia-form-grid">
+              
+              {/* Tipo de Membresía (Deshabilitado intencionalmente) */}
               <div>
                 <label className="membresia-label">Tipo de Membresía</label>
-                <select className="membresia-select" name="membership_type" value={editFormData.membership_type} onChange={handleEditChange} disabled>
+                <select 
+                    className="membresia-select" 
+                    name="membership_type" 
+                    value={editFormData.membership_type} 
+                    onChange={handleEditChange} 
+                    disabled
+                >
                   <option value="CICLISTA">Ciclista</option>
                   <option value="ENTRENADOR">Entrenador</option>
                   <option value="EQUIPO_EPN">Equipo EPN</option>
                 </select>
               </div>
+
+              {/* Nivel */}
               <div>
                 <label className="membresia-label">Nivel de Experiencia</label>
-                <select className="membresia-select" name="participation_level" value={editFormData.participation_level} onChange={handleEditChange}>
+                <select 
+                    className="membresia-select" 
+                    name="participation_level" 
+                    value={editFormData.participation_level} 
+                    onChange={handleEditChange}
+                >
                   <option value="BEGINNER">Principiante</option>
                   <option value="INTERMEDIATE">Intermedio</option>
                   <option value="ADVANCED">Avanzado</option>
                   <option value="COMPETITIVE">Competitivo</option>
                 </select>
               </div>
+
               <div className="membresia-grid-full">
                 <h4 className="membresia-section-title">Datos de Emergencia</h4>
               </div>
+
+              {/* Contacto Emergencia (Solo Letras) */}
               <div>
                 <label className="membresia-label">Contacto de Emergencia</label>
-                <input className="membresia-input" name="emergency_contact" value={editFormData.emergency_contact} onChange={handleEditChange} />
+                <input 
+                    className="membresia-input" 
+                    name="emergency_contact" 
+                    value={editFormData.emergency_contact} 
+                    onChange={handleEditChange}
+                    maxLength={100}
+                    placeholder="Solo letras"
+                />
               </div>
+
+              {/* Teléfono (Solo Números, Max 10) */}
               <div>
                 <label className="membresia-label">Teléfono de Emergencia</label>
-                <input className="membresia-input" name="emergency_phone" value={editFormData.emergency_phone} onChange={handleEditChange} />
+                <input 
+                    className="membresia-input" 
+                    name="emergency_phone" 
+                    value={editFormData.emergency_phone} 
+                    onChange={handleEditChange}
+                    maxLength={10}
+                    placeholder="Ej: 0991234567"
+                />
               </div>
+
+              {/* Condiciones Médicas (Sanitizado) */}
               <div className="membresia-grid-full">
                 <label className="membresia-label">Condiciones Médicas</label>
-                <textarea className="membresia-textarea" name="medical_conditions" value={editFormData.medical_conditions} onChange={handleEditChange} rows="3" />
+                <textarea 
+                    className="membresia-textarea" 
+                    name="medical_conditions" 
+                    value={editFormData.medical_conditions} 
+                    onChange={handleEditChange} 
+                    rows="3"
+                    maxLength={500} 
+                />
               </div>
             </div>
+
             <div className="membresia-form-buttons">
               <button className="membresia-btn-update" onClick={handleEditSubmit}>Actualizar</button>
               <button className="membresia-btn-cancel" onClick={() => setShowEditModal(false)}>Cancelar</button>

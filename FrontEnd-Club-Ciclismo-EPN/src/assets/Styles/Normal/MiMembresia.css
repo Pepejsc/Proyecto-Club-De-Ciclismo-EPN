@@ -466,8 +466,8 @@
 
 /* BOTÓN CANCELAR */
 .membresia-btn-cancel {
-  background-color: #e5e7eb;
-  color: #333333;
+  background-color: #D93E3E;
+  color: #ffffff;
   padding: 12px 30px;
   border-radius: 8px;
   font-weight: 600;
@@ -479,7 +479,7 @@
 }
 
 .membresia-btn-cancel:hover {
-  background-color: #d1d5db;
+  background-color: #f1646c;
   transform: translateY(-1px);
 }
 

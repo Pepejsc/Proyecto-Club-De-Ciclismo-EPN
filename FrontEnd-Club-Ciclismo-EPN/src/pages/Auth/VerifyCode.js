@@ -8,24 +8,29 @@ import {
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from "../../pages/Auth/AuthLayout";
 
-
-
-
 const VerifyCode = () => {
   const inputs = useRef([]);
   const [code, setCode] = useState(new Array(6).fill(""));
-  const [email, setEmail] = useState(
-    localStorage.getItem("emailToRecover") || ""
-  );
-  const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+  const [success, setSuccess] = useState(false);
+
+  // 🛡️ Sanitización básica del email recuperado del localStorage
+  // para evitar que se use un valor inyectado maliciosamente.
+  const storedEmail = localStorage.getItem("emailToRecover") || "";
+  const [email] = useState(storedEmail.replace(/[<>&"'/]/g, "")); 
 
   const handleChange = (value, index) => {
-    if (!/\d/.test(value)) return;
+    // 🛡️ Solo permitir números (Sanitización estricta)
+    if (!/^\d*$/.test(value)) return;
+
+    // Tomar solo el último caracter si se escriben varios
+    const val = value.slice(-1);
+
     const newCode = [...code];
-    newCode[index] = value;
+    newCode[index] = val;
     setCode(newCode);
-    if (value && index < 5) inputs.current[index + 1].focus();
+    
+    if (val && index < 5) inputs.current[index + 1].focus();
   };
 
   const handleKeyDown = (e, index) => {
@@ -46,11 +51,12 @@ const VerifyCode = () => {
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
     const finalCode = code.join("");
-    if (finalCode.length !== 6) {
-      toast.error("Ingresa los 6 dígitos del código.");
+    
+    // 🛡️ Validación de longitud y contenido
+    if (finalCode.length !== 6 || !/^\d+$/.test(finalCode)) {
+      toast.error("Ingresa el código completo de 6 dígitos.");
       return;
     }
 
@@ -96,13 +102,15 @@ const VerifyCode = () => {
               <input
                 key={index}
                 type="text"
-                inputMode="numeric"
-                maxLength="1"
+                inputMode="numeric" // Teclado numérico en móviles
+                pattern="[0-9]*"
+                maxLength="1" // 🛡️ Límite estricto visual
                 value={digit}
                 ref={(el) => (inputs.current[index] = el)}
                 onChange={(e) => handleChange(e.target.value, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 className={`otp-box ${success ? "success-border" : ""}`}
+                autoComplete="one-time-code"
               />
             ))}
           </div>
@@ -118,7 +126,6 @@ const VerifyCode = () => {
         </form>
       </div>
     </AuthLayout>
-
   );
 };
 

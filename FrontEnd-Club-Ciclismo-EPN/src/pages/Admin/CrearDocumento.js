@@ -5,6 +5,17 @@ import "../../assets/Styles/Admin/CrearDocumento.css";
 
 const API_BASE_URL = "http://localhost:8000/api/documents/";
 
+// --- 🛡️ CONSTANTES DE SEGURIDAD ---
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx", ".txt", ".odt"];
+
+// --- 🛡️ FUNCIÓN DE SANITIZACIÓN ---
+const sanitizeInput = (input) => {
+  if (typeof input !== 'string') return input;
+  // Elimina caracteres peligrosos para evitar XSS
+  return input.replace(/[<>&"'/]/g, "");
+};
+
 /**
  * Componente para crear y subir nuevos documentos al sistema.
  */
@@ -30,34 +41,36 @@ const CrearDocumento = () => {
   // ===========================================================================
 
   /**
-   * Maneja los cambios en los inputs de texto.
+   * Maneja los cambios en los inputs de texto (CON SANITIZACIÓN).
    */
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // 🛡️ Sanitización en tiempo real
+    const safeValue = sanitizeInput(value);
+    setFormData((prev) => ({ ...prev, [name]: safeValue }));
   };
 
   /**
    * Maneja la selección y validación del archivo.
-   * Valida extensión y tamaño (máx 50MB).
    */
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validar tipo de archivo
-      const allowedTypes = [".pdf", ".doc", ".docx", ".txt", ".odt"];
+      // 🛡️ Validar extensión
       const fileExtension = "." + file.name.split(".").pop().toLowerCase();
       
-      if (!allowedTypes.includes(fileExtension)) {
-        toast.error(`Tipo de archivo no permitido. Formatos aceptados: ${allowedTypes.join(", ")}`);
-        e.target.value = ""; // Limpiar input
+      if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
+        toast.error(`Tipo de archivo no permitido. Formatos aceptados: ${ALLOWED_EXTENSIONS.join(", ")}`);
+        e.target.value = ""; // Limpiar input inseguro
+        setArchivo(null);
         return;
       }
 
-      // Validar tamaño (50MB)
-      if (file.size > 50 * 1024 * 1024) {
+      // 🛡️ Validar tamaño
+      if (file.size > MAX_FILE_SIZE) {
         toast.error("El archivo es demasiado grande. Máximo 50MB");
-        e.target.value = "";
+        e.target.value = ""; // Limpiar input
+        setArchivo(null);
         return;
       }
 
@@ -66,9 +79,6 @@ const CrearDocumento = () => {
     }
   };
 
-  /**
-   * Regresa a la página anterior.
-   */
   const handleCancel = () => {
     navigate(-1);
   };
@@ -77,10 +87,6 @@ const CrearDocumento = () => {
   // LOGICA DE NEGOCIO Y VALIDACIÓN
   // ===========================================================================
 
-  /**
-   * Valida los campos del formulario antes de enviar.
-   * @returns {boolean} True si es válido, False si hay errores.
-   */
   const validateForm = () => {
     if (
       !formData.nombre_documento.trim() ||
@@ -100,7 +106,6 @@ const CrearDocumento = () => {
 
     const selectedDate = new Date(formData.fecha_ingreso);
     const today = new Date();
-    // Normalizar horas para comparar solo fechas
     today.setHours(0, 0, 0, 0);
     
     if (selectedDate > today) {
@@ -116,9 +121,6 @@ const CrearDocumento = () => {
     return true;
   };
 
-  /**
-   * Resetea el formulario a su estado inicial.
-   */
   const resetForm = () => {
     setFormData({
       nombre_documento: "",
@@ -132,9 +134,6 @@ const CrearDocumento = () => {
     if (fileInput) fileInput.value = "";
   };
 
-  /**
-   * Envía los datos al servidor.
-   */
   const handleSubmit = async () => {
     try {
       if (!validateForm()) return;
@@ -142,11 +141,12 @@ const CrearDocumento = () => {
       setIsSubmitting(true);
 
       const formDataToSend = new FormData();
-      formDataToSend.append("name", String(formData.nombre_documento));
-      formDataToSend.append("responsible", String(formData.responsable));
+      // 🛡️ Enviar datos limpios (trim)
+      formDataToSend.append("name", String(formData.nombre_documento).trim());
+      formDataToSend.append("responsible", String(formData.responsable).trim());
       formDataToSend.append("document_type", String(formData.tipo_documento));
       formDataToSend.append("entry_date", String(formData.fecha_ingreso));
-      formDataToSend.append("description", String(formData.descripcion));
+      formDataToSend.append("description", String(formData.descripcion).trim());
       formDataToSend.append("file", archivo);
 
       const response = await fetch(API_BASE_URL, {
@@ -189,6 +189,7 @@ const CrearDocumento = () => {
             onChange={handleChange}
             placeholder="Ingrese el nombre del recurso"
             disabled={isSubmitting}
+            maxLength={100} // 🛡️ Límite
           />
         </div>
 
@@ -219,6 +220,7 @@ const CrearDocumento = () => {
             value={formData.fecha_ingreso} 
             onChange={handleChange}
             disabled={isSubmitting}
+            max={new Date().toISOString().split("T")[0]} // 🛡️ No fechas futuras
           />
         </div>
 
@@ -230,6 +232,7 @@ const CrearDocumento = () => {
             onChange={handleChange}
             placeholder="Nombre del responsable"
             disabled={isSubmitting}
+            maxLength={100} // 🛡️ Límite
           />
         </div>
 
@@ -243,6 +246,7 @@ const CrearDocumento = () => {
             placeholder="Describa el documento..."
             rows="5"
             disabled={isSubmitting}
+            maxLength={500} // 🛡️ Límite
           />
         </div>
 
@@ -252,7 +256,7 @@ const CrearDocumento = () => {
             <input 
               type="file" 
               onChange={handleFileChange}
-              accept=".pdf,.doc,.docx,.txt,.odt"
+              accept=".pdf,.doc,.docx,.txt,.odt" // 🛡️ Restricción HTML
               disabled={isSubmitting}
             />
             <small className="file-info">

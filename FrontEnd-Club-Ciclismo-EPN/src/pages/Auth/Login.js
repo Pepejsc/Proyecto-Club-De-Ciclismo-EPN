@@ -7,8 +7,6 @@ import { useUser } from "../../context/Auth/UserContext";
 import { fetchMyProfile } from "../../services/userService";
 import AuthLayout from "../../pages/Auth/AuthLayout";
 
-
-
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -16,17 +14,39 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { setUserData } = useUser();
 
+  // --- 🛡️ 1. SEGURIDAD: Función de Sanitización ---
+  const sanitizeInput = (input) => {
+    // Elimina caracteres peligrosos para evitar inyecciones XSS
+    return input.replace(/[<>&"'/`]/g, "");
+  };
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    // Sanitizamos en tiempo real
+    setEmail(sanitizeInput(value));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!email || !password) {
+    // --- 🛡️ 2. SEGURIDAD: Validaciones ---
+    
+    // Validación de campos vacíos
+    if (!email.trim() || !password) {
       toast.error("Todos los campos son obligatorios");
       return;
     }
 
+    // Validación de formato de email (Regex seguro)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        toast.error("Por favor ingrese un correo electrónico válido");
+        return;
+    }
+
     try {
-      const result = await login(email, password);
+      // Enviamos el email limpio (trim)
+      const result = await login(email.trim(), password);
       sessionStorage.setItem("accessToken", result.access_token);
       toast.success("Inicio de sesión exitoso");
 
@@ -50,7 +70,6 @@ const Login = () => {
     }
   };
 
-
   return (
     <AuthLayout>
       <div className="login-container">
@@ -63,7 +82,9 @@ const Login = () => {
               type="email"
               placeholder="Ingrese el correo electrónico"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange} // Usamos el handler seguro
+              maxLength={100} // Límite de seguridad
+              autoComplete="email"
             />
           </div>
 
@@ -76,6 +97,8 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{ width: "100%", paddingRight: "70px" }}
+                maxLength={128} // Límite de seguridad para evitar desbordamientos
+                autoComplete="current-password"
               />
               <button
                 type="button"
@@ -117,12 +140,10 @@ const Login = () => {
             >
               Registrarse
             </button>
-
           </div>
         </form>
       </div>
     </AuthLayout>
-
   );
 };
 

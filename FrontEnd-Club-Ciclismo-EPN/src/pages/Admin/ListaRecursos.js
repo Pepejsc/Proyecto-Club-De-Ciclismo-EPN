@@ -5,46 +5,39 @@ import Swal from "sweetalert2";
 import { getToken } from "../../services/authService";
 import "../../assets/Styles/Admin/ListaRecursos.css";
 
-/**
- * Constantes de configuración
- */
 const API_URL = process.env.REACT_APP_API_URL;
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 const MAX_GALLERY_FILES = 3;
-const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']; 
 const RESOURCE_TYPES = {
   COMMERCIAL: 'COMERCIAL',
   OPERATIONAL: 'OPERATIVO'
 };
 
-/**
- * Función auxiliar para validar tipo y tamaño de archivo.
- * @param {File} file - El archivo a validar.
- * @returns {string|null} - Mensaje de error o null si es válido.
- */
+// --- 🛡️ LÓGICA DE SEGURIDAD Y SANITIZACIÓN ---
+const sanitizeInput = (input) => {
+  if (typeof input !== 'string') return input;
+  // Elimina caracteres peligrosos para evitar XSS
+  return input.replace(/[<>&"'/]/g, "");
+};
+
 const validateFile = (file) => {
   if (file.size > MAX_FILE_SIZE_BYTES) return `El archivo ${file.name} excede el tamaño máximo de 10MB.`;
-  if (!ALLOWED_FILE_TYPES.includes(file.type)) return `El archivo ${file.name} debe ser JPG, PNG o WebP.`;
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) return `El archivo ${file.name} debe ser una imagen válida (JPG, PNG, WebP).`;
   return null;
 };
 
 const ListaRecursos = () => {
   const navigate = useNavigate();
-
-  // Gestión de Estado
   const [recursos, setRecursos] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Estado del Modal
   const [modalVisible, setModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editFormData, setEditFormData] = useState(null);
   const [archivo, setArchivo] = useState(null);
   const [archivosGaleria, setArchivosGaleria] = useState([]);
 
-  /**
-   * Obtiene la lista de recursos de la API.
-   */
   const fetchRecursos = useCallback(async () => {
     setLoading(true);
     const token = getToken();
@@ -76,19 +69,15 @@ const ListaRecursos = () => {
     fetchRecursos();
   }, [fetchRecursos]);
 
-  /**
-   * Maneja la eliminación de un recurso con confirmación.
-   * @param {number} recursoId 
-   */
   const handleDelete = async (recursoId) => {
     const result = await Swal.fire({
       title: '¿Estás seguro?',
-      text: "El recurso se borrará de forma permanente",
+      text: "El recurso se eliminará de forma permanente",
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, borrar',
+      confirmButtonColor: '#2196F3',
+      cancelButtonColor: '#D93E3E',
+      confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar'
     });
 
@@ -114,31 +103,31 @@ const ListaRecursos = () => {
     }
   };
 
-  /**
-   * Abre el modal de edición y carga los datos.
-   * @param {object} recurso 
-   */
   const handleEdit = (recurso) => {
     setEditFormData({
       ...recurso,
-      stock_inicial: recurso.stock_actual // Mapear stock actual a inicial para la edición
+      stock_inicial: recurso.stock_actual 
     });
     setArchivo(null);
     setArchivosGaleria([]);
     setModalVisible(true);
   };
 
-  /**
-   * Maneja los cambios en los inputs del formulario modal.
-   */
   const handleModalChange = (e) => {
-    const { name, value } = e.target;
-    setEditFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    let safeValue = value;
+
+    if (type === 'number') {
+        // Evitar números negativos si no corresponde
+        if (value < 0) safeValue = 0;
+    } else {
+        // Sanitizar texto libre
+        safeValue = sanitizeInput(value);
+    }
+
+    setEditFormData(prev => ({ ...prev, [name]: safeValue }));
   };
 
-  /**
-   * Maneja la selección del archivo de imagen principal.
-   */
   const handleModalFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -146,7 +135,7 @@ const ListaRecursos = () => {
     const error = validateFile(file);
     if (error) {
       toast.error(error);
-      e.target.value = '';
+      e.target.value = ''; // Limpiar input inseguro
       return;
     }
 
@@ -154,9 +143,6 @@ const ListaRecursos = () => {
     toast.info(`Archivo seleccionado: ${file.name}`);
   };
 
-  /**
-   * Maneja la selección de imágenes para la galería.
-   */
   const handleModalGalleryFileChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -167,29 +153,41 @@ const ListaRecursos = () => {
       return;
     }
 
+    const validFiles = [];
     for (const file of files) {
       const error = validateFile(file);
       if (error) {
         toast.error(error);
         e.target.value = '';
-        return;
+        return; 
       }
+      validFiles.push(file);
     }
 
-    setArchivosGaleria(files);
-    toast.success(`${files.length} imágenes seleccionadas.`);
+    setArchivosGaleria(validFiles);
+    toast.success(`${validFiles.length} imágenes seleccionadas.`);
   };
 
-  /**
-   * Envía los datos actualizados del recurso a la API.
-   */
   const handleUpdateSubmit = async () => {
     if (!editFormData) return;
+
+    // --- 🛡️ VALIDACIÓN PREVIA ---
+    if (!editFormData.nombre.trim()) { toast.error("El nombre es obligatorio."); return; }
+    if (!editFormData.descripcion.trim()) { toast.error("La descripción es obligatoria."); return; }
+    if (editFormData.costo_adquisicion < 0) { toast.error("El costo no puede ser negativo."); return; }
+
+    if (editFormData.tipo_recurso === RESOURCE_TYPES.COMMERCIAL) {
+        if (editFormData.precio_venta < 0) { toast.error("El precio de venta no puede ser negativo."); return; }
+        if (editFormData.stock_inicial < 0) { toast.error("El stock no puede ser negativo."); return; }
+    } else {
+        if (!editFormData.codigo_activo.trim()) { toast.error("El código activo es obligatorio."); return; }
+    }
+    // -----------------------------
+
     setIsSubmitting(true);
 
     const formDataToSend = new FormData();
     
-    // Agregar campos básicos
     const fields = [
       'tipo_recurso', 'nombre', 'descripcion', 'categoria', 
       'fecha_adquisicion', 'observacion', 'tallas_disponibles'
@@ -197,17 +195,16 @@ const ListaRecursos = () => {
 
     fields.forEach(field => {
       if (editFormData[field] !== undefined && editFormData[field] !== null) {
+        // Enviar datos ya sanitizados y sin espacios extra
         formDataToSend.append(field, String(editFormData[field]).trim());
       }
     });
     
     formDataToSend.append('costo_adquisicion', parseFloat(editFormData.costo_adquisicion));
 
-    // Agregar archivos
     if (archivo) formDataToSend.append('file', archivo);
     archivosGaleria.forEach(file => formDataToSend.append('files_gallery', file));
 
-    // Agregar campos específicos por tipo
     if (editFormData.tipo_recurso === RESOURCE_TYPES.COMMERCIAL) {
       formDataToSend.append('precio_venta', parseFloat(editFormData.precio_venta));
       formDataToSend.append('stock_actual', parseInt(editFormData.stock_inicial));
@@ -247,9 +244,6 @@ const ListaRecursos = () => {
     }
   };
 
-  /**
-   * Renderiza el badge de stock o estado según el tipo de recurso.
-   */
   const renderStockStatus = (resource) => {
     if (resource.tipo_recurso === RESOURCE_TYPES.COMMERCIAL) {
       if (resource.stock_actual <= 0) {
@@ -360,11 +354,11 @@ const ListaRecursos = () => {
             <div className="form-grid text-left">
               <div>
                 <label>Nombre recurso *</label>
-                <input name="nombre" value={editFormData.nombre} onChange={handleModalChange} disabled={isSubmitting} />
+                <input name="nombre" value={editFormData.nombre} onChange={handleModalChange} disabled={isSubmitting} maxLength={100} />
               </div>
               <div>
                 <label>Categoría</label>
-                <input name="categoria" value={editFormData.categoria || ''} onChange={handleModalChange} disabled={isSubmitting} />
+                <input name="categoria" value={editFormData.categoria || ''} onChange={handleModalChange} disabled={isSubmitting} maxLength={50} />
               </div>
               <div>
                 <label>Fecha de Adquisición *</label>
@@ -372,15 +366,15 @@ const ListaRecursos = () => {
               </div>
               <div>
                 <label>Costo de Adquisición (USD) *</label>
-                <input type="number" name="costo_adquisicion" value={editFormData.costo_adquisicion} onChange={handleModalChange} min="0" disabled={isSubmitting} />
+                <input type="number" name="costo_adquisicion" value={editFormData.costo_adquisicion} onChange={handleModalChange} min="0" step="0.01" disabled={isSubmitting} />
               </div>
               <div className="grid-full">
                 <label>Descripción *</label>
-                <textarea name="descripcion" value={editFormData.descripcion || ''} onChange={handleModalChange} rows="3" disabled={isSubmitting} />
+                <textarea name="descripcion" value={editFormData.descripcion || ''} onChange={handleModalChange} rows="3" disabled={isSubmitting} maxLength={500} />
               </div>
               <div className="grid-full">
                 <label>Tallas Disponibles (Opcional)</label>
-                <input name="tallas_disponibles" value={editFormData.tallas_disponibles || ''} onChange={handleModalChange} placeholder="Ej: S, M, L" disabled={isSubmitting} />
+                <input name="tallas_disponibles" value={editFormData.tallas_disponibles || ''} onChange={handleModalChange} placeholder="Ej: S, M, L" disabled={isSubmitting} maxLength={50} />
               </div>
 
               <div className="grid-full">
@@ -394,12 +388,12 @@ const ListaRecursos = () => {
                     />
                   </div>
                 )}
-                <input type="file" name="imagen_file_principal" onChange={handleModalFileChange} accept="image/*" disabled={isSubmitting} />
+                <input type="file" name="imagen_file_principal" onChange={handleModalFileChange} accept="image/png, image/jpeg, image/webp" disabled={isSubmitting} />
               </div>
               
               <div className="grid-full">
                 <label>Añadir Imágenes de Galería (Máx {MAX_GALLERY_FILES})</label>
-                <input type="file" name="imagen_file_gallery" multiple onChange={handleModalGalleryFileChange} accept="image/*" disabled={isSubmitting} />
+                <input type="file" name="imagen_file_gallery" multiple onChange={handleModalGalleryFileChange} accept="image/png, image/jpeg, image/webp" disabled={isSubmitting} />
                 {archivosGaleria.length > 0 && <small>{archivosGaleria.length} seleccionadas</small>}
               </div>
             </div>
@@ -410,7 +404,7 @@ const ListaRecursos = () => {
                 <div className="form-grid text-left">
                   <div>
                     <label>Precio Venta (USD) *</label>
-                    <input type="number" name="precio_venta" value={editFormData.precio_venta} onChange={handleModalChange} min="0" disabled={isSubmitting} />
+                    <input type="number" name="precio_venta" value={editFormData.precio_venta} onChange={handleModalChange} min="0" step="0.01" disabled={isSubmitting} />
                   </div>
                   <div>
                     <label>Stock *</label>
@@ -418,7 +412,7 @@ const ListaRecursos = () => {
                   </div>
                   <div>
                     <label>SKU (Opcional)</label>
-                    <input name="sku" value={editFormData.sku || ''} onChange={handleModalChange} disabled={isSubmitting} />
+                    <input name="sku" value={editFormData.sku || ''} onChange={handleModalChange} disabled={isSubmitting} maxLength={20} />
                   </div>
                 </div>
               </>
@@ -430,7 +424,7 @@ const ListaRecursos = () => {
                 <div className="form-grid text-left">
                   <div>
                     <label>Código Activo *</label>
-                    <input name="codigo_activo" value={editFormData.codigo_activo} onChange={handleModalChange} disabled={isSubmitting} />
+                    <input name="codigo_activo" value={editFormData.codigo_activo} onChange={handleModalChange} disabled={isSubmitting} maxLength={20} />
                   </div>
                   <div>
                     <label>Estado *</label>
@@ -447,7 +441,7 @@ const ListaRecursos = () => {
                   </div>
                   <div>
                     <label>Ubicación *</label>
-                    <input name="ubicacion" value={editFormData.ubicacion || ''} onChange={handleModalChange} disabled={isSubmitting} />
+                    <input name="ubicacion" value={editFormData.ubicacion || ''} onChange={handleModalChange} disabled={isSubmitting} maxLength={50} />
                   </div>
                 </div>
               </>
@@ -455,7 +449,7 @@ const ListaRecursos = () => {
 
             <div className="modal-buttons">
               <button onClick={handleUpdateSubmit} className="btn-primary" disabled={isSubmitting}>
-                {isSubmitting ? "Guardando..." : "Guardar Cambios"}
+                {isSubmitting ? "Actualizando..." : "Actualizar"}
               </button>
               <button onClick={() => setModalVisible(false)} className="btn-secondary" disabled={isSubmitting}>
                 Cancelar

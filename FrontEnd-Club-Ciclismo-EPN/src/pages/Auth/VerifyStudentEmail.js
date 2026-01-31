@@ -10,18 +10,26 @@ const VerifyStudentEmail = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // 🛡️ Handler seguro: solo permite números
+  const handleCodeChange = (e) => {
+    const val = e.target.value.replace(/\D/g, ""); // Elimina todo lo que no sea número
+    if (val.length <= 6) { // 🛡️ Límite lógico de 6 dígitos (o lo que requiera tu backend)
+        setCode(val);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!code) {
-      toast.error("Por favor ingresa el código.");
+    if (!code || code.length < 6) {
+      toast.error("Por favor ingresa un código válido.");
       return;
     }
 
     setLoading(true);
 
     try {
-      await verifyStudentEmail(parseInt(code));
+      await verifyStudentEmail(parseInt(code, 10)); // Base 10 explícita
       toast.success("✅ ¡Cuenta verificada! Iniciando sesión...");
       navigate("/login");
     } catch (error) {
@@ -49,13 +57,17 @@ const VerifyStudentEmail = () => {
           
           <form onSubmit={handleSubmit}>
             <input
-                type="number"
+                type="text" // Usamos text con inputMode numeric para mejor control que type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 className="verify-input"
                 placeholder="123456"
                 value={code}
-                onChange={(e) => setCode(e.target.value)}
+                onChange={handleCodeChange} // 🛡️ Usamos el handler blindado
                 autoFocus
                 disabled={loading}
+                maxLength={6} // 🛡️ Límite HTML
+                autoComplete="one-time-code"
             />
 
             <button 

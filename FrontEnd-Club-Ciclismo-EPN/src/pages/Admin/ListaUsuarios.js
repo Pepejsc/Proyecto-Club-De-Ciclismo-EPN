@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { deleteUser, fetchUsers, updateUserRole } from "../../services/userService";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
-import "../../assets/Styles/Admin/ListaUsuarios.css";
+import "../../assets/Styles/Admin/ListaUsuarios.css"; 
 import { logout, getUserData } from "../../services/authService";
 import { useNavigate } from 'react-router-dom';
 import { useUser } from "../../context/Auth/UserContext";
@@ -15,7 +15,6 @@ const ListaUsuarios = () => {
   const navigate = useNavigate();
   const { setUserData } = useUser();
 
-
   useEffect(() => {
     fetchUsers()
       .then((data) => setUsuarios(data))
@@ -25,12 +24,12 @@ const ListaUsuarios = () => {
   const handleDelete = async (userId) => {
     const result = await Swal.fire({
       title: '¿Estás seguro?',
-      text: "Se borrará de forma permanente",
+      text: "Se eliminará el usuario de forma permanente",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, borrar',
+      confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar'
     });
 
@@ -80,12 +79,10 @@ const ListaUsuarios = () => {
     }
   };
   
-
-
   return (
-    <div className="usuarios-container">
+    <div className="lu-container">
       <h2>Lista de Usuarios</h2>
-      <table className="tabla-usuarios">
+      <table className="lu-tabla">
         <thead>
           <tr>
             <th>Nombre</th>
@@ -112,14 +109,14 @@ const ListaUsuarios = () => {
               <td data-label="Rol">{u.role}</td>
               <td data-label="Acciones">
                 <button
-                  className="btn-action editar"
+                  className="lu-btn-action lu-btn-edit"
                   title="Editar usuario"
                   onClick={() => handleEdit(u)}
                 >
                   <i className="fas fa-pen-to-square"></i>
                 </button>
                 <button
-                  className="btn-action eliminar"
+                  className="lu-btn-action lu-btn-delete"
                   title="Eliminar usuario"
                   onClick={() => handleDelete(u.id)}
                 >
@@ -132,19 +129,21 @@ const ListaUsuarios = () => {
       </table>
 
       {modalVisible && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className="lu-modal-overlay">
+          <div className="lu-modal-content">
             <h3>Actualizar Rol</h3>
-            <p><strong>{selectedUser.person.first_name} {selectedUser.person.last_name}</strong></p>
-
-            <select value={newRole} onChange={(e) => setNewRole(e.target.value)}>
+            <select 
+              className="lu-modal-select"
+              value={newRole} 
+              onChange={(e) => setNewRole(e.target.value)}
+            >
               <option value="Admin">Admin</option>
               <option value="Normal">Normal</option>
             </select>
 
-            <div className="modal-buttons">
-              <button onClick={handleRoleUpdate} className="btn-action editar">Guardar</button>
-              <button onClick={() => setModalVisible(false)} className="btn-action eliminar">Cancelar</button>
+            <div className="lu-modal-buttons">
+              <button onClick={handleRoleUpdate} className="lu-btn-modal lu-btn-save">Guardar</button>
+              <button onClick={() => setModalVisible(false)} className="lu-btn-modal lu-btn-cancel">Cancelar</button>
             </div>
           </div>
         </div>

@@ -4,7 +4,6 @@ import toast, { Toaster } from "react-hot-toast";
 import "../../assets/Styles/Main/Contacto.css";
 import PublicLayout from "../../components/Main/PublicLayout";
 
-// Variantes de animación
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
@@ -23,144 +22,105 @@ const Contacto = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // --- LÓGICA DE SEGURIDAD (Sanitización) ---
+  const sanitizeInput = (value) => {
+    // Elimina caracteres peligrosos para evitar inyecciones
+    return value.replace(/[<>{}[\]()\\/'"`]/g, "");
+  };
+
   const handleChange = (e) => {
     const { name, value, files } = e.target;
+
+    // Manejo de archivo
     if (name === "archivo") {
-      setFormData((prevState) => ({
-        ...prevState,
-        [name]: files[0],
-      }));
-    } else {
-      setFormData((prevState) => ({
-        ...prevState,
-        [name]: value,
-      }));
+      setFormData((prev) => ({ ...prev, [name]: files[0] }));
+      return;
     }
+
+    let safeValue = value;
+
+    // Validaciones en tiempo real
+    if (name === "telefono") {
+      // Solo permite números
+      safeValue = value.replace(/[^0-9]/g, "");
+      if (safeValue.length > 10) return;
+    } else if (name === "email") {
+      // Limpia caracteres inválidos para email (pero permite @ . _ -)
+      safeValue = value.replace(/[<>()'"\s]/g, "");
+    } else {
+      // Texto normal: sanitización general
+      safeValue = sanitizeInput(value);
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: safeValue }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    // Mostrar loading
-    const loadingToast = toast.loading('Enviando tu propuesta...', {
-      duration: Infinity,
-    });
+    // 1. Validaciones (Usando Toast para no romper el diseño)
+    if (!formData.empresa.trim() || !formData.contacto.trim() || !formData.email.trim()) {
+      toast.error("Por favor completa los campos obligatorios.");
+      return;
+    }
+    
+    if (formData.telefono.length !== 10) {
+      toast.error("El teléfono debe tener 10 dígitos válidos.");
+      return;
+    }
+
+    if (!formData.propuesta.trim()) {
+      toast.error("Debes incluir una descripción de la propuesta.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const loadingToast = toast.loading('Enviando propuesta...', { duration: Infinity });
 
     try {
-      const sponsorData = {
-        company_name: formData.empresa,
-        contact_name: formData.contacto,
-        position: formData.cargo,
-        contact_email: formData.email,
-        contact_phone: formData.telefono,
-        proposal_description: formData.propuesta
-      };
+      // 2. Crear FormData (Necesario para enviar archivos)
+      const formDataToSend = new FormData();
+      formDataToSend.append('company_name', formData.empresa);
+      formDataToSend.append('contact_name', formData.contacto);
+      formDataToSend.append('position', formData.cargo);
+      formDataToSend.append('contact_email', formData.email);
+      formDataToSend.append('contact_phone', formData.telefono);
+      formDataToSend.append('proposal_description', formData.propuesta);
+      
+      if (formData.archivo) {
+        formDataToSend.append('file', formData.archivo);
+      }
 
-      console.log("📤 Enviando datos:", sponsorData);
-
+      // 3. Enviar al Backend
+      // Nota: Fetch configura automáticamente el Content-Type correcto para FormData
       const response = await fetch('http://localhost:8000/sponsors/apply', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(sponsorData)
+        body: formDataToSend 
       });
 
       const result = await response.json();
-      console.log("📥 Respuesta:", result);
-
-      // Cerrar loading y mostrar resultado
       toast.dismiss(loadingToast);
 
-      if (result.success) {
-        // ✅ Notificación de éxito
-        toast.success(
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '5px' }}>
-              🎉 ¡Propuesta Enviada!
-            </div>
-            <div style={{ fontSize: '14px', color: '#666' }}>
-              Hemos recibido tu solicitud. Nos pondremos en contacto pronto.
-            </div>
-          </div>,
-          {
-            duration: 5000,
-            style: {
-              background: '#f0f9ff',
-              border: '2px solid #39B9C2',
-              padding: '16px',
-              borderRadius: '12px',
-            },
-            iconTheme: {
-              primary: '#39B9C2',
-              secondary: '#fff',
-            },
-          }
-        );
-
+      if (response.ok && result.success) {
+        toast.success("¡Propuesta enviada con éxito!");
+        
         // Limpiar formulario
         setFormData({
-          empresa: "",
-          contacto: "",
-          cargo: "",
-          email: "",
-          telefono: "",
-          propuesta: "",
-          archivo: null,
+          empresa: "", contacto: "", cargo: "", email: "",
+          telefono: "", propuesta: "", archivo: null,
         });
-
-        // Limpiar input file
+        
+        // Limpiar input file visualmente
         const fileInput = document.querySelector('input[type="file"]');
         if (fileInput) fileInput.value = "";
-
       } else {
-        // ❌ Notificación de error
-        toast.error(
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '5px' }}>
-              ⚠️ Error al Enviar
-            </div>
-            <div style={{ fontSize: '14px', color: '#666' }}>
-              {result.message || 'Por favor, intenta nuevamente.'}
-            </div>
-          </div>,
-          {
-            duration: 4000,
-            style: {
-              background: '#fef2f2',
-              border: '2px solid #ef4444',
-              padding: '16px',
-              borderRadius: '12px',
-            },
-          }
-        );
+        toast.error(result.message || 'Error al procesar la solicitud.');
       }
 
     } catch (error) {
       console.error("Error:", error);
       toast.dismiss(loadingToast);
-      
-      // ❌ Notificación de error de conexión
-      toast.error(
-        <div style={{ textAlign: 'left' }}>
-          <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '5px' }}>
-            🔌 Error de Conexión
-          </div>
-          <div style={{ fontSize: '14px', color: '#666' }}>
-            No se pudo conectar con el servidor. Verifica tu conexión.
-          </div>
-        </div>,
-        {
-          duration: 4000,
-          style: {
-            background: '#fef2f2',
-            border: '2px solid #ef4444',
-            padding: '16px',
-            borderRadius: '12px',
-          },
-        }
-      );
+      toast.error("Error de conexión con el servidor.");
     } finally {
       setIsSubmitting(false);
     }
@@ -168,20 +128,9 @@ const Contacto = () => {
 
   return (
     <PublicLayout>
-      {/* 🔔 Componente de notificaciones */}
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          // Estilos globales
-          className: '',
-          style: {
-            fontFamily: 'Arial, sans-serif',
-          },
-        }}
-      />
+      <Toaster position="top-right" toastOptions={{ style: { fontFamily: 'Montserrat, sans-serif' } }} />
       
       <div className="quienes-container">
-        {/* Sección Principal */}
         <motion.section
           className="contacto-exacto-section"
           initial={{ opacity: 0, y: 50 }}
@@ -190,9 +139,7 @@ const Contacto = () => {
           transition={{ duration: 0.8 }}
         >
           <div className="contacto-header">
-            <motion.h1 variants={fadeInUp}>
-              CONVIÉRTETE EN NUESTRO AUSPICIANTE
-            </motion.h1>
+            <motion.h1 variants={fadeInUp}>CONVIÉRTETE EN NUESTRO AUSPICIANTE</motion.h1>
             <motion.p className="descripcion" variants={fadeInUp}>
               No buscamos solo fondos, buscamos socios estratégicos que crean en
               el poder del deporte para moldear el carácter. Tu apoyo nos
@@ -200,8 +147,7 @@ const Contacto = () => {
               o llevar nuestra bandera a campeonatos nacionales.
             </motion.p>
             <motion.h3 className="subtitle" variants={fadeInUp}>
-              Completa el formulario y conversemos sobre la ruta ideal para tu
-              patrocinio.
+              Completa el formulario y conversemos sobre la ruta ideal para tu patrocinio.
             </motion.h3>
           </div>
 
@@ -213,11 +159,9 @@ const Contacto = () => {
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6 }}
           >
-            {/* Nombre de la empresa / marca */}
+            {/* Empresa */}
             <div className="campo-grupo">
-              <label className="campo-label">
-                <strong>Nombre de la empresa / marca</strong>
-              </label>
+              <label className="campo-label"><strong>Nombre de la empresa / marca</strong></label>
               <input
                 type="text"
                 name="empresa"
@@ -230,11 +174,9 @@ const Contacto = () => {
               />
             </div>
 
-            {/* Nombre del contacto */}
+            {/* Contacto */}
             <div className="campo-grupo">
-              <label className="campo-label">
-                <strong>Nombre del contacto</strong>
-              </label>
+              <label className="campo-label"><strong>Nombre del contacto</strong></label>
               <input
                 type="text"
                 name="contacto"
@@ -247,16 +189,14 @@ const Contacto = () => {
               />
             </div>
 
-            {/* Cargo / Pardalán */}
+            {/* Cargo */}
             <div className="campo-grupo">
-              <label className="campo-label">
-                <strong>Cargo / Posición</strong>
-              </label>
+              <label className="campo-label"><strong>Cargo / Posición</strong></label>
               <input
                 type="text"
                 name="cargo"
                 className="campo-input"
-                placeholder="Ingresa el cargo o pardalán"
+                placeholder="Ingresa el cargo o posición"
                 value={formData.cargo}
                 onChange={handleChange}
                 required
@@ -264,11 +204,9 @@ const Contacto = () => {
               />
             </div>
 
-            {/* Correo electrónico */}
+            {/* Email */}
             <div className="campo-grupo">
-              <label className="campo-label">
-                <strong>Correo electrónico</strong>
-              </label>
+              <label className="campo-label"><strong>Correo electrónico</strong></label>
               <input
                 type="email"
                 name="email"
@@ -281,11 +219,9 @@ const Contacto = () => {
               />
             </div>
 
-            {/* Teléfono de contacto */}
+            {/* Teléfono */}
             <div className="campo-grupo">
-              <label className="campo-label">
-                <strong>Teléfono de contacto</strong>
-              </label>
+              <label className="campo-label"><strong>Teléfono de contacto</strong></label>
               <input
                 type="tel"
                 name="telefono"
@@ -295,14 +231,13 @@ const Contacto = () => {
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
+                maxLength={10}
               />
             </div>
 
-            {/* Descripción de la propuesta */}
+            {/* Propuesta */}
             <div className="campo-grupo">
-              <label className="campo-label">
-                <strong>Descripción de la propuesta</strong>
-              </label>
+              <label className="campo-label"><strong>Descripción de la propuesta</strong></label>
               <textarea
                 name="propuesta"
                 className="campo-input campo-textarea"
@@ -314,12 +249,10 @@ const Contacto = () => {
               />
             </div>
 
-            {/* Anexar documentación */}
+            {/* Archivo */}
             <div className="archivo-grupo">
-              <label className="archivo-label">
-                <strong>Anexar documentación (opcional)</strong>
-              </label>
-              <p className="archivo-descripcion">Email: archive</p>
+              <label className="archivo-label"><strong>Anexar documentación (opcional)</strong></label>
+              <p className="archivo-descripcion">Formatos: PDF, Word, Imagen</p>
               <div className="archivo-input">
                 <input
                   type="file"
@@ -331,31 +264,19 @@ const Contacto = () => {
               </div>
             </div>
 
-            {/* Línea separadora */}
             <div className="separador"></div>
 
-            {/* Botón enviar */}
             <motion.button
               type="submit"
               className="btn-enviar-exacto"
               whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
               whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
               disabled={isSubmitting}
-              style={{
-                opacity: isSubmitting ? 0.7 : 1,
-                cursor: isSubmitting ? 'not-allowed' : 'pointer'
-              }}
             >
               {isSubmitting ? (
-                <>
-                  <span style={{ marginRight: '8px' }}>⏳</span>
-                  Enviando...
-                </>
+                <><span style={{ marginRight: '8px' }}>⏳</span> Enviando...</>
               ) : (
-                <>
-                  <span style={{ marginRight: '8px' }}></span>
-                  Enviar Formulario
-                </>
+                <><span style={{ marginRight: '8px' }}></span> Enviar Formulario</>
               )}
             </motion.button>
           </motion.form>

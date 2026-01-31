@@ -1,7 +1,7 @@
 import React from "react";
 import { Carousel } from "react-bootstrap";
 import "../../assets/Styles/Main/Carrousel.css";
-import img1 from "../../assets/Images/Banner/bannerProductos.jpg";
+import img1 from "../../assets/Images/Banner/bannerProductos.png";
 
 const BannerProductos = () => {
   return (
@@ -11,7 +11,7 @@ const BannerProductos = () => {
           <img src={img1} alt="Banner" className="banner-img" />
           <div className="overlay"></div>
           <div className="banner-text">
-            <h1 className="fade-in">Productos del club de ciclismo</h1>
+            <h1 className="fade-in">Productos del Club de Ciclismo</h1>
           </div>
         </div>
       </Carousel.Item>

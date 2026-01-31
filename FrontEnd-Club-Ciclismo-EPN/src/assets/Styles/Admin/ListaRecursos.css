@@ -2,63 +2,44 @@
    1. VARIABLES GLOBALES & CONFIGURACIÓN
    ========================================================================== */
 :root {
-  /* --- Paleta de Colores --- */
-  --color-primary: #238CBC;
-  --color-primary-dark: #1b6ca8;
-  --color-secondary: #6c757d;
-  --color-secondary-dark: #545b62;
-  --color-success: #28a745;
-  --color-success-dark: #218838;
-  --color-info: #007bff;
-  --color-danger: #dc3545;
+  /* --- COLORES UNIVERSALES DE LA APP --- */
+  --color-delete: #D93E3E;  /* Rojo (Eliminar) */
+  --color-edit:   #9E9E9E;  /* Plomo (Editar) */
+  --color-update: #4CAF50;  /* Verde (Actualizar Modal) */
+  --color-save:   #2196F3;  /* Azul (Guardar/Crear) */
   
-  /* --- Fondos & Textos --- */
+  /* Otros colores base (se mantienen) */
+  --color-delete-dark: #da4e4e;
+  --color-secondary: #6c757d;
+  
+  /* ... resto de variables de fuentes y fondos ... */
   --bg-body: #f4f6f8;
   --bg-white: #ffffff;
   --text-main: #333333;
   --text-heading: #11182f;
   --text-light: #666666;
   --text-inverse: #ffffff;
-
-  /* --- Bordes & Separadores --- */
   --border-color: #e5e5e5;
   --border-input: #cccccc;
   
-  /* --- Badges (Fondos y Textos) --- */
+  /* ... variables de badges se mantienen igual ... */
   --badge-bg-operativo: #17a2b8;
   --badge-bg-comercial: #28a745;
   
-  /* Stock Badges */
-  --stock-normal-bg: #e8f5e9;
-  --stock-normal-text: #2e7d32;
-  --stock-normal-border: #c8e6c9;
-  
-  --stock-low-bg: #fff8e1;
-  --stock-low-text: #f57f17;
-  --stock-low-border: #ffecb3;
-  
-  --stock-out-bg: #ffebee;
-  --stock-out-text: #c62828;
-  --stock-out-border: #ffcdd2;
+  --stock-normal-bg: #e8f5e9; --stock-normal-text: #2e7d32; --stock-normal-border: #c8e6c9;
+  --stock-low-bg: #fff8e1;    --stock-low-text: #f57f17;    --stock-low-border: #ffecb3;
+  --stock-out-bg: #ffebee;    --stock-out-text: #c62828;    --stock-out-border: #ffcdd2;
 
-  /* Estado Badges */
   --estado-disponible-bg: #d4edda; --estado-disponible-text: #155724;
   --estado-asignado-bg: #cce5ff;   --estado-asignado-text: #004085;
   --estado-manten-bg: #fff3cd;     --estado-manten-text: #856404;
   --estado-baja-bg: #f8d7da;       --estado-baja-text: #721c24;
 
-  /* Estados de Fila */
-  --row-error-bg: #ffe6e6;
-  --row-error-hover: #ffcccc;
-  --row-hover: #f1f1f1;
-
-  /* --- Dimensiones & Efectos --- */
-  --shadow-card: 0 0 10px rgba(0, 0, 0, 0.05);
-  --shadow-modal: 0 5px 20px rgba(0, 0, 0, 0.25);
   --radius-card: 10px;
   --radius-btn: 5px;
+  --shadow-card: 0 0 10px rgba(0, 0, 0, 0.05);
+  --shadow-modal: 0 5px 20px rgba(0, 0, 0, 0.25);
   --font-main: 'Montserrat', sans-serif;
-  --max-width-container: 1200px;
 }
 
 /* ==========================================================================
@@ -107,7 +88,7 @@
 
 /* Botón "Crear Nuevo" */
 .btn-crear-nuevo {
-  background-color: var(--color-success);
+  background-color: var(--color-save); /* AHORA ES AZUL (#2196F3) */
   color: var(--text-inverse);
   padding: 10px 15px;
   font-size: 1rem;
@@ -118,9 +99,8 @@
 }
 
 .btn-crear-nuevo:hover {
-  background-color: var(--color-success-dark);
+  background-color: #1976D2; /* Azul un poco más oscuro para hover */
 }
-
 /* Botones de Acción (Tabla) */
 .btn-action {
   display: inline-flex;
@@ -137,11 +117,11 @@
 }
 
 .btn-action.editar {
-  background-color: var(--color-info);
+  background-color: var(--color-edit) !important; /* AHORA ES PLOMO (#9E9E9E) */
 }
 
 .btn-action.eliminar {
-  background-color: var(--color-danger);
+  background-color: var(--color-delete) !important; /* AHORA ES ROJO (#D93E3E) */
 }
 
 /* ==========================================================================
@@ -282,7 +262,7 @@
 
 
 /* ==========================================================================
-   6. MODAL
+   6. MODAL (MEJORADO - MÁS ANCHO)
    ========================================================================== */
 
 .modal-overlay {
@@ -291,77 +271,87 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6); /* Fondo un poco más oscuro */
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: center; /* Centrado vertical */
+  justify-content: center; /* Centrado horizontal */
   z-index: 1000;
+  padding: 20px; /* Margen para evitar bordes en pantallas chicas */
 }
 
 .modal-content {
   background-color: var(--bg-white);
-  padding: 30px;
+  padding: 40px; /* Más espacio interno para que respire */
   border-radius: var(--radius-card);
-  width: 90%;
-  max-width: 700px;
+  
+  /* --- CAMBIO CLAVE: ANCHURA --- */
+  width: 100%; 
+  max-width: 1100px; /* Antes 700px. Ahora 1100px para usar más horizontalidad */
+  max-height: 90vh; /* Altura máxima */
+  /* ---------------------------- */
+  
   box-shadow: var(--shadow-modal);
-  max-height: 85vh;
   overflow-y: auto;
-  text-align: left; /* Alineación general izquierda */
+  text-align: left;
 }
 
 .modal-content h3 {
   margin-top: 0;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   color: var(--text-heading);
   text-align: center;
-  font-size: 22px;
+  font-size: 26px; /* Título más grande */
 }
 
 /* Formulario */
 .form-section-header {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--color-primary);
-  margin-top: 20px;
-  margin-bottom: 15px;
-  border-bottom: 2px solid var(--color-primary);
-  padding-bottom: 5px;
+  margin-top: 30px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 8px;
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  margin-bottom: 15px;
+  grid-template-columns: repeat(2, 1fr); /* Fuerza 2 columnas equilibradas */
+  gap: 30px; /* Más separación entre columnas para aprovechar el ancho extra */
+  margin-bottom: 20px;
 }
 
-/* Utility class para forzar alineación izquierda si es necesario */
+/* Utility class para forzar alineación izquierda */
 .text-left {
   text-align: left;
 }
 
 .grid-full {
-  grid-column: 1 / -1;
+  grid-column: 1 / -1; /* Ocupa todo el ancho */
 }
 
-/* --- [NUEVO] Previsualización de imagen en modal --- */
+/* Previsualización de imagen en modal */
 .image-preview {
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px dashed var(--border-input);
 }
 
 .image-preview img {
-  width: 80px;
+  max-width: 150px; /* Imagen un poco más grande */
+  max-height: 150px;
   border-radius: 5px;
-  border: 1px solid var(--border-color);
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .modal-content label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px; /* Letra un poco más legible */
   color: var(--text-main);
 }
 
@@ -369,56 +359,78 @@
 .modal-content select,
 .modal-content textarea {
   width: 100%;
-  padding: 10px;
-  font-size: 14px;
+  padding: 12px 15px; /* Inputs más altos y cómodos */
+  font-size: 15px;
   border: 1px solid var(--border-input);
   border-radius: var(--radius-btn);
   box-sizing: border-box;
   font-family: inherit;
+  transition: border-color 0.3s;
+}
+
+.modal-content input:focus,
+.modal-content select:focus,
+.modal-content textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
 .modal-content input:disabled {
-  background-color: #eee;
+  background-color: #f0f0f0;
   cursor: not-allowed;
+  color: #666;
 }
 
 .modal-content textarea {
   resize: vertical;
-  min-height: 80px;
+  min-height: 100px;
 }
 
 /* Botones del Modal */
 .modal-buttons {
   display: flex;
   justify-content: flex-end;
-  gap: 15px;
-  margin-top: 25px;
+  gap: 20px; /* Más separación entre botones */
+  margin-top: 40px;
   border-top: 1px solid var(--border-color);
-  padding-top: 20px;
+  padding-top: 25px;
 }
 
 .btn-primary {
-  background-color: var(--color-info);
+  background-color: var(--color-update); /* VERDE (#4CAF50) */
   color: var(--text-inverse);
-  padding: 10px 20px;
+  padding: 12px 30px; /* Botones más anchos */
   font-weight: 600;
+  font-size: 16px;
 }
 
 .btn-primary:hover {
-  background-color: #0056b3;
+  filter: brightness(0.9);
 }
 
 .btn-secondary {
-  background-color: var(--color-secondary);
+  background-color: var(--color-delete); /* ROJO (#D93E3E) */
   color: var(--text-inverse);
-  padding: 10px 20px;
+  padding: 12px 30px; /* Botones más anchos */
   font-weight: 600;
+  font-size: 16px;
 }
 
 .btn-secondary:hover {
-  background-color: var(--color-secondary-dark);
+  filter: brightness(0.9);
 }
 
+/* Responsive para modal */
+@media screen and (max-width: 768px) {
+  .modal-content {
+    padding: 20px;
+    max-height: 95vh;
+  }
+  .form-grid {
+    grid-template-columns: 1fr; /* En móvil vuelve a 1 columna */
+    gap: 15px;
+  }
+}
 
 /* ==========================================================================
    7. RESPONSIVE (Móvil)

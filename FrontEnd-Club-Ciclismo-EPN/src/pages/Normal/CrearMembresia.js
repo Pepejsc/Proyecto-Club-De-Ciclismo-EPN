@@ -2,22 +2,28 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { createMembership } from "../../services/membershipService";
-import { getToken } from "../../services/authService"; 
-import "../../assets/Styles/Admin/CrearRecurso.css"; 
+import { getToken } from "../../services/authService";
+import "../../assets/Styles/Normal/CrearMembresia.css";
 
 const CrearMembresia = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [file, setFile] = useState(null); 
-  
-  // Estado para controlar la visualización de campos EPN
+  const [file, setFile] = useState(null);
   const [isEpnDetected, setIsEpnDetected] = useState(false);
 
+  const [formData, setFormData] = useState({
+    membership_type: "",
+    participation_level: "",
+    emergency_contact: "",
+    emergency_phone: "",
+    medical_conditions: "",
+    unique_code: ""
+  });
+
   useEffect(() => {
-    // Decodificación del token para detectar dominio EPN
     const decodeToken = () => {
       try {
-        const token = getToken(); 
+        const token = getToken();
         if (!token) return;
 
         const base64Url = token.split('.')[1];
@@ -40,40 +46,91 @@ const CrearMembresia = () => {
     decodeToken();
   }, []);
 
-  const [formData, setFormData] = useState({
-    membership_type: "CICLISTA",
-    participation_level: "BEGINNER",
-    emergency_contact: "",
-    emergency_phone: "",
-    medical_conditions: "",
-    unique_code: "" 
-  });
-
+  // --- 🛡️ LÓGICA DE VALIDACIÓN EN TIEMPO REAL ---
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    let safeValue = value;
+
+    // 1. Validar Teléfono (Solo números, máximo 10 caracteres)
+    if (name === "emergency_phone") {
+        safeValue = value.replace(/[^0-9]/g, ""); // Borra todo lo que no sea número
+        if (safeValue.length > 10) return; // Bloquea si intenta pasar de 10
+    } 
+    // 2. Validar Nombre Contacto (Solo letras y espacios)
+    else if (name === "emergency_contact") {
+        // Regex: Solo letras (incluye tildes y ñ) y espacios.
+        if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) {
+            return; // Si escribe un número o símbolo, no se actualiza
+        }
+        safeValue = value;
+    }
+    // 3. Código Único (Solo números)
+    else if (name === "unique_code") {
+        safeValue = value.replace(/[^0-9]/g, "");
+        if (safeValue.length > 20) return;
+    }
+    // 4. Texto libre (Condiciones médicas): Sanitización agresiva de HTML
+    else {
+        // Elimina caracteres peligrosos para XSS: < > " ' `
+        safeValue = value.replace(/[<>"'`]/g, "");
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: safeValue }));
   };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      if (!allowedTypes.includes(selectedFile.type)) {
+        toast.error("Formato no permitido. Solo PDF, JPG o PNG.");
+        e.target.value = null;
+        setFile(null);
+        return;
+      }
+
+      if (selectedFile.size > maxSize) {
+        toast.error("El archivo es demasiado grande (Máx 5MB).");
+        e.target.value = null;
+        setFile(null);
+        return;
+      }
+
+      setFile(selectedFile);
     }
   };
 
+  // --- 🛡️ VALIDACIÓN FINAL ANTES DE ENVIAR ---
   const validateForm = () => {
+    // 1. Nombre
     if (!formData.emergency_contact.trim()) {
-      toast.error("El contacto de emergencia es obligatorio.");
+      toast.error("El nombre de contacto es obligatorio.");
       return false;
     }
+    if (formData.emergency_contact.length < 3) {
+      toast.error("El nombre es muy corto.");
+      return false;
+    }
+
+    // 2. Teléfono (Validación estricta de Ecuador)
+    // Debe tener exactamente 10 dígitos y empezar con '09'
+    const phoneRegex = /^09\d{8}$/;
     if (!formData.emergency_phone.trim()) {
-      toast.error("El teléfono de emergencia es obligatorio.");
+      toast.error("El teléfono es obligatorio.");
+      return false;
+    }
+    if (!phoneRegex.test(formData.emergency_phone)) {
+      toast.error("El celular debe tener 10 dígitos y empezar con '09'.");
       return false;
     }
     
-    // Validación condicional para EPN
+    // 3. EPN
     if (isEpnDetected) {
         if (!formData.unique_code.trim()) {
-            toast.error("El Código Único es obligatorio para estudiantes.");
+            toast.error("El Código Único es obligatorio.");
             return false;
         }
         if (!file) {
@@ -94,10 +151,12 @@ const CrearMembresia = () => {
       
       dataToSend.append("membership_type", formData.membership_type);
       dataToSend.append("participation_level", formData.participation_level);
-      dataToSend.append("emergency_contact", formData.emergency_contact);
+      dataToSend.append("emergency_contact", formData.emergency_contact.trim());
       dataToSend.append("emergency_phone", formData.emergency_phone);
       
-      if(formData.medical_conditions) dataToSend.append("medical_conditions", formData.medical_conditions);
+      if(formData.medical_conditions.trim()) {
+          dataToSend.append("medical_conditions", formData.medical_conditions.trim());
+      }
 
       if (isEpnDetected) {
           dataToSend.append("unique_code", formData.unique_code);
@@ -108,12 +167,12 @@ const CrearMembresia = () => {
 
       await createMembership(dataToSend);
       
-      toast.success("¡Solicitud enviada! Tu membresía ha sido creada.");
+      toast.success("¡Membresía creada con éxito!");
       navigate("/user/mi-membresia"); 
       
     } catch (error) {
       console.error(error);
-      const errorMsg = error.response?.data?.detail || error.message || "Hubo un problema";
+      const errorMsg = error.response?.data?.detail || error.message || "Error al crear la membresía";
       toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
@@ -121,45 +180,49 @@ const CrearMembresia = () => {
   };
 
   return (
-    <div className="editar-perfil-container">
+    <div className="cm-container">
       <h2>Registro de Membresía</h2>
+      
       {isEpnDetected && (
-        <div style={{
-            backgroundColor: '#e3f2fd', 
-            border: '1px solid #2196f3', 
-            borderRadius: '8px', 
-            padding: '15px', 
-            marginBottom: '20px',
-            color: '#0d47a1',
-            fontSize: '0.95rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px'
-        }}>
-            <span style={{fontSize: '1.5rem'}}>🎓</span>
+        <div className="cm-epn-alert">
+            <span className="cm-epn-icon">🎓</span>
             <div>
               <strong>Estudiante EPN Identificado</strong>
-              <div style={{fontSize: '0.85rem', marginTop: '4px'}}>
-                 Detectamos tu correo institucional. Por favor completa los datos académicos requeridos.
+              <div className="cm-epn-text-small">
+                 Detectamos tu correo institucional. Por favor completa los datos académicos.
               </div>
             </div>
         </div>
       )}
 
-      <div className="form-grid">
+      <div className="cm-form-grid">
         
-        <div>
-          <label>Tipo de Membresía *</label>
-          <select name="membership_type" value={formData.membership_type} onChange={handleChange}>
+        <div className="cm-form-group">
+          <label htmlFor="membership_type">Tipo de Membresía *</label>
+          <select 
+            id="membership_type"
+            name="membership_type" 
+            className="cm-select"
+            value={formData.membership_type} 
+            onChange={handleChange}
+          >
+            <option value="" disabled>-- Selecciona una opción --</option>
             <option value="CICLISTA">Ciclista (Estándar)</option>
             <option value="ENTRENADOR">Entrenador</option>
             <option value="EQUIPO_EPN">Equipo EPN (Competitivo)</option>
           </select>
         </div>
 
-        <div>
-          <label>Nivel de Experiencia *</label>
-          <select name="participation_level" value={formData.participation_level} onChange={handleChange}>
+        <div className="cm-form-group">
+          <label htmlFor="participation_level">Nivel de Experiencia *</label>
+          <select 
+            id="participation_level"
+            name="participation_level" 
+            className="cm-select"
+            value={formData.participation_level} 
+            onChange={handleChange}
+          >
+            <option value="" disabled>-- Selecciona una opción --</option>
             <option value="BEGINNER">Principiante (Recreativo)</option>
             <option value="INTERMEDIATE">Intermedio (Rutas medias)</option>
             <option value="ADVANCED">Avanzado (Rutas largas)</option>
@@ -169,85 +232,94 @@ const CrearMembresia = () => {
 
         {isEpnDetected && (
             <>
-                <div className="grid-full">
-                    <h4 style={{ margin: '15px 0 10px', color: '#238CBC', borderBottom: '1px solid #eee' }}>
-                        Datos Académicos
-                    </h4>
+                <div className="cm-grid-full">
+                    <h4 className="cm-section-header">Datos Académicos</h4>
                 </div>
-                <div>
-                    <label>Código Único *</label>
+                <div className="cm-form-group">
+                    <label htmlFor="unique_code">Código Único *</label>
                     <input 
+                        id="unique_code"
                         type="text" 
                         name="unique_code"
+                        className="cm-input"
                         placeholder="Ej: 201820616"
                         value={formData.unique_code}
                         onChange={handleChange}
+                        maxLength={20}
                     />
                 </div>
-                <div>
-                    <label>Matrícula / SAEw (Imagen o PDF) *</label>
+                <div className="cm-form-group">
+                    <label htmlFor="file_upload">Matrícula / SAEw (Imagen o PDF) *</label>
                     <input 
+                        id="file_upload"
                         type="file" 
-                        accept="image/*,.pdf"
+                        accept="image/png, image/jpeg, application/pdf"
+                        className="cm-input cm-file-input"
                         onChange={handleFileChange}
-                        style={{padding: '5px', border: '1px dashed #ccc', width: '100%'}}
                     />
-                    <small style={{color: '#666'}}>Sube una captura de tu SAEw o certificado</small>
+                    <small className="cm-help-text">Sube una captura de tu SAEw o certificado</small>
                 </div>
             </>
         )}
 
-        <div className="grid-full">
-          <h4 style={{ margin: '15px 0 10px', color: '#238CBC', borderBottom: '1px solid #eee' }}>
-            Datos de Seguridad
-          </h4>
+        <div className="cm-grid-full">
+          <h4 className="cm-section-header">Datos de Seguridad</h4>
         </div>
 
-        <div>
-          <label>Contacto de Emergencia (Nombre) *</label>
+        <div className="cm-form-group">
+          <label htmlFor="emergency_contact">Contacto de Emergencia *</label>
           <input 
+            id="emergency_contact"
             type="text"
             name="emergency_contact" 
+            className="cm-input"
             value={formData.emergency_contact} 
             onChange={handleChange}
-            placeholder="Ej: Mamá, Esposo/a"
+            placeholder="Ej: María Pérez"
+            maxLength={100}
           />
         </div>
 
-        <div>
-          <label>Teléfono de Emergencia *</label>
+        <div className="cm-form-group">
+          <label htmlFor="emergency_phone">Teléfono de Emergencia *</label>
           <input 
+            id="emergency_phone"
             type="tel"
             name="emergency_phone" 
+            className="cm-input"
             value={formData.emergency_phone} 
             onChange={handleChange}
             placeholder="Ej: 0991234567"
+            maxLength={10}
           />
         </div>
 
-        <div className="grid-full">
-          <label>Condiciones Médicas / Alergias</label>
+        <div className="cm-grid-full cm-form-group">
+          <label htmlFor="medical_conditions">Condiciones Médicas / Alergias</label>
           <textarea 
+            id="medical_conditions"
             name="medical_conditions" 
+            className="cm-textarea"
             value={formData.medical_conditions} 
             onChange={handleChange}
-            placeholder="Ej: Asma leve, Alergia a picaduras..."
+            placeholder="Ej: Asma leve, Alergia a picaduras... (Sin caracteres especiales)"
             rows="3"
+            maxLength={500}
           />
         </div>
 
       </div>
 
-      <div className="form-buttons-inline" style={{ marginTop: '25px' }}>
+      <div className="cm-buttons-container">
         <button 
-          className="btn-send" 
+          className="cm-btn cm-btn-save" 
           onClick={handleSubmit} 
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Registrando..." : "Guardar"}
+          {isSubmitting ? "Guardando..." : "Guardar"}
         </button>
         <button 
-          className="btn-cancel" 
+          className="cm-btn cm-btn-cancel" 
           onClick={() => navigate(-1)} 
           disabled={isSubmitting}
         >

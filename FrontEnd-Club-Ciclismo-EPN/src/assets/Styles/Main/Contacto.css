@@ -19,13 +19,15 @@
 }
 
 .contacto-header .descripcion {
-  font-size: 1.1rem;
-  line-height: 1.6;
-  color: #333;
-  margin-bottom: 15px;
-  text-align: justify;
+  text-align: center !important;  /* Centrado (El !important asegura que sobrescriba 'justify') */
+  font-weight: bold;              /* Negrita */
+  font-size: 1.1rem;              /* Opcional: Ajustar tamaño si se ve pequeño */
+  max-width: 800px;               /* Opcional: Para que no se estire demasiado a los lados */
+  margin: 0 auto 20px auto;       /* Centrar el bloque y dar espacio abajo */
+  line-height: 1.5;
+  color: #333;                    /* O el color que prefieras */
+  font-family: 'Montserrat', sans-serif; /* Asegura que use la misma fuente */
 }
-
 .contacto-header .subtitle {
   font-size: 1.3rem;
   color: #0077c2;

@@ -25,13 +25,24 @@ const Register = () => {
 
   const navigate = useNavigate();
 
+  // --- 🛡️ 1. SEGURIDAD: Función de Sanitización ---
+  const sanitizeInput = (input) => {
+    // Elimina caracteres peligrosos para evitar inyecciones XSS
+    return input.replace(/[<>&"'/`]/g, "");
+  };
+
+  const handleInputChange = (setter) => (e) => {
+    const value = e.target.value;
+    setter(sanitizeInput(value)); // Sanitización en tiempo real
+  };
+
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordRegex =
-      /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    // Regex fuerte: Mínimo 8 caracteres, 1 mayúscula, 1 número, 1 especial
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     const phoneRegex = /^\d{7,10}$/;
 
-    if (!firstName || !lastName || !city || !neighborhood) {
+    if (!firstName.trim() || !lastName.trim() || !city.trim() || !neighborhood.trim()) {
       toast.error("Todos los campos de texto son obligatorios.");
       return false;
     }
@@ -49,7 +60,7 @@ const Register = () => {
     }
 
     if (!phoneRegex.test(phoneNumber)) {
-      toast.error("Número de teléfono inválido.");
+      toast.error("Número de teléfono inválido (7-10 dígitos).");
       return false;
     }
 
@@ -66,9 +77,11 @@ const Register = () => {
     return true;
   };
 
-  // --- Manejador de cambio de email ---
+  // --- Manejador de cambio de email (Con Sanitización) ---
   const handleEmailChange = (e) => {
-    const val = e.target.value.toLowerCase(); // Normalizamos a minúsculas
+    let val = e.target.value.toLowerCase(); 
+    val = sanitizeInput(val); // 🛡️ Sanitizamos el email también
+    
     setEmail(val);
     setEmailError(false);
 
@@ -86,16 +99,17 @@ const Register = () => {
     e.preventDefault();
     if (!validateForm()) return;
 
+    // Preparamos los datos limpios (trim)
     const userData = {
-      email,
-      password,
-      role: "Normal", // El backend decidirá si cambia esto internamente
+      email: email.trim(),
+      password, // La contraseña se envía tal cual (ya validada por regex)
+      role: "Normal", 
       persona: {
-        first_name: firstName,
-        last_name: lastName,
-        phone_number: phoneNumber,
-        city,
-        neighborhood,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        phone_number: phoneNumber.trim(),
+        city: city.trim(),
+        neighborhood: neighborhood.trim(),
         blood_type: bloodType,
         skill_level: skillLevel,
         profile_picture: null,
@@ -131,13 +145,11 @@ const Register = () => {
 
       console.log("Usuario registrado correctamente");
 
-      // --- CORRECCIÓN IMPORTANTE: Redirección condicional ---
+      // --- Redirección condicional ---
       if (isEpnUser) {
-        // Si es estudiante, vamos a la pantalla de poner el código
         toast.info("Por favor ingresa el código enviado a tu correo.");
         navigate("/verify-student-email");
       } else {
-        // Si es usuario normal, vamos al login
         navigate("/login");
       }
       
@@ -203,7 +215,8 @@ const Register = () => {
                 type="text"
                 placeholder="Ingrese su nombre"
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                onChange={handleInputChange(setFirstName)} // 🛡️ Handler seguro
+                maxLength={50} // 🛡️ Límite de longitud
               />
             </div>
 
@@ -213,7 +226,8 @@ const Register = () => {
                 type="text"
                 placeholder="Ingrese su apellido"
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                onChange={handleInputChange(setLastName)} // 🛡️ Handler seguro
+                maxLength={50} // 🛡️ Límite de longitud
               />
             </div>
 
@@ -231,8 +245,9 @@ const Register = () => {
                       ? { borderColor: "#2196F3", backgroundColor: "#F5F9FF" }
                       : {}
                   }
+                  maxLength={100} // 🛡️ Límite de longitud
                 />
-                {/* Icono de verificación dentro del input */}
+                {/* Icono de verificación */}
                 {isEpnUser && (
                   <span
                     style={{
@@ -266,6 +281,7 @@ const Register = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   style={{ width: "100%", paddingRight: "70px" }}
+                  maxLength={128} // 🛡️ Límite de longitud (sin sanitizar chars)
                 />
                 <button
                   type="button"
@@ -294,10 +310,13 @@ const Register = () => {
                 placeholder="Ingrese su número"
                 value={phoneNumber}
                 onChange={(e) => {
-                  setPhoneNumber(e.target.value);
+                  // Solo permitir números
+                  const val = e.target.value.replace(/\D/g, "");
+                  setPhoneNumber(val);
                   setPhoneError(false);
                 }}
                 className={phoneError ? "input-error-border" : ""}
+                maxLength={10} // 🛡️ Límite de longitud exacto
               />
             </div>
 
@@ -342,7 +361,8 @@ const Register = () => {
                 type="text"
                 placeholder="Ingrese su ciudad"
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
+                onChange={handleInputChange(setCity)} // 🛡️ Handler seguro
+                maxLength={50} // 🛡️ Límite de longitud
               />
             </div>
 
@@ -352,7 +372,8 @@ const Register = () => {
                 type="text"
                 placeholder="Ingrese su barrio"
                 value={neighborhood}
-                onChange={(e) => setNeighborhood(e.target.value)}
+                onChange={handleInputChange(setNeighborhood)} // 🛡️ Handler seguro
+                maxLength={50} // 🛡️ Límite de longitud
               />
             </div>
           </div>
