@@ -32,7 +32,7 @@ const validarCedulaEcuatoriana = (cedula) => {
 
   // 4. Tercer dígito (debe ser menor a 6 para personas naturales)
   const tercerDigito = digitos[2];
-  if (tercerDigito >= 6) return false; // Nota: RUCs usan 6 o 9, pero cédula natural es < 6
+  if (tercerDigito >= 6) return false;
 
   // 5. Algoritmo Módulo 10
   const coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
@@ -178,8 +178,8 @@ const VerProducto = () => {
 
     // 2. Validar Celular (Ecuador)
     if (!validarCelular(cliente.telefono)) {
-        toast.warning("El celular debe tener 10 dígitos y empezar con 09.");
-        return;
+       toast.warning("El celular debe tener 10 dígitos y empezar con 09.");
+       return;
     }
 
     // 3. Validar Cédula (Ecuador)
@@ -203,10 +203,10 @@ const VerProducto = () => {
       // --- FormData ---
       const formData = new FormData();
 
-      const fullName = `${cliente.nombre} ${cliente.cedula ? `(CI: ${cliente.cedula})` : ""}`;
-
-      // Agregamos campos de texto
-      formData.append("customer_name", fullName);
+      // ✅ CORRECCIÓN CLAVE: Enviamos el nombre y la cédula por separado
+      // para que coincida con los parámetros del backend (venta.py)
+      formData.append("customer_name", cliente.nombre);
+      formData.append("customer_dni", cliente.cedula); // <--- ESTO FALTABA
       formData.append("customer_phone", cliente.telefono);
       formData.append("total", cartTotal);
 
@@ -505,7 +505,6 @@ const VerProducto = () => {
 
                     <div className="form-row">
                       <div className="form-group" style={{ flex: 1 }}>
-                        {/* CAMBIO 2: Etiqueta actualizada para Telegram */}
                         <label>Número Celular*</label>
                         <input
                           type="tel"
@@ -589,7 +588,6 @@ const VerProducto = () => {
 
                   <div className="modal-buttons">
                     <button
-                      /* CAMBIO 3: Clase y función para Telegram */
                       className="btn-primary btn-telegram-modal"
                       onClick={handleTelegramCheckout}
                       disabled={isProcessing}
