@@ -46,9 +46,9 @@
   text-align: center;
   display: flex;
 
-  left: 50%;                    
-  transform: translateX(-50%);  
-  position: absolute;           
+  left: 50%;
+  transform: translateX(-50%);
+  position: absolute;
 }
 
 /* Logo y texto dentro del arco */

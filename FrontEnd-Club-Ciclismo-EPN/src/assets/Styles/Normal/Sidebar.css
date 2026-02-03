@@ -1,5 +1,5 @@
 /* =========================================
-   SIDEBAR - ESTILOS PRINCIPALES
+   USER SIDEBAR - ESTILOS PRINCIPALES
    ========================================= */
 .sidebar {
   background-color: #11182f;
@@ -25,15 +25,18 @@
   border-radius: 3px;
 }
 
-/* Estado Colapsado (Desktop) */
+/* =========================================
+   ESTADOS (EXPANDIDO / COLAPSADO)
+   ========================================= */
 .sidebar[data-state="collapsed"] {
   width: 80px;
 }
+
 .sidebar[data-state="expanded"] {
   width: 275px !important;
 }
 
-/* Ocultar elementos SOLO cuando está colapsado y NO es móvil */
+/* Ocultar textos e iconos secundarios al colapsar (Desktop) */
 .sidebar[data-state="collapsed"] .sidebar-user-info-container,
 .sidebar[data-state="collapsed"] .category-title span:not(.category-icon),
 .sidebar[data-state="collapsed"] .sidebar-label,
@@ -42,46 +45,12 @@
   display: none;
 }
 
-/* Ajustes de centrado en modo colapsado */
+/* Centrado en modo colapsado */
 .sidebar[data-state="collapsed"] .sidebar-link,
 .sidebar[data-state="collapsed"] .category-title {
   justify-content: center;
   padding-left: 0 !important;
   padding-right: 0 !important;
-}
-
-/* =========================================
-   BOTÓN HAMBURGUESA (MÓVIL)
-   ========================================= */
-.mobile-toggle-btn {
-  display: none; /* Oculto en PC */
-}
-
-@media (max-width: 768px) {
-  .mobile-toggle-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    /* Ajustado para no tapar tanto el título */
-    top: 12px; 
-    left: 12px;
-    width: 40px;
-    height: 40px;
-    background-color: rgba(17, 24, 47, 0.9); /* Fondo oscuro semi-transparente */
-    color: white;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
-    font-size: 18px;
-    cursor: pointer;
-    z-index: 1100; /* Encima de todo */
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    transition: all 0.2s ease;
-  }
-  
-  .mobile-toggle-btn:active {
-    transform: scale(0.95);
-  }
 }
 
 /* =========================================
@@ -143,7 +112,7 @@
 }
 
 /* =========================================
-   ENLACES Y CATEGORÍAS
+   NAVEGACIÓN
    ========================================= */
 .sidebar-link,
 .category-title {
@@ -169,6 +138,7 @@
   margin-top: 5px;
 }
 
+/* Sub-enlaces */
 .sidebar-sublink {
   display: flex;
   align-items: center;
@@ -187,9 +157,7 @@
   transform: translateX(5px);
 }
 
-/* =========================================
-   ICONOS
-   ========================================= */
+/* Iconos */
 .sidebar-icon,
 .category-icon {
   font-size: 20px;
@@ -206,9 +174,11 @@
   opacity: 0.7;
 }
 
+/* Logout */
 .sidebar-logout-btn {
   margin-top: 20px;
   color: #ff8a80 !important;
+  cursor: pointer;
 }
 
 .sidebar-logout-btn:hover {
@@ -216,7 +186,68 @@
 }
 
 /* =========================================
-   RESPONSIVE (Móviles)
+   NOTIFICACIONES (BADGE)
+   ========================================= */
+.sidebar-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-notification-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #FF0026;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px #11182f;
+  z-index: 2;
+}
+
+/* =========================================
+   BOTÓN FLOTANTE (MÓVIL)
+   ========================================= */
+.mobile-toggle-btn {
+  display: none; /* Oculto en PC */
+}
+
+@media (max-width: 768px) {
+  .mobile-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(17, 24, 47, 0.9);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 1100; /* Encima de todo */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+  }
+  
+  .mobile-toggle-btn:active {
+    transform: scale(0.95);
+  }
+}
+
+/* =========================================
+   RESPONSIVE (MÓVIL)
    ========================================= */
 @media (max-width: 768px) {
   .sidebar {
@@ -226,34 +257,36 @@
     height: 100vh;
     width: 275px !important;
     transform: translateX(-100%);
-    padding-top: 60px; /* Espacio para que el contenido no quede bajo el botón */
+    padding-top: 60px; /* Espacio para el botón flotante */
   }
 
-  /* FORZAR VISIBILIDAD DE CONTENIDO CUANDO SE EXPANDE EN MÓVIL */
+  /* Expandido */
+  .sidebar[data-state="expanded"] {
+    transform: translateX(0);
+    box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+  }
+
+  /* Colapsado */
+  .sidebar[data-state="collapsed"] {
+    transform: translateX(-100%);
+    width: 275px !important;
+  }
+
+  /* Forzar visibilidad de contenido en móvil abierto */
   .sidebar[data-state="expanded"] .sidebar-user-info-container,
   .sidebar[data-state="expanded"] .category-title span:not(.category-icon),
   .sidebar[data-state="expanded"] .sidebar-label,
   .sidebar[data-state="expanded"] .chevron-icon,
   .sidebar[data-state="expanded"] .sidebar-sublink {
-    display: block !important; /* Forzar display block */
+    display: block !important;
   }
-  
+
   .sidebar[data-state="expanded"] .sidebar-link,
   .sidebar[data-state="expanded"] .category-title {
-    justify-content: flex-start !important; /* Alinear a la izquierda */
+    justify-content: flex-start !important;
   }
 
-  /* Deslizamiento */
-  .sidebar[data-state="expanded"] {
-    transform: translateX(0);
-    box-shadow: 4px 0 15px rgba(0,0,0,0.5);
-  }
-  
-  .sidebar[data-state="collapsed"] {
-    transform: translateX(-100%);
-    width: 275px !important; 
-  }
-
+  /* Overlay */
   .sidebar-overlay {
     position: fixed;
     top: 0;
@@ -266,7 +299,7 @@
   }
 }
 
-/* Reset de estilos */
+/* Reset listas */
 .sidebar ul, 
 .sidebar li {
   list-style: none;
