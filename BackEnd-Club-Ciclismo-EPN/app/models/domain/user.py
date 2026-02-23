@@ -42,4 +42,8 @@ class User(Base):
     
     #NUEVA RELACIÓN CON MEMBRESÍAS
     membership = relationship("Membership", back_populates="user", uselist=False)
-    
+
+    @property
+    def total_participaciones(self):
+        # Cuenta cuántos eventos tiene en la lista
+        return len(self.event_participations) if self.event_participations else 0

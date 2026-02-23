@@ -29,6 +29,7 @@ class UserResponse(UserBase):
     id: int
     role: Role
     person: Optional[PersonaResponse] = None
+    total_participaciones: int = 0
 
     class Config:
         from_attributes = True
@@ -39,7 +40,8 @@ class UserResponse(UserBase):
             id=user.id,
             email=user.email,
             role=user.role,
-            person=PersonaResponse.from_orm(user.person) if user.person else None
+            person=PersonaResponse.from_orm(user.person) if user.person else None,
+            total_participaciones=user.total_participaciones
         )
 
 class UserUpdate(BaseModel):
@@ -60,6 +62,7 @@ class UserWithPersonaResponse(BaseModel):
     role: Role
     person: Optional[PersonaResponse] = None
     membership: Optional[MembershipStatusResponse] = None
+    total_participaciones: int = 0
 
     class Config:
         from_attributes = True
@@ -87,7 +90,8 @@ class UserWithPersonaResponse(BaseModel):
             id=user.id,
             role=user.role,
             person=person_data,
-            membership=membership_data
+            membership=membership_data,
+            total_participaciones=user.total_participaciones
         )
 
 class UserBasicResponse(BaseModel):
@@ -95,3 +99,4 @@ class UserBasicResponse(BaseModel):
     person: PersonaResponse
     class Config:
         from_attributes = True
+

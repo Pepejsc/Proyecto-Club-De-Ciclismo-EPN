@@ -65,6 +65,16 @@ class Membership(Base):
     user = relationship("User", back_populates="membership")
     payments = relationship("MembershipPayment", back_populates="membership")
 
+    @property
+    def total_participaciones(self):
+        if self.user:
+            print(f"DEBUG: Usuario {self.user.id} encontrado.")
+            print(f"DEBUG: Tiene {len(self.user.event_participations)} eventos.")
+            return self.user.total_participaciones
+        else:
+            print("DEBUG: Membresía huérfana (sin usuario).")
+            return 0
+
 # --- TABLA DE PAGOS ---
 class MembershipPayment(Base):
     __tablename__ = "membership_payments"

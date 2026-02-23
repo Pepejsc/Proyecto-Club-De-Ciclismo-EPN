@@ -178,7 +178,6 @@ def actualizar_recurso(id_recurso: int, tipo_recurso: str = Form(...), nombre: s
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-# --- (NUEVO) Endpoint para RESTAR STOCK (Compra) ---
 @router.post("/{id_recurso}/comprar", status_code=status.HTTP_200_OK)
 def registrar_compra(id_recurso: int, db: Session = Depends(get_db)):
     inventario = db.query(InventarioComercial).filter(InventarioComercial.id_recurso == id_recurso).first()

@@ -16,6 +16,7 @@ from app.models.domain.membership import Membership, MembershipStatus, Membershi
 from app.models.schema.membership import MembershipCreate, MembershipResponse, MembershipStatusResponse, MembershipUpdate
 from app.models.domain.persona import Persona
 from app.models.domain.notification import Notification
+from app.models.domain.event_participant import EventParticipant
 
 router = APIRouter()
 
@@ -143,12 +144,14 @@ def read_my_membership_status(
             final_profile_pic = f"data:image/png;base64,{b64_encoded}"
         else:
             final_profile_pic = person_data.profile_picture
+    conteo_real = db.query(EventParticipant).filter(EventParticipant.user_id == current_user.id).count()
 
     # 3. Respuesta
     response_data = MembershipStatusResponse(
         **membership.__dict__,
         member_name=full_name,
-        profile_picture_url=final_profile_pic
+        profile_picture_url=final_profile_pic,
+        total_participaciones=conteo_real
     )
     
     return response_data

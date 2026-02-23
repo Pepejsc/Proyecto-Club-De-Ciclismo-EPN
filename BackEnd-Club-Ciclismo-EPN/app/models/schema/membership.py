@@ -80,6 +80,7 @@ class MembershipStatusResponse(BaseModel):
     emergency_contact: Optional[str]
     emergency_phone: Optional[str]
     medical_conditions: Optional[str]
+    total_participaciones: int = 0  # NUEVO: Para mostrar el nivel en MiMembresia
     
     # --- NUEVO: Para que el Admin pueda ver el comprobante y código ---
     unique_code: Optional[str] = None

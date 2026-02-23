@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, Text
+from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, Text, ForeignKey
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from app.db.database import Base
 import enum
 
@@ -32,6 +33,6 @@ class FinancialTransaction(Base):
     monto = Column(Float, nullable=False)
     descripcion = Column(Text, nullable=True)
     fecha_registro = Column(DateTime, server_default=func.now())
-    
-    # Opcional: Usuario que registró el movimiento (Admin)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
+    usuario = relationship("User")
     registrado_por = Column(String(100), nullable=True)

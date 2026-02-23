@@ -343,11 +343,10 @@ const VerProducto = () => {
                 marginBottom: "10px",
               }}
             >
-              Status:{" "}
               <strong>
                 {isAgotado
                   ? "Agotado"
-                  : `Disponible (${producto.stock_actual} un.)`}
+                  : `Disponibles (${producto.stock_actual} unidades)`}
               </strong>
             </p>
 
