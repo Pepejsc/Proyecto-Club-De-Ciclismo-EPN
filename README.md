@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://github.com/Pepejsc/Proyecto-Club-De-Ciclismo-EPN/blob/main/FrontEnd-Club-Ciclismo-EPN/src/assets/Images/Icons/ClubCiclismo.png" alt="Logo Club Ciclismo EPN" width="150">
+</p>
+
 #  Sistema Web de Gestión para el Club de Ciclismo EPN 
 Plataforma integral desarrollada para administrar las operaciones financieras, operativas y administrativas del Club de Ciclismo de la Escuela Politécnica Nacional (EPN). 
 
